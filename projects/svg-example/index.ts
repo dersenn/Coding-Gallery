@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import { SVG, Path } from '~/utils/svg'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -12,6 +12,43 @@ import { shortcuts } from '~/utils/shortcuts'
  * - Seeded randomness
  * - Control panel integration
  */
+
+// Export controls - defined in the sketch
+export const controls: ControlDefinition[] = [
+  {
+    type: 'slider',
+    label: 'Grid Size',
+    key: 'gridSize',
+    default: 8,
+    min: 3,
+    max: 20,
+    step: 1
+  },
+  {
+    type: 'slider',
+    label: 'Complexity',
+    key: 'complexity',
+    default: 4,
+    min: 2,
+    max: 8,
+    step: 1
+  },
+  {
+    type: 'slider',
+    label: 'Stroke Width',
+    key: 'strokeWidth',
+    default: 1.5,
+    min: 0.5,
+    max: 5,
+    step: 0.5
+  },
+  {
+    type: 'toggle',
+    label: 'Show Noise Field',
+    key: 'showNoise',
+    default: false
+  }
+]
 
 export async function init(
   container: HTMLElement,

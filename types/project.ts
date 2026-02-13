@@ -26,11 +26,13 @@ export interface Project {
   entryFile: string  // Path to JS/TS module (e.g., '/projects/noise-field/index.ts')
   controls?: ControlDefinition[]
   github?: string
+  hidden?: boolean  // Hide from gallery (still accessible via direct URL)
 }
 
 // Project module interface - all projects must export this
 export interface ProjectModule {
   init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
+  controls?: ControlDefinition[] // Optional: controls can be defined in the module
 }
 
 export interface ProjectContext {

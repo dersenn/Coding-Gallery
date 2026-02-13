@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import p5 from 'p5'
 
 interface Particle {
@@ -9,6 +9,40 @@ interface Particle {
   vx: number
   vy: number
 }
+
+// Export controls - defined in the sketch
+export const controls: ControlDefinition[] = [
+  {
+    type: 'slider',
+    label: 'Particle Count',
+    key: 'particleCount',
+    default: 1000,
+    min: 100,
+    max: 5000,
+    step: 100
+  },
+  {
+    type: 'slider',
+    label: 'Flow Speed',
+    key: 'flowSpeed',
+    default: 0.5,
+    min: 0.1,
+    max: 2,
+    step: 0.1
+  },
+  {
+    type: 'toggle',
+    label: 'Show Trails',
+    key: 'showTrails',
+    default: true
+  },
+  {
+    type: 'color',
+    label: 'Background Color',
+    key: 'bgColor',
+    default: '#000000'
+  }
+]
 
 export async function init(
   container: HTMLElement,

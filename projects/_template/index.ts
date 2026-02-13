@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import p5 from 'p5'
 
 /**
@@ -8,10 +8,36 @@ import p5 from 'p5'
  * Copy this folder and modify to create your own projects.
  * 
  * Available context:
- * - controls: Reactive control values defined in projects.json
+ * - controls: Reactive control values (defined below)
  * - utils: Global utilities (noise, seed, math)
  * - onControlChange: Register callback for control updates
  */
+
+// Export controls - define them here in your sketch
+export const controls: ControlDefinition[] = [
+  // Example controls (uncomment and modify as needed):
+  // {
+  //   type: 'slider',
+  //   label: 'Speed',
+  //   key: 'speed',
+  //   default: 1,
+  //   min: 0.1,
+  //   max: 5,
+  //   step: 0.1
+  // },
+  // {
+  //   type: 'toggle',
+  //   label: 'Show Grid',
+  //   key: 'showGrid',
+  //   default: false
+  // },
+  // {
+  //   type: 'color',
+  //   label: 'Color',
+  //   key: 'color',
+  //   default: '#ff0000'
+  // }
+]
 
 export async function init(
   container: HTMLElement,

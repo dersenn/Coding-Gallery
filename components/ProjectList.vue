@@ -24,5 +24,6 @@
 </template>
 
 <script setup lang="ts">
-const { projects } = useProjectLoader()
+const { getVisibleProjects } = useProjectLoader()
+const projects = computed(() => getVisibleProjects())
 </script>

@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import { SVG, Path } from '~/utils/svg'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -9,7 +9,7 @@ import { shortcuts } from '~/utils/shortcuts'
  * Copy this folder and modify to create your own SVG-based generative art projects.
  * 
  * Available context:
- * - controls: Reactive control values defined in projects.json
+ * - controls: Reactive control values (defined below)
  * - utils: Global utilities (noise, seed, math, vec, array)
  * - onControlChange: Register callback for control updates
  * 
@@ -21,6 +21,29 @@ import { shortcuts } from '~/utils/shortcuts'
  * - lerp(a, b, t): Linear interpolation
  * - And many more! See utils/shortcuts.ts
  */
+
+// Export controls - define them here in your sketch
+export const controls: ControlDefinition[] = [
+  // Example controls (uncomment and modify as needed):
+  // {
+  //   type: 'slider',
+  //   label: 'Line Count',
+  //   key: 'lineCount',
+  //   default: 10,
+  //   min: 1,
+  //   max: 50,
+  //   step: 1
+  // },
+  // {
+  //   type: 'slider',
+  //   label: 'Stroke Width',
+  //   key: 'strokeWidth',
+  //   default: 2,
+  //   min: 0.5,
+  //   max: 10,
+  //   step: 0.5
+  // }
+]
 
 export async function init(
   container: HTMLElement,

@@ -10,13 +10,18 @@ const props = defineProps<{
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
-const { controlValues } = useControls()
+const { controlValues, initializeControls } = useControls()
 const { utils } = useGenerativeUtils()
 
 let cleanup: CleanupFunction | null = null
 let controlCallbacks: Array<(values: any) => void> = []
 let isLoading = ref(true)
 let error = ref<string | null>(null)
+
+// Emit controls when module is loaded
+const emit = defineEmits<{
+  controlsLoaded: [controls: any]
+}>()
 
 // Use Vite's glob import to load all project modules
 // This creates a map of paths to module loaders
@@ -51,6 +56,13 @@ const loadProject = async () => {
     
     if (!module.init) {
       throw new Error('Project module must export an init function')
+    }
+
+    // Initialize controls from module if available, otherwise from project metadata
+    const controls = module.controls || props.project.controls
+    if (controls) {
+      initializeControls(controls)
+      emit('controlsLoaded', controls)
     }
 
     // Setup context for the project

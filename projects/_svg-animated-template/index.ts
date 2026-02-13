@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import { SVG } from '~/utils/svg'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -8,6 +8,20 @@ import { shortcuts } from '~/utils/shortcuts'
  * Shows how to use requestAnimationFrame for SVG animations.
  * Minimal TypeScript - just enough for strict mode compliance.
  */
+
+// Export controls - define them here in your sketch
+export const controls: ControlDefinition[] = [
+  // Example controls for animation (uncomment and modify as needed):
+  // {
+  //   type: 'slider',
+  //   label: 'Speed',
+  //   key: 'speed',
+  //   default: 1,
+  //   min: 0.1,
+  //   max: 5,
+  //   step: 0.1
+  // }
+]
 
 export async function init(
   container: HTMLElement,

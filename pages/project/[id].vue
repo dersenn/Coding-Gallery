@@ -4,7 +4,8 @@
     <ProjectViewer 
       v-if="project" 
       :project="project" 
-      class="absolute inset-0" 
+      class="absolute inset-0"
+      @controls-loaded="handleControlsLoaded"
     />
 
     <!-- Overlay navigation (top-left) -->
@@ -82,7 +83,7 @@
 
     <!-- Overlay controls (bottom-right) -->
     <div 
-      v-if="project?.controls?.length" 
+      v-if="loadedControls?.length" 
       class="absolute bottom-4 right-4 z-10"
     >
       <!-- Show controls button (when collapsed) -->
@@ -100,7 +101,7 @@
       <!-- Control panel with hide button (when expanded) -->
       <Transition name="slide-up">
         <div v-if="showControls" class="w-80 space-y-2">
-          <ControlPanel :controls="project.controls" />
+          <ControlPanel :controls="loadedControls" />
           <UButton 
             icon="i-heroicons-chevron-down"
             @click="showControls = false"
@@ -125,12 +126,19 @@
 </template>
 
 <script setup lang="ts">
+import type { ControlDefinition } from '~/types/project'
+
 const route = useRoute()
 const { getProjectById } = useProjectLoader()
-const { initializeControls } = useControls()
 
 const project = computed(() => getProjectById(route.params.id as string))
 const showInfo = ref(false)
+const loadedControls = ref<ControlDefinition[] | undefined>(undefined)
+
+// Handle controls loaded from module
+const handleControlsLoaded = (controls: ControlDefinition[]) => {
+  loadedControls.value = controls
+}
 
 // Restore showControls state from localStorage
 const showControls = ref(false)
@@ -145,12 +153,6 @@ onMounted(() => {
 watch(showControls, (newValue) => {
   localStorage.setItem('showControls', newValue.toString())
 })
-
-watch(project, (newProject) => {
-  if (newProject) {
-    initializeControls(newProject.controls)
-  }
-}, { immediate: true })
 </script>
 
 <style scoped>
