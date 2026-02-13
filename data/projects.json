@@ -39,5 +39,49 @@
         "default": "#000000"
       }
     ]
+  },
+  {
+    "id": "svg-example",
+    "title": "SVG Generative Grid",
+    "description": "Generative grid pattern using SVG with bezier curves and noise",
+    "date": "2026-02",
+    "tags": ["svg", "generative", "noise", "grid"],
+    "libraries": ["svg", "simplex-noise"],
+    "entryFile": "/projects/svg-example/index.ts",
+    "controls": [
+      {
+        "type": "slider",
+        "label": "Grid Size",
+        "key": "gridSize",
+        "default": 8,
+        "min": 3,
+        "max": 20,
+        "step": 1
+      },
+      {
+        "type": "slider",
+        "label": "Complexity",
+        "key": "complexity",
+        "default": 4,
+        "min": 2,
+        "max": 8,
+        "step": 1
+      },
+      {
+        "type": "slider",
+        "label": "Stroke Width",
+        "key": "strokeWidth",
+        "default": 1.5,
+        "min": 0.5,
+        "max": 5,
+        "step": 0.5
+      },
+      {
+        "type": "toggle",
+        "label": "Show Noise Field",
+        "key": "showNoise",
+        "default": false
+      }
+    ]
   }
 ]

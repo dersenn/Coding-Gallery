@@ -22,7 +22,11 @@ export const useSeedFromURL = () => {
         .map(() => alphabet[(Math.random() * alphabet.length) | 0])
         .join('')
 
-    await setSeed(newHash)
+    // Preserve all current query params (including control values) when setting new seed
+    await router.push({
+      query: { ...route.query, seed: newHash },
+    })
+    
     // Reload to apply new seed
     window.location.reload()
   }

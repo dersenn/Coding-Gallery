@@ -40,3 +40,8 @@ export interface ProjectContext {
 }
 
 export type CleanupFunction = () => void
+
+// Re-export common types for convenience in project files
+export type { Vec } from '~/utils/generative'
+export { SVG, Path, pPt } from '~/utils/svg'
+export { shortcuts } from '~/utils/shortcuts'

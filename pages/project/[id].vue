@@ -131,7 +131,20 @@ const { initializeControls } = useControls()
 
 const project = computed(() => getProjectById(route.params.id as string))
 const showInfo = ref(false)
+
+// Restore showControls state from localStorage
 const showControls = ref(false)
+onMounted(() => {
+  const savedState = localStorage.getItem('showControls')
+  if (savedState !== null) {
+    showControls.value = savedState === 'true'
+  }
+})
+
+// Persist showControls state to localStorage
+watch(showControls, (newValue) => {
+  localStorage.setItem('showControls', newValue.toString())
+})
 
 watch(project, (newProject) => {
   if (newProject) {
