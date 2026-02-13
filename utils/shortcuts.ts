@@ -17,40 +17,40 @@ import type { GenerativeUtils, Vec } from './generative'
 export function shortcuts(utils: GenerativeUtils) {
   return {
     // Random shortcuts
-    rnd: utils.seed.random,
-    rndInt: utils.seed.randomInt,
-    rndRange: utils.seed.randomRange,
-    coin: utils.seed.coinToss,
+    rnd: utils.seed.random, // rnd() => number [0-1]
+    rndInt: utils.seed.randomInt, // rndInt(min, max) => integer
+    rndRange: utils.seed.randomRange, // rndRange(min, max) => number
+    coin: utils.seed.coinToss, // coin() => boolean
 
     // Math shortcuts
-    map: utils.math.map,
-    lerp: utils.math.lerp,
-    clamp: utils.math.clamp,
-    norm: utils.math.norm,
-    dist: utils.math.dist,
-    rad: utils.math.rad,
-    deg: utils.math.deg,
+    map: utils.math.map, // map(value, start1, stop1, start2, stop2) => number
+    lerp: utils.math.lerp, // lerp(start, stop, amt) => number
+    clamp: utils.math.clamp, // clamp(value, min, max) => number
+    norm: utils.math.norm, // norm(value, start, stop) => number [0-1]
+    dist: utils.math.dist, // dist(x1, y1, x2, y2) => number
+    rad: utils.math.rad, // rad(degrees) => radians
+    deg: utils.math.deg, // deg(radians) => degrees
 
     // Vector shortcuts - single letter for convenience
-    v: utils.vec.create, // v(x, y, z?) creates new Vec
-    vDist: utils.vec.dist,
-    vLerp: utils.vec.lerp,
-    vMid: utils.vec.mid,
-    vDot: utils.vec.dot,
-    vAng: utils.vec.ang,
+    v: utils.vec.create, // v(x, y, z?) => Vec
+    vDist: utils.vec.dist, // vDist(v1, v2) => number
+    vLerp: utils.vec.lerp, // vLerp(v1, v2, amt) => Vec
+    vMid: utils.vec.mid, // vMid(v1, v2) => Vec
+    vDot: utils.vec.dot, // vDot(v1, v2) => number
+    vAng: utils.vec.ang, // vAng(v1, v2) => number (radians)
 
     // Noise shortcuts
-    noise2: utils.noise.perlin2D,
-    noise3: utils.noise.perlin3D,
-    simplex2: utils.noise.simplex2D,
-    simplex3: utils.noise.simplex3D,
+    noise2: utils.noise.perlin2D, // noise2(x, y) => number [-1, 1]
+    noise3: utils.noise.perlin3D, // noise3(x, y, z) => number [-1, 1]
+    simplex2: utils.noise.simplex2D, // simplex2(x, y) => number [-1, 1]
+    simplex3: utils.noise.simplex3D, // simplex3(x, y, z) => number [-1, 1]
 
     // Array shortcuts
-    shuffle: utils.array.shuffle,
-    divLength: utils.array.divLength,
+    shuffle: utils.array.shuffle, // shuffle(array) => array
+    divLength: utils.array.divLength, // divLength(start, end, divisions) => number[]
 
     // Direct access to Vec class for type annotations
-    Vec: utils.vec.create,
+    Vec: utils.vec.create, // Vec(x, y, z?) => Vec
   }
 }
 

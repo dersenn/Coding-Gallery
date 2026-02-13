@@ -52,55 +52,52 @@ export async function init(
   const { controls, utils, onControlChange } = context
   const { v, rnd, map, rad } = shortcuts(utils)
 
-  // Create SVG canvas
-  // Option 1: Full container size (default)
+  // Calculate square size (based on smaller dimension)
+  const size = Math.min(container.clientWidth, container.clientHeight)
+  
+  // Center the container content
+  container.style.display = 'flex'
+  container.style.alignItems = 'center'
+  container.style.justifyContent = 'center'
+  
+  // Create square SVG canvas
   const svg = new SVG({
     parent: container,
-    id: 'svg-sketch',
+    id: 'pearlymats',
+    width: size,
+    height: size
   })
-  
-  // Option 2: Square canvas (uncomment for square-based sketches)
-  // const size = Math.min(container.clientWidth, container.clientHeight)
-  // container.style.display = 'flex'
-  // container.style.alignItems = 'center'
-  // container.style.justifyContent = 'center'
-  // const svg = new SVG({
-  //   parent: container,
-  //   id: 'svg-sketch',
-  //   width: size,
-  //   height: size
-  // })
 
   // Your sketch code here
   // Example: Draw a simple composition
+
+  const nRows = 29
+  const nCols = 29
+  const settings = {
+    nRows,
+    nCols,
+    cellSize: size / nRows,
+    cellPadding: 10,
+    cellColor: '#fff',
+    cellStroke: '#000',
+    cellStrokeWidth: 2,
+  }
+
   
-  // Center circle
-  svg.makeCircle(svg.c, 50, 'none', '#000', 2)
-  
-  // Random circles around center
-  for (let i = 0; i < 8; i++) {
-    const angle = rad(i * 45)
-    const radius = 100
-    const pos = v(
-      svg.c.x + Math.cos(angle) * radius,
-      svg.c.y + Math.sin(angle) * radius
-    )
-    svg.makeCircle(pos, 10, '#000', 'none')
+
+  for (let row = 0; row < settings.nRows; row++) {
+    for (let col = 0; col < settings.nCols; col++) {
+      const x = col * settings.cellSize + settings.cellPadding
+      const y = row * settings.cellSize + settings.cellPadding
+      svg.makeCircle(v(x, y), settings.cellSize / 2, settings.cellColor, settings.cellStroke, settings.cellStrokeWidth)
+    }
   }
   
-  // Example: Create a path with bezier curves
-  const pts = [
-    v(100, 100),
-    v(200, 150),
-    v(300, 100),
-    v(350, 200),
-    v(250, 250),
-    v(150, 200),
-  ]
+  // Center circle
+  svg.makeCircle(svg.c, 50, 'none', '#fff', 2)
   
-  const path = new Path(pts, true)
-  const pathStr = path.buildSpline(0.3)
-  svg.makePath(pathStr, 'rgba(255, 0, 0, 0.1)', '#ff0000', 2)
+
+
 
   // React to control changes
   onControlChange((newControls) => {

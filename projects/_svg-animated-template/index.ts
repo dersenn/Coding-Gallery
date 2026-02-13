@@ -31,10 +31,23 @@ export async function init(
   const { v, rnd, map, rad, noise2 } = shortcuts(utils)
 
   // Create SVG canvas
+  // Option 1: Full container size (default)
   const svg = new SVG({
     parent: container,
     id: 'animated-sketch',
   })
+  
+  // Option 2: Square canvas (uncomment for square-based sketches)
+  // const size = Math.min(container.clientWidth, container.clientHeight)
+  // container.style.display = 'flex'
+  // container.style.alignItems = 'center'
+  // container.style.justifyContent = 'center'
+  // const svg = new SVG({
+  //   parent: container,
+  //   id: 'animated-sketch',
+  //   width: size,
+  //   height: size
+  // })
 
   // Animation state
   let frameCount = 0
@@ -54,7 +67,7 @@ export async function init(
       v(svg.w / 2, svg.h / 2),
       10,
       'none',
-      '#000',
+      '#0f0',
       2
     )
     circles.push({

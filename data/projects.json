@@ -1,12 +1,52 @@
 [
   {
+    "id": "pearlymats",
+    "title": "Pearly Mats",
+    "description": "Pearly Mats",
+    "date": "2026-02",
+    "tags": ["svg", "generative", "noise", "grid"],
+    "libraries": ["svg", "simplex-noise"],
+    "entryFile": "/projects/pearlymats/index.ts",
+    "hidden": false
+  },
+  {
+    "id": "template",
+    "title": "Template",
+    "description": "Template",
+    "date": "2026-02",
+    "tags": ["template"],
+    "libraries": [],
+    "entryFile": "/projects/_template/index.ts",
+    "hidden": true
+  },
+  {
+    "id": "svg-template",
+    "title": "SVG Template",
+    "description": "SVG Template",
+    "date": "2026-02",
+    "tags": ["svg", "template"],
+    "libraries": ["svg", "simplex-noise"],
+    "entryFile": "/projects/_svg-template/index.ts",
+    "hidden": true
+  },
+  {
+    "id": "svg-animated-template",
+    "title": "SVG Animated Template",
+    "description": "SVG Animated Template",
+    "date": "2026-02",
+    "tags": ["svg", "template"],
+    "libraries": ["svg", "simplex-noise"],
+    "entryFile": "/projects/_svg-animated-template/index.ts",
+    "hidden": true
+  },
+  {
     "id": "noise-field",
     "title": "Perlin Noise Field",
     "description": "Flow field visualization using Perlin noise",
     "date": "2024-03",
     "tags": ["p5js", "generative", "noise"],
     "libraries": ["p5", "simplex-noise"],
-    "entryFile": "/projects/noise-field/index.ts",
+    "entryFile": "/projects/_noise-field/index.ts",
     "hidden": true
   },
   {
@@ -16,6 +56,7 @@
     "date": "2026-02",
     "tags": ["svg", "generative", "noise", "grid"],
     "libraries": ["svg", "simplex-noise"],
-    "entryFile": "/projects/svg-example/index.ts"
+    "entryFile": "/projects/_svg-example/index.ts",
+    "hidden": true
   }
 ]
