@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Particle System</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #0a0a0a;
+    }
+    canvas {
+      display: block;
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    // Placeholder for particle system
+    let gravity = 0.1
+    let friction = 0.95
+    let mouseAttraction = false
+    
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'control-update') {
+        const values = event.data.values
+        gravity = values.gravity !== undefined ? values.gravity : gravity
+        friction = values.friction || friction
+        mouseAttraction = values.mouseAttraction !== undefined ? values.mouseAttraction : mouseAttraction
+        console.log('Particle system controls updated:', values)
+      }
+    })
+    
+    const canvas = document.createElement('canvas')
+    canvas.width = 600
+    canvas.height = 600
+    document.body.appendChild(canvas)
+    
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#0a0a0a'
+    ctx.fillRect(0, 0, 600, 600)
+    ctx.fillStyle = '#00ff88'
+    ctx.font = '16px monospace'
+    ctx.textAlign = 'center'
+    ctx.fillText('Particle System', 300, 280)
+    ctx.fillText('(Add p5.js to see particles)', 300, 310)
+  </script>
+</body>
+</html>

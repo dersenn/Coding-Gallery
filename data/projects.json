@@ -1,0 +1,110 @@
+[
+  {
+    "id": "noise-field",
+    "title": "Perlin Noise Field",
+    "description": "Flow field visualization using Perlin noise",
+    "date": "2024-03",
+    "tags": ["p5js", "generative", "noise"],
+    "libraries": ["p5", "simplex-noise"],
+    "entryFile": "/projects/noise-field/index.html",
+    "controls": [
+      {
+        "type": "slider",
+        "label": "Particle Count",
+        "key": "particleCount",
+        "default": 1000,
+        "min": 100,
+        "max": 5000,
+        "step": 100
+      },
+      {
+        "type": "slider",
+        "label": "Flow Speed",
+        "key": "flowSpeed",
+        "default": 0.5,
+        "min": 0.1,
+        "max": 2,
+        "step": 0.1
+      },
+      {
+        "type": "toggle",
+        "label": "Show Trails",
+        "key": "showTrails",
+        "default": true
+      },
+      {
+        "type": "color",
+        "label": "Background Color",
+        "key": "bgColor",
+        "default": "#000000"
+      }
+    ],
+    "github": "https://github.com/user/noise-field"
+  },
+  {
+    "id": "svg-morph",
+    "title": "SVG Path Morphing",
+    "description": "Animated SVG path transformations",
+    "date": "2024-01",
+    "tags": ["svg", "animation"],
+    "libraries": [],
+    "entryFile": "/projects/svg-morph/index.html",
+    "controls": [
+      {
+        "type": "slider",
+        "label": "Morph Speed",
+        "key": "morphSpeed",
+        "default": 2,
+        "min": 0.5,
+        "max": 10,
+        "step": 0.5
+      },
+      {
+        "type": "select",
+        "label": "Shape Type",
+        "key": "shapeType",
+        "default": "organic",
+        "options": [
+          { "label": "Organic", "value": "organic" },
+          { "label": "Geometric", "value": "geometric" },
+          { "label": "Abstract", "value": "abstract" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "particle-system",
+    "title": "Particle System",
+    "description": "Interactive particle system with physics",
+    "date": "2023-11",
+    "tags": ["p5js", "physics", "interactive"],
+    "libraries": ["p5"],
+    "entryFile": "/projects/particle-system/index.html",
+    "controls": [
+      {
+        "type": "slider",
+        "label": "Gravity",
+        "key": "gravity",
+        "default": 0.1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01
+      },
+      {
+        "type": "slider",
+        "label": "Friction",
+        "key": "friction",
+        "default": 0.95,
+        "min": 0.8,
+        "max": 0.99,
+        "step": 0.01
+      },
+      {
+        "type": "toggle",
+        "label": "Mouse Attraction",
+        "key": "mouseAttraction",
+        "default": false
+      }
+    ]
+  }
+]
