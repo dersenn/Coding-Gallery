@@ -98,8 +98,26 @@ export async function init(
     // Update your animation based on controls
   })
 
+  // Keyboard shortcut for downloading SVG
+  const handleKeyPress = (event: KeyboardEvent) => {
+    if (
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement
+    ) {
+      return
+    }
+    
+    if (event.key.toLowerCase() === 'd') {
+      event.preventDefault()
+      svg.save(utils.seed.current, 'svg-animated')
+    }
+  }
+  
+  window.addEventListener('keydown', handleKeyPress)
+
   // Cleanup function - IMPORTANT: cancel animation frame!
   return () => {
+    window.removeEventListener('keydown', handleKeyPress)
     isRunning = false
     if (animationId) {
       cancelAnimationFrame(animationId)

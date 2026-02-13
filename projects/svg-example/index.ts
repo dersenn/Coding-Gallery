@@ -184,8 +184,26 @@ export async function init(
     draw()
   })
 
+  // Keyboard shortcut for downloading SVG
+  const handleKeyPress = (event: KeyboardEvent) => {
+    if (
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement
+    ) {
+      return
+    }
+    
+    if (event.key.toLowerCase() === 'd') {
+      event.preventDefault()
+      svg.save(utils.seed.current, 'svg-grid')
+    }
+  }
+  
+  window.addEventListener('keydown', handleKeyPress)
+
   // Cleanup function
   return () => {
+    window.removeEventListener('keydown', handleKeyPress)
     svg.stage.remove()
   }
 }

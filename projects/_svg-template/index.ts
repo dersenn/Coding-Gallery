@@ -90,14 +90,32 @@ export async function init(
   const pathStr = path.buildSpline(0.3)
   svg.makePath(pathStr, 'rgba(255, 0, 0, 0.1)', '#ff0000', 2)
 
-  // React to control changes (if you have controls in projects.json)
+  // React to control changes
   onControlChange((newControls) => {
     // Update your sketch based on new control values
     // You might need to clear and redraw, or update elements directly
   })
 
+  // Keyboard shortcut for downloading SVG
+  const handleKeyPress = (event: KeyboardEvent) => {
+    if (
+      event.target instanceof HTMLInputElement ||
+      event.target instanceof HTMLTextAreaElement
+    ) {
+      return
+    }
+    
+    if (event.key.toLowerCase() === 'd') {
+      event.preventDefault()
+      svg.save(utils.seed.current, 'svg-sketch')
+    }
+  }
+  
+  window.addEventListener('keydown', handleKeyPress)
+
   // Cleanup function - called when project is unmounted
   return () => {
+    window.removeEventListener('keydown', handleKeyPress)
     svg.stage.remove()
   }
 }

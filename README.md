@@ -196,6 +196,7 @@ console.log('Seed:', utils.seed.current)
 
 **Keyboard Shortcuts:**
 - Press **'n'** to generate a new random seed and reload the sketch
+- Press **'d'** to download SVG (for SVG projects)
 - Seeds are automatically saved in the URL for sharing
 
 ### Math Helpers
@@ -398,6 +399,17 @@ export async function init(container, context) {
 
 **Animation:**
 Use `requestAnimationFrame` for animated SVG sketches (see `_svg-animated-template/`)
+
+**Download/Save:**
+SVG projects include keyboard shortcut for downloading. Press **'d'** to save:
+- Filename format: `{sketchName}_{seed}_{timestamp}.svg`
+- Includes seed hash for reproducibility
+- Timestamp in format: `YYYY-MM-DD_HH-MM-SS`
+
+The download handler is already implemented in the templates. The `svg.save()` method:
+```typescript
+svg.save(utils.seed.current, 'my-sketch-name')
+```
 
 ## Exporting Standalone Projects
 
