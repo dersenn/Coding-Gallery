@@ -18,13 +18,6 @@ export const useControls = () => {
 
   const updateControl = (key: string, value: number | boolean | string) => {
     controlValues.value[key] = value
-    
-    // Dispatch custom event for iframe projects to listen to
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('control-change', {
-        detail: { key, value, all: controlValues.value }
-      }))
-    }
   }
 
   const resetControls = (controls?: ControlDefinition[]) => {

@@ -1,45 +1,84 @@
 <template>
-  <div class="w-full">
-    <UCard>
-      <div class="aspect-square bg-gray-100 flex items-center justify-center">
-        <iframe
-          v-if="project"
-          ref="iframeRef"
-          :src="project.entryFile"
-          class="w-full h-full border-0"
-          sandbox="allow-scripts allow-same-origin"
-        />
-        <p v-else class="text-gray-500">Loading project...</p>
-      </div>
-    </UCard>
-  </div>
+  <div ref="containerRef" class="w-full h-full bg-black"></div>
 </template>
 
 <script setup lang="ts">
-import type { Project } from '~/types/project'
+import type { Project, ProjectModule, CleanupFunction } from '~/types/project'
 
 const props = defineProps<{
   project: Project
 }>()
 
-const iframeRef = ref<HTMLIFrameElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
 const { controlValues } = useControls()
+const { galleryUtils } = useGalleryUtils()
 
-// Send control updates to iframe
+let cleanup: CleanupFunction | null = null
+let controlCallbacks: Array<(values: any) => void> = []
+let isLoading = ref(true)
+let error = ref<string | null>(null)
+
+const loadProject = async () => {
+  if (!containerRef.value) return
+
+  try {
+    isLoading.value = true
+    error.value = null
+    
+    // Clear previous instance
+    if (cleanup) {
+      cleanup()
+      cleanup = null
+      controlCallbacks = []
+    }
+
+    // Clear container
+    containerRef.value.innerHTML = ''
+
+    // Dynamic import of project module
+    const module = await import(/* @vite-ignore */ props.project.entryFile) as ProjectModule
+    
+    if (!module.init) {
+      throw new Error('Project module must export an init function')
+    }
+
+    // Setup context for the project
+    cleanup = await module.init(containerRef.value, {
+      controls: toRaw(controlValues.value),
+      utils: galleryUtils,
+      onControlChange: (callback) => {
+        controlCallbacks.push(callback)
+      }
+    })
+
+    isLoading.value = false
+  } catch (err) {
+    console.error('Failed to load project:', err)
+    error.value = err instanceof Error ? err.message : 'Failed to load project'
+    isLoading.value = false
+  }
+}
+
+// Watch for control changes and notify project
 watch(controlValues, (newValues) => {
-  if (iframeRef.value?.contentWindow) {
-    // Convert Vue proxy to plain object for postMessage
-    iframeRef.value.contentWindow.postMessage({
-      type: 'control-update',
-      values: toRaw(newValues)
-    }, '*')
+  if (controlCallbacks.length > 0) {
+    const rawValues = toRaw(newValues)
+    controlCallbacks.forEach(cb => cb(rawValues))
   }
 }, { deep: true })
 
-// Reload iframe when project changes
+// Watch for project changes
 watch(() => props.project, () => {
-  if (iframeRef.value) {
-    iframeRef.value.src = props.project.entryFile
+  loadProject()
+}, { immediate: false })
+
+onMounted(() => {
+  loadProject()
+})
+
+onUnmounted(() => {
+  if (cleanup) {
+    cleanup()
   }
 })
 </script>

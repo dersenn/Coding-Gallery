@@ -1,3 +1,5 @@
+import type { GalleryUtils } from '~/utils/gallery'
+
 export interface ControlDefinition {
   type: 'slider' | 'toggle' | 'select' | 'color'
   label: string
@@ -9,6 +11,10 @@ export interface ControlDefinition {
   options?: Array<{ label: string; value: string | number }>
 }
 
+export interface ControlValues {
+  [key: string]: number | boolean | string
+}
+
 export interface Project {
   id: string
   title: string
@@ -17,11 +23,20 @@ export interface Project {
   tags: string[]
   thumbnail?: string
   libraries: string[]
-  entryFile: string
+  entryFile: string  // Path to JS/TS module (e.g., '/projects/noise-field/index.ts')
   controls?: ControlDefinition[]
   github?: string
 }
 
-export interface ControlValues {
-  [key: string]: number | boolean | string
+// Project module interface - all projects must export this
+export interface ProjectModule {
+  init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
 }
+
+export interface ProjectContext {
+  controls: ControlValues
+  utils: GalleryUtils
+  onControlChange: (callback: (controls: ControlValues) => void) => void
+}
+
+export type CleanupFunction = () => void
