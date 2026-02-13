@@ -165,7 +165,8 @@ See template README for detailed instructions.
 - Tree-shaking in production builds
 
 ### Vue State Management
-- `useState` for global control values
+- `useState` for global control values (serializable data only)
+- `useGalleryUtils` uses module-level singleton (functions can't be serialized for SSR)
 - Reactive updates propagate automatically
 - No external state library needed
 
@@ -189,6 +190,12 @@ See template README for detailed instructions.
 
 - EMFILE error on macOS (file watch limit) - Not related to our changes, system configuration issue
 - Dev server uses port 3002 instead of 3000 - Auto-selected due to port conflict
+
+## Bug Fixes Applied
+
+1. **SSR Serialization Error** - Changed `useGalleryUtils` from `useState` to module-level singleton to prevent "Cannot stringify a function" error during server-side rendering
+2. **Path Resolution** - Updated project entry files from `~/projects/...` to `/projects/...` to match Vite's glob import resolution
+3. **Overlay Defaults** - Set info and controls overlays to collapsed by default for cleaner initial view
 
 ## Next Steps for User
 
