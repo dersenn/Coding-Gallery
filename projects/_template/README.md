@@ -1,250 +1,213 @@
-# Project Template
+# p5.js Project Template
 
-This is a starter template for creating new projects in the gallery.
+Minimal template for creating new p5.js projects in the gallery.
 
 ## Quick Start
 
-1. **Copy this folder** and rename it to your project name:
+1. **Copy this folder** and rename it:
    ```bash
-   cp -r projects/_template projects/my-new-project
+   cp -r projects/_template projects/my-sketch
    ```
 
-2. **Edit `index.ts`** to implement your sketch
+2. **Edit `index.ts`** - Add your controls and implement your sketch
 
-3. **Add project metadata** to `data/projects.json`:
+3. **Add metadata** to `data/projects.json`:
    ```json
    {
-     "id": "my-new-project",
-     "title": "My New Project",
-     "description": "A cool sketch",
-     "date": "2024-12",
+     "id": "my-sketch",
+     "title": "My Sketch",
+     "description": "A cool generative sketch",
+     "date": "2026-02",
      "tags": ["p5js", "generative"],
      "libraries": ["p5"],
-     "entryFile": "/projects/my-new-project/index.ts",
-     "controls": [
-       {
-         "type": "slider",
-         "label": "Speed",
-         "key": "speed",
-         "default": 1,
-         "min": 0.1,
-         "max": 5,
-         "step": 0.1
-       }
-     ]
+     "entryFile": "/projects/my-sketch/index.ts"
    }
    ```
 
-4. **Run dev server** and navigate to your project
+4. **Run and test**:
+   ```bash
+   npm run dev
+   ```
+   Navigate to `http://localhost:3000/project/my-sketch`
 
-## Available Context
+## Controls
 
-### Controls
-Access control values from your controls definition:
+Define controls directly in your `index.ts`:
+
+```typescript
+export const controls: ControlDefinition[] = [
+  {
+    type: 'slider',
+    label: 'Speed',
+    key: 'speed',
+    default: 1,
+    min: 0.1,
+    max: 5,
+    step: 0.1
+  },
+  {
+    type: 'toggle',
+    label: 'Show Grid',
+    key: 'showGrid',
+    default: false
+  },
+  {
+    type: 'color',
+    label: 'Background',
+    key: 'bgColor',
+    default: '#000000'
+  }
+]
+```
+
+Access in your sketch:
 ```typescript
 const speed = controls.speed as number
+const showGrid = controls.showGrid as boolean
 ```
 
-### Global Utilities
+## Available Utilities
 
-#### Noise Functions
+All projects have access to `utils` via the context:
+
+### Seeded Random
 ```typescript
-// Simplex noise (-1 to 1)
-utils.noise.simplex2D(x, y)
-utils.noise.simplex3D(x, y, z)
-
-// Perlin noise (0 to 1)
-utils.noise.perlin2D(x, y)
-utils.noise.perlin3D(x, y, z)
+utils.seed.random()                    // Random 0-1
+utils.seed.randomRange(0, 100)         // Random in range
+utils.seed.randomInt(0, 10)            // Random integer
+utils.seed.coinToss(50)                // Random boolean (50% chance)
+utils.seed.current                     // Current seed hash
 ```
 
-#### Seeded Random
+### Noise Functions
+```typescript
+utils.noise.perlin2D(x, y)             // Perlin noise 0-1
+utils.noise.perlin3D(x, y, z)          // Perlin noise 3D
+utils.noise.simplex2D(x, y)            // Simplex noise -1 to 1
+```
 
-Seeds are automatically loaded from the URL (`?seed=...`). Press **'n'** to generate a new random seed.
+### Math Helpers
+```typescript
+utils.math.map(val, min1, max1, min2, max2)  // Map value to range
+utils.math.lerp(start, stop, t)              // Linear interpolation
+utils.math.clamp(n, min, max)                // Constrain value
+utils.math.norm(val, min, max)               // Normalize to 0-1
+utils.math.dist(x1, y1, x2, y2)              // Distance
+utils.math.rad(degrees)                      // Degrees to radians
+utils.math.deg(radians)                      // Radians to degrees
+```
+
+### Vectors
+```typescript
+const v = utils.vec.create(x, y, z)          // Create vector
+utils.vec.dist(a, b)                         // Distance
+utils.vec.lerp(a, b, t)                      // Interpolate
+utils.vec.mid(a, b)                          // Midpoint
+
+// Or use Vec class directly
+import { Vec } from '~/utils/generative'
+const v = new Vec(x, y, z)
+v.add(other)    // Vector addition
+v.sub(other)    // Subtraction
+v.norm()        // Normalize
+v.lerp(other, t)  // Interpolate
+```
+
+### Array Utilities
+```typescript
+utils.array.shuffle([1, 2, 3])              // Seeded shuffle
+utils.array.divLength(vecA, vecB, 10)       // Divide line into segments
+```
+
+## Shorthand Functions
+
+For faster hand-coding, use shortcuts:
 
 ```typescript
-// Random between 0 and 1
-const r = utils.seed.random()
+import { shortcuts } from '~/utils/shortcuts'
+const { v, rnd, map, lerp, rad } = shortcuts(utils)
 
-// Random in range
-const x = utils.seed.randomRange(0, width)
-
-// Random integer
-const i = utils.seed.randomInt(0, 10)
-
-// Get current seed (for logging/debugging)
-console.log('Current seed:', utils.seed.current)
-
-// Manually set a seed (usually not needed - use URL instead)
-utils.seed.set("oo2x9k...")
+// Now use short names
+const center = v(width/2, height/2)
+const x = rnd() * width
+const angle = rad(45)
 ```
 
-#### Math Helpers
-```typescript
-// Map value from one range to another
-const mapped = utils.math.map(value, 0, 100, 0, 1)
-
-// Linear interpolation
-const lerped = utils.math.lerp(start, stop, 0.5)
-
-// Constrain/clamp value
-const clamped = utils.math.constrain(value, 0, 100)
-
-// Normalize value to 0-1
-const normalized = utils.math.norm(value, min, max)
-
-// Distance between points
-const distance = utils.math.dist(x1, y1, x2, y2)
-const distance3D = utils.math.dist3D(x1, y1, z1, x2, y2, z2)
-```
-
-## Control Types
-
-### Slider
-```json
-{
-  "type": "slider",
-  "label": "Speed",
-  "key": "speed",
-  "default": 1,
-  "min": 0,
-  "max": 10,
-  "step": 0.1
-}
-```
-
-### Toggle
-```json
-{
-  "type": "toggle",
-  "label": "Show Grid",
-  "key": "showGrid",
-  "default": true
-}
-```
-
-### Select
-```json
-{
-  "type": "select",
-  "label": "Mode",
-  "key": "mode",
-  "default": "organic",
-  "options": [
-    { "label": "Organic", "value": "organic" },
-    { "label": "Geometric", "value": "geometric" }
-  ]
-}
-```
-
-### Color
-```json
-{
-  "type": "color",
-  "label": "Background",
-  "key": "bgColor",
-  "default": "#000000"
-}
-```
-
-## Reactive Control Updates
+## Reactive Updates
 
 Listen for control changes:
+
 ```typescript
 onControlChange((newControls) => {
   speed = newControls.speed as number
-  showGrid = newControls.showGrid as boolean
-  // Re-initialize or update as needed
+  // Update your sketch
 })
-```
-
-## p5.js Instance Mode
-
-All projects use p5.js instance mode to prevent namespace conflicts:
-```typescript
-const sketch = new p5((p) => {
-  // Use p. prefix for all p5 functions
-  p.setup = () => { }
-  p.draw = () => { }
-}, container)
-```
-
-## Cleanup
-
-Always return a cleanup function to properly dispose of resources:
-```typescript
-return () => {
-  sketch.remove()
-  // Clean up any other resources
-}
 ```
 
 ## Keyboard Shortcuts
 
-- **'n'** - Generate new random seed (works globally in all projects)
-- Projects can register their own shortcuts (e.g., 'd' for download)
+- **'n'** - Generate new seed (keeps your control settings)
+- Control values persist in URL for sharing
 
-## Exporting Standalone
+## Project Structure
 
-To export your project as a standalone HTML file:
-
-1. Copy your project folder
-2. Create an `index.html` file with seed support:
-```html
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>My Project</title>
-  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0"></script>
-  <style>
-    body { margin: 0; padding: 0; overflow: hidden; }
-    #app { width: 100vw; height: 100vh; }
-  </style>
-</head>
-<body>
-  <div id="app"></div>
-  <script type="module">
-    import { init } from './index.js'
-    
-    // Get seed from URL or generate new one
-    const params = new URLSearchParams(location.search)
-    const seedString = params.get('seed') || generateSeed()
-    
-    function generateSeed() {
-      const alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
-      return 'oo' + Array(49).fill(0)
-        .map(() => alphabet[(Math.random() * alphabet.length) | 0]).join('')
-    }
-    
-    // Mock gallery context with seed
-    const mockContext = {
-      controls: { /* Your default control values */ },
-      utils: {
-        seed: {
-          current: seedString,
-          set: (s) => { location.search = '?seed=' + s },
-          random: () => Math.random(), // Replace with actual sfc32 if needed
-          randomRange: (min, max) => min + Math.random() * (max - min),
-          randomInt: (min, max) => Math.floor(min + Math.random() * (max - min + 1)),
-        },
-        noise: { /* Implement or stub */ },
-        math: { /* Implement basic math helpers */ },
-      },
-      onControlChange: () => {},
-    }
-    
-    console.log('Seed:', seedString)
-    init(document.getElementById('app'), mockContext)
-  </script>
-</body>
-</html>
+```
+my-sketch/
+├── index.ts          # Your sketch code + controls
+└── README.md         # Optional documentation
 ```
 
 ## Tips
 
-- Use `p.windowResized()` to handle canvas resizing
-- Use `p.frameCount` or `p.millis()` for animations
-- Test with different control values to ensure reactivity
-- Keep your sketch performant - aim for 60fps
-- Use TypeScript for better IDE support
+1. **Seeded Random** - All random functions use the URL seed for reproducibility
+2. **Instance Mode** - p5.js runs in instance mode to prevent conflicts
+3. **Cleanup** - Always return a cleanup function to remove the sketch on unmount
+4. **TypeScript** - Use types for better autocomplete, but you can write plain JS too
+5. **URL Sharing** - Share URLs with specific seeds and control values
+
+## Example Sketch
+
+```typescript
+import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
+import p5 from 'p5'
+
+export const controls: ControlDefinition[] = [
+  { type: 'slider', label: 'Speed', key: 'speed', default: 1, min: 0.1, max: 5, step: 0.1 }
+]
+
+export async function init(
+  container: HTMLElement,
+  context: ProjectContext
+): Promise<CleanupFunction> {
+  const { controls, utils } = context
+  let speed = controls.speed as number
+
+  const sketch = new p5((p) => {
+    p.setup = () => {
+      p.createCanvas(container.clientWidth, container.clientHeight)
+    }
+
+    p.draw = () => {
+      p.background(0)
+      p.fill(255)
+      p.circle(p.width/2, p.height/2, 100 * speed)
+    }
+
+    p.windowResized = () => {
+      p.resizeCanvas(container.clientWidth, container.clientHeight)
+    }
+  }, container)
+
+  return () => sketch.remove()
+}
+```
+
+## More Templates
+
+- **SVG Static**: `projects/_svg-template/`
+- **SVG Animated**: `projects/_svg-animated-template/`
+
+## See Also
+
+- Main README: `/README.md`
+- SVG Implementation: `/SVG_IMPLEMENTATION.md`
