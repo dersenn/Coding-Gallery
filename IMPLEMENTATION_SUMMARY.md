@@ -22,8 +22,10 @@ Successfully migrated from iframe-based architecture to a direct JS module loadi
 ### 2. Files Created
 
 #### Global Utilities
-- `utils/gallery.ts` - Shared noise, seed, and math utilities
-- `composables/useGalleryUtils.ts` - Vue composable for utilities
+- `utils/generative.ts` - Shared noise, seed, and math utilities using sfc32 algorithm
+- `composables/useGenerativeUtils.ts` - Vue composable for utilities with URL seed integration
+- `composables/useSeedFromURL.ts` - URL parameter management for seeds
+- `plugins/keyboard-shortcuts.client.ts` - Global keyboard shortcuts (n=new seed)
 
 #### Type System
 - Updated `types/project.ts` with:
@@ -166,9 +168,17 @@ See template README for detailed instructions.
 
 ### Vue State Management
 - `useState` for global control values (serializable data only)
-- `useGalleryUtils` uses module-level singleton (functions can't be serialized for SSR)
+- `useGenerativeUtils` uses module-level singleton (functions can't be serialized for SSR)
+- Seeds loaded from URL parameters on initialization
 - Reactive updates propagate automatically
 - No external state library needed
+
+### Seed System
+- Uses sfc32 algorithm (industry standard for generative art, compatible with fxhash.xyz)
+- Base58 encoding for human-readable seed strings (e.g., "oo2x9k...")
+- Automatic URL integration - seeds persist across page reloads
+- Global keyboard shortcut: press 'n' to generate new seed
+- Seed automatically logged to console on project load
 
 ### TypeScript Throughout
 - Type-safe project modules
@@ -193,9 +203,16 @@ See template README for detailed instructions.
 
 ## Bug Fixes Applied
 
-1. **SSR Serialization Error** - Changed `useGalleryUtils` from `useState` to module-level singleton to prevent "Cannot stringify a function" error during server-side rendering
+1. **SSR Serialization Error** - Changed `useGenerativeUtils` from `useState` to module-level singleton to prevent "Cannot stringify a function" error during server-side rendering
 2. **Path Resolution** - Updated project entry files from `~/projects/...` to `/projects/...` to match Vite's glob import resolution
 3. **Overlay Defaults** - Set info and controls overlays to collapsed by default for cleaner initial view
+
+## Enhancements Applied
+
+1. **Upgraded Seed System** - Replaced mulberry32 with sfc32 algorithm for better distribution and fxhash compatibility
+2. **URL Seed Integration** - Seeds automatically loaded from `?seed=` parameter and persist across reloads
+3. **Keyboard Shortcuts** - Added global 'n' shortcut to generate new random seeds
+4. **Clearer Naming** - Renamed `utils/gallery.ts` to `utils/generative.ts` for clarity
 
 ## Next Steps for User
 

@@ -16,6 +16,9 @@ export async function init(
 ): Promise<CleanupFunction> {
   const { controls, utils, onControlChange } = context
 
+  // You can access the current seed with utils.seed.current
+  // console.log('Current seed:', utils.seed.current)
+
   // Reactive state
   let particleCount = controls.particleCount as number
   let flowSpeed = controls.flowSpeed as number

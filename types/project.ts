@@ -1,4 +1,4 @@
-import type { GalleryUtils } from '~/utils/gallery'
+import type { GenerativeUtils } from '~/utils/generative'
 
 export interface ControlDefinition {
   type: 'slider' | 'toggle' | 'select' | 'color'
@@ -35,7 +35,7 @@ export interface ProjectModule {
 
 export interface ProjectContext {
   controls: ControlValues
-  utils: GalleryUtils
+  utils: GenerativeUtils
   onControlChange: (callback: (controls: ControlValues) => void) => void
 }
 

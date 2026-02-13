@@ -24,7 +24,8 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   └── ProjectViewer.vue      # Project loader component
 ├── composables/
 │   ├── useControls.ts         # Control state management
-│   ├── useGalleryUtils.ts     # Global utilities accessor
+│   ├── useGenerativeUtils.ts  # Generative art utilities accessor
+│   ├── useSeedFromURL.ts      # URL seed parameter management
 │   └── useProjectLoader.ts    # Project metadata loader
 ├── data/
 │   └── projects.json          # Project metadata
@@ -36,8 +37,10 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   └── noise-field/           # Example project
 ├── types/
 │   └── project.ts             # TypeScript interfaces
+├── plugins/
+│   └── keyboard-shortcuts.client.ts  # Global keyboard shortcuts (n=new seed)
 └── utils/
-    └── gallery.ts             # Global utilities implementation
+    └── generative.ts          # Generative art utilities implementation
 ```
 
 ## Creating a New Project
@@ -121,7 +124,17 @@ Navigate to `http://localhost:3000/project/my-new-project`
 
 ## Global Utilities
 
-All projects have access to shared utilities via the `context.utils` object:
+All projects have access to shared generative art utilities via the `context.utils` object:
+
+### Current Seed
+
+```typescript
+// Access the current seed hash
+console.log(utils.seed.current)  // e.g., "oo2x9k..."
+
+// Set a specific seed
+utils.seed.set("oo2x9k...")
+```
 
 ### Noise Functions
 
@@ -138,10 +151,9 @@ utils.noise.perlin3D(x, y, z)
 
 ### Seeded Random
 
-```typescript
-// Set seed for reproducible randomness
-utils.seed.set("my-seed")
+Seeds are automatically loaded from the URL (`?seed=...`). All random and noise functions use this seed for reproducibility.
 
+```typescript
 // Random between 0 and 1
 const r = utils.seed.random()
 
@@ -150,7 +162,14 @@ const x = utils.seed.randomRange(0, width)
 
 // Random integer
 const i = utils.seed.randomInt(0, 10)
+
+// Get current seed (useful for logging/debugging)
+console.log('Seed:', utils.seed.current)
 ```
+
+**Keyboard Shortcuts:**
+- Press **'n'** to generate a new random seed and reload the sketch
+- Seeds are automatically saved in the URL for sharing
 
 ### Math Helpers
 

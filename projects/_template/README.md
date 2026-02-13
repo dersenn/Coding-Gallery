@@ -59,10 +59,10 @@ utils.noise.perlin3D(x, y, z)
 ```
 
 #### Seeded Random
-```typescript
-// Set seed for reproducible randomness
-utils.seed.set("my-seed")
 
+Seeds are automatically loaded from the URL (`?seed=...`). Press **'n'** to generate a new random seed.
+
+```typescript
 // Random between 0 and 1
 const r = utils.seed.random()
 
@@ -71,6 +71,12 @@ const x = utils.seed.randomRange(0, width)
 
 // Random integer
 const i = utils.seed.randomInt(0, 10)
+
+// Get current seed (for logging/debugging)
+console.log('Current seed:', utils.seed.current)
+
+// Manually set a seed (usually not needed - use URL instead)
+utils.seed.set("oo2x9k...")
 ```
 
 #### Math Helpers
@@ -173,12 +179,17 @@ return () => {
 }
 ```
 
+## Keyboard Shortcuts
+
+- **'n'** - Generate new random seed (works globally in all projects)
+- Projects can register their own shortcuts (e.g., 'd' for download)
+
 ## Exporting Standalone
 
 To export your project as a standalone HTML file:
 
 1. Copy your project folder
-2. Create an `index.html` file:
+2. Create an `index.html` file with seed support:
 ```html
 <!DOCTYPE html>
 <html>
@@ -196,29 +207,34 @@ To export your project as a standalone HTML file:
   <script type="module">
     import { init } from './index.js'
     
-    // Mock gallery context
+    // Get seed from URL or generate new one
+    const params = new URLSearchParams(location.search)
+    const seedString = params.get('seed') || generateSeed()
+    
+    function generateSeed() {
+      const alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+      return 'oo' + Array(49).fill(0)
+        .map(() => alphabet[(Math.random() * alphabet.length) | 0]).join('')
+    }
+    
+    // Mock gallery context with seed
     const mockContext = {
-      controls: {
-        // Your default control values
-        speed: 1,
-      },
+      controls: { /* Your default control values */ },
       utils: {
-        // Stub or implement utilities
-        noise: {
-          perlin2D: (x, y) => 0.5,
-        },
         seed: {
-          random: () => Math.random(),
+          current: seedString,
+          set: (s) => { location.search = '?seed=' + s },
+          random: () => Math.random(), // Replace with actual sfc32 if needed
           randomRange: (min, max) => min + Math.random() * (max - min),
+          randomInt: (min, max) => Math.floor(min + Math.random() * (max - min + 1)),
         },
-        math: {
-          map: (value, start1, stop1, start2, stop2) => 
-            start2 + (stop2 - start2) * ((value - start1) / (stop1 - start1)),
-        },
+        noise: { /* Implement or stub */ },
+        math: { /* Implement basic math helpers */ },
       },
       onControlChange: () => {},
     }
     
+    console.log('Seed:', seedString)
     init(document.getElementById('app'), mockContext)
   </script>
 </body>

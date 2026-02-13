@@ -11,7 +11,7 @@ const props = defineProps<{
 
 const containerRef = ref<HTMLElement | null>(null)
 const { controlValues } = useControls()
-const { galleryUtils } = useGalleryUtils()
+const { utils } = useGenerativeUtils()
 
 let cleanup: CleanupFunction | null = null
 let controlCallbacks: Array<(values: any) => void> = []
@@ -56,11 +56,14 @@ const loadProject = async () => {
     // Setup context for the project
     cleanup = await module.init(containerRef.value, {
       controls: toRaw(controlValues.value),
-      utils: galleryUtils,
+      utils,
       onControlChange: (callback) => {
         controlCallbacks.push(callback)
       }
     })
+
+    // Log seed to console for debugging
+    console.log(`Seed: ?seed=${utils.seed.current}`)
 
     isLoading.value = false
   } catch (err) {

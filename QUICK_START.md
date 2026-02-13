@@ -16,14 +16,19 @@ Your gallery has been transformed from an iframe-based system to a modern JavaSc
 3. **Open the example project**: Click on "Perlin Noise Field"
 
 4. **Try the controls**:
-   - Adjust particle count (bottom-right panel)
-   - Change flow speed
-   - Toggle trails on/off
-   - Change background color
+   - Click "Controls" (bottom-right) to open the control panel
+   - Adjust particle count, flow speed, trails, and background color
+   - Click "Hide Controls" to collapse the panel
 
-5. **Test the overlay UI**:
-   - Click the info button (top-right) to show/hide project details
-   - Click "Hide Controls" to collapse the control panel
+5. **Test the seed system**:
+   - Press **'n'** on your keyboard to generate a new random variation
+   - Notice the URL updates with `?seed=...`
+   - Copy the URL to share the exact same random variation with others
+   - Open the browser console to see the current seed logged
+
+6. **Test the overlay UI**:
+   - Click the info icon (top-right) to show/hide project details
+   - All overlays start collapsed for a clean full-screen view
    - Click "Gallery" (top-left) to return to the home page
 
 ## Create Your First Project
