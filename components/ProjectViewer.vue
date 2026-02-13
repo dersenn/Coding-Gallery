@@ -18,6 +18,10 @@ let controlCallbacks: Array<(values: any) => void> = []
 let isLoading = ref(true)
 let error = ref<string | null>(null)
 
+// Use Vite's glob import to load all project modules
+// This creates a map of paths to module loaders
+const projectModules = import.meta.glob('~/projects/*/index.ts') as Record<string, () => Promise<ProjectModule>>
+
 const loadProject = async () => {
   if (!containerRef.value) return
 
@@ -35,8 +39,15 @@ const loadProject = async () => {
     // Clear container
     containerRef.value.innerHTML = ''
 
-    // Dynamic import of project module
-    const module = await import(/* @vite-ignore */ props.project.entryFile) as ProjectModule
+    // Look up the module loader from the glob import map
+    const moduleLoader = projectModules[props.project.entryFile]
+    
+    if (!moduleLoader) {
+      throw new Error(`Project module not found: ${props.project.entryFile}. Available: ${Object.keys(projectModules).join(', ')}`)
+    }
+
+    // Load the module
+    const module = await moduleLoader() as ProjectModule
     
     if (!module.init) {
       throw new Error('Project module must export an init function')

@@ -80,39 +80,39 @@
       />
     </div>
 
-    <!-- Overlay controls (bottom-right or collapsed) -->
+    <!-- Overlay controls (bottom-right) -->
     <div 
       v-if="project?.controls?.length" 
-      class="absolute bottom-4 right-4 z-10 w-80 max-h-[calc(100vh-8rem)] overflow-y-auto"
+      class="absolute bottom-4 right-4 z-10"
     >
-      <Transition name="slide-up">
-        <div v-if="showControls">
-          <ControlPanel :controls="project.controls" />
-        </div>
-      </Transition>
-
-      <!-- Controls toggle button -->
+      <!-- Show controls button (when collapsed) -->
       <UButton 
         v-if="!showControls"
         icon="i-heroicons-adjustments-horizontal"
         @click="showControls = true"
         size="sm"
         color="neutral"
-        class="bg-black/50 backdrop-blur-md border border-white/10 w-full"
+        class="bg-black/50 backdrop-blur-md border border-white/10"
       >
-        Show Controls
+        Controls
       </UButton>
-      <UButton 
-        v-else
-        icon="i-heroicons-chevron-down"
-        @click="showControls = false"
-        size="xs"
-        color="neutral"
-        variant="ghost"
-        class="mt-2 w-full"
-      >
-        Hide Controls
-      </UButton>
+
+      <!-- Control panel with hide button (when expanded) -->
+      <Transition name="slide-up">
+        <div v-if="showControls" class="w-80 space-y-2">
+          <ControlPanel :controls="project.controls" />
+          <UButton 
+            icon="i-heroicons-chevron-down"
+            @click="showControls = false"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            class="w-full bg-black/30 backdrop-blur-md border border-white/10 hover:bg-black/50"
+          >
+            Hide Controls
+          </UButton>
+        </div>
+      </Transition>
     </div>
 
     <!-- Project not found message -->
@@ -130,8 +130,8 @@ const { getProjectById } = useProjectLoader()
 const { initializeControls } = useControls()
 
 const project = computed(() => getProjectById(route.params.id as string))
-const showInfo = ref(true)
-const showControls = ref(true)
+const showInfo = ref(false)
+const showControls = ref(false)
 
 watch(project, (newProject) => {
   if (newProject) {
