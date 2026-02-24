@@ -16,7 +16,7 @@
 
     <div class="space-y-4">
       <div v-for="control in controls" :key="control.key">
-        <label class="block text-sm font-medium mb-2 text-gray-300">
+        <label v-if="control.type !== 'toggle'" class="block text-sm font-medium mb-2 text-gray-300">
           {{ control.label }}
         </label>
 
@@ -44,7 +44,7 @@
             @change="updateControl(control.key, ($event.target as HTMLInputElement).checked)"
             class="w-5 h-5 rounded cursor-pointer accent-blue-500"
           />
-          <span class="text-sm text-gray-300">{{ controlValues[control.key] ? 'On' : 'Off' }}</span>
+          <span class="text-sm text-gray-300">{{ control.label }}</span>
         </label>
 
         <!-- Select -->
