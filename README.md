@@ -17,6 +17,15 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 - **p5.js instance mode** to prevent namespace conflicts
 - **TypeScript support** throughout
 
+## Additional Docs
+
+- Docs index: `docs/INDEX.md`
+- Quick start: `docs/QUICK_START.md`
+- Seed system reference: `docs/SEED_SYSTEM.md`
+- SVG engine reference: `docs/SVG_IMPLEMENTATION.md`
+- Migration history: `docs/IMPLEMENTATION_SUMMARY.md`
+- Project structure planning: `docs/PROJECT_STRUCTURE_PLAN.md`
+
 ## Project Structure
 
 ```
@@ -35,11 +44,11 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   ├── index.vue              # Gallery home page
 │   └── project/[id].vue       # Full-screen project view
 ├── projects/
-│   ├── _template/             # p5.js starter template
-│   ├── _svg-template/         # SVG static template
-│   ├── _svg-animated-template/ # SVG animated template
-│   ├── noise-field/           # p5.js example
-│   └── svg-example/           # SVG example
+│   ├── _Templates/            # Hidden project templates
+│   │   ├── _template/         # p5.js starter template
+│   │   ├── _svg-template/     # SVG static template
+│   │   └── _svg-animated-template/ # SVG animated template
+│   └── pearlymats/            # Current visible sketch
 ├── types/
 │   └── project.ts             # TypeScript interfaces
 ├── plugins/
@@ -53,18 +62,18 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 ## Creating a New Project
 
 Choose a template based on your sketch type:
-- **p5.js**: `projects/_template/`
-- **SVG (static)**: `projects/_svg-template/`
-- **SVG (animated)**: `projects/_svg-animated-template/`
+- **p5.js**: `projects/_Templates/_template/`
+- **SVG (static)**: `projects/_Templates/_svg-template/`
+- **SVG (animated)**: `projects/_Templates/_svg-animated-template/`
 
 ### 1. Copy the Template
 
 ```bash
 # For p5.js
-cp -r projects/_template projects/my-new-project
+cp -r projects/_Templates/_template projects/my-new-project
 
 # For SVG
-cp -r projects/_svg-template projects/my-svg-project
+cp -r projects/_Templates/_svg-template projects/my-svg-project
 ```
 
 ### 2. Implement Your Sketch
@@ -221,6 +230,9 @@ const distance3D = utils.math.dist3D(x1, y1, z1, x2, y2, z2)
 // Angle conversion
 const radians = utils.math.rad(degrees)
 const degrees = utils.math.deg(radians)
+
+// Divide line into segments (returns Vec[])
+const points = utils.math.divLength(startVec, endVec, 10)
 ```
 
 ### Vector Operations
@@ -257,7 +269,7 @@ const midpoint = utils.vec.mid(a, b)
 const shuffled = utils.array.shuffle([1, 2, 3, 4, 5])
 
 // Divide line into segments
-const points = utils.array.divLength(startVec, endVec, 10) // 10 segments
+const points = utils.math.divLength(startVec, endVec, 10) // 10 segments
 
 // Random boolean with probability
 const flip = utils.seed.coinToss(50) // 50% chance
@@ -398,7 +410,7 @@ export async function init(container, context) {
 - `buildSpline(t, close?)` - Smooth cubic spline
 
 **Animation:**
-Use `requestAnimationFrame` for animated SVG sketches (see `_svg-animated-template/`)
+Use `requestAnimationFrame` for animated SVG sketches (see `projects/_Templates/_svg-animated-template/`)
 
 **Download/Save:**
 SVG projects include keyboard shortcut for downloading. Press **'d'** to save:
@@ -420,7 +432,7 @@ Projects are designed to be easily extracted and run independently:
 3. Mock the gallery context with default values
 4. Import and initialize your project module
 
-See `projects/_template/README.md` for detailed export instructions.
+See `projects/_Templates/_template/README.md` for detailed export instructions.
 
 ## Development
 

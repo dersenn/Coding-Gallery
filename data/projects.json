@@ -16,7 +16,7 @@
     "date": "2026-02",
     "tags": ["template"],
     "libraries": [],
-    "entryFile": "/projects/_template/index.ts",
+    "entryFile": "/projects/_Templates/_template/index.ts",
     "hidden": true
   },
   {
@@ -26,7 +26,7 @@
     "date": "2026-02",
     "tags": ["svg", "template"],
     "libraries": ["svg", "simplex-noise"],
-    "entryFile": "/projects/_svg-template/index.ts",
+    "entryFile": "/projects/_Templates/_svg-template/index.ts",
     "hidden": true
   },
   {
@@ -36,7 +36,7 @@
     "date": "2026-02",
     "tags": ["svg", "template"],
     "libraries": ["svg", "simplex-noise"],
-    "entryFile": "/projects/_svg-animated-template/index.ts",
+    "entryFile": "/projects/_Templates/_svg-animated-template/index.ts",
     "hidden": true
   },
   {
@@ -46,7 +46,7 @@
     "date": "2024-03",
     "tags": ["p5js", "generative", "noise"],
     "libraries": ["p5", "simplex-noise"],
-    "entryFile": "/projects/_noise-field/index.ts",
+    "entryFile": "/projects/_Templates/_noise-field/index.ts",
     "hidden": true
   },
   {
@@ -56,7 +56,7 @@
     "date": "2026-02",
     "tags": ["svg", "generative", "noise", "grid"],
     "libraries": ["svg", "simplex-noise"],
-    "entryFile": "/projects/_svg-example/index.ts",
+    "entryFile": "/projects/_Templates/_svg-example/index.ts",
     "hidden": true
   }
 ]

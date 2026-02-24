@@ -92,6 +92,7 @@ export interface GenerativeUtils {
     dist3D: (x1: number, y1: number, z1: number, x2: number, y2: number, z2: number) => number
     rad: (deg: number) => number
     deg: (rad: number) => number
+    divLength: (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean) => Vec[]
   }
   vec: {
     create: (x: number, y: number, z?: number) => Vec
@@ -103,6 +104,7 @@ export interface GenerativeUtils {
   }
   array: {
     shuffle: <T>(array: T[]) => T[]
+      // Legacy alias: prefer utils.math.divLength
     divLength: (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean) => Vec[]
   }
 }
@@ -204,6 +206,25 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
   noise3D = createNoise3D(() => currentHash!.random())
   noise4D = createNoise4D(() => currentHash!.random())
 
+  const divLength = (a: Vec, b: Vec, nSeg: number, incStartEnd: boolean = false): Vec[] => {
+    const oA: Vec[] = []
+    const t = 1 / nSeg
+
+    if (incStartEnd) {
+      oA.push(a)
+    }
+
+    for (let i = 0; i < nSeg - 1; i++) {
+      oA.push(a.lerp(b, (i + 1) * t))
+    }
+
+    if (incStartEnd) {
+      oA.push(b)
+    }
+
+    return oA
+  }
+
   return {
     seed: {
       get current() {
@@ -258,6 +279,7 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
       deg: (rad: number) => {
         return rad / (Math.PI / 180)
       },
+      divLength,
     },
     vec: {
       create: (x: number, y: number, z: number = 0) => new Vec(x, y, z),
@@ -297,24 +319,8 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
         }
         return oA
       },
-      divLength: (a: Vec, b: Vec, nSeg: number, incStartEnd: boolean = false): Vec[] => {
-        const oA: Vec[] = []
-        const t = 1 / nSeg
-
-        if (incStartEnd) {
-          oA.push(a)
-        }
-
-        for (let i = 0; i < nSeg - 1; i++) {
-          oA.push(a.lerp(b, (i + 1) * t))
-        }
-
-        if (incStartEnd) {
-          oA.push(b)
-        }
-
-        return oA
-      },
+      // Legacy alias for backwards compatibility
+      divLength,
     },
   }
 }

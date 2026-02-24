@@ -6,7 +6,7 @@ Minimal template for creating new p5.js projects in the gallery.
 
 1. **Copy this folder** and rename it:
    ```bash
-   cp -r projects/_template projects/my-sketch
+   cp -r projects/_Templates/_template projects/my-sketch
    ```
 
 2. **Edit `index.ts`** - Add your controls and implement your sketch
@@ -93,6 +93,7 @@ utils.math.lerp(start, stop, t)              // Linear interpolation
 utils.math.clamp(n, min, max)                // Constrain value
 utils.math.norm(val, min, max)               // Normalize to 0-1
 utils.math.dist(x1, y1, x2, y2)              // Distance
+utils.math.divLength(vecA, vecB, 10)         // Divide line into segments (Vec[])
 utils.math.rad(degrees)                      // Degrees to radians
 utils.math.deg(radians)                      // Radians to degrees
 ```
@@ -116,7 +117,6 @@ v.lerp(other, t)  // Interpolate
 ### Array Utilities
 ```typescript
 utils.array.shuffle([1, 2, 3])              // Seeded shuffle
-utils.array.divLength(vecA, vecB, 10)       // Divide line into segments
 ```
 
 ## Shorthand Functions
@@ -204,10 +204,10 @@ export async function init(
 
 ## More Templates
 
-- **SVG Static**: `projects/_svg-template/`
-- **SVG Animated**: `projects/_svg-animated-template/`
+- **SVG Static**: `projects/_Templates/_svg-template/`
+- **SVG Animated**: `projects/_Templates/_svg-animated-template/`
 
 ## See Also
 
 - Main README: `/README.md`
-- SVG Implementation: `/SVG_IMPLEMENTATION.md`
+- SVG Implementation: `/docs/SVG_IMPLEMENTATION.md`

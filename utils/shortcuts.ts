@@ -47,7 +47,7 @@ export function shortcuts(utils: GenerativeUtils) {
 
     // Array shortcuts
     shuffle: utils.array.shuffle, // shuffle(array) => array
-    divLength: utils.array.divLength, // divLength(start, end, divisions) => number[]
+    divLength: utils.math.divLength, // divLength(start, end, divisions) => Vec[]
 
     // Direct access to Vec class for type annotations
     Vec: utils.vec.create, // Vec(x, y, z?) => Vec

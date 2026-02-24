@@ -25,7 +25,7 @@ const emit = defineEmits<{
 
 // Use Vite's glob import to load all project modules
 // This creates a map of paths to module loaders
-const projectModules = import.meta.glob('~/projects/*/index.ts') as Record<string, () => Promise<ProjectModule>>
+const projectModules = import.meta.glob('~/projects/**/index.ts') as Record<string, () => Promise<ProjectModule>>
 
 const loadProject = async () => {
   if (!containerRef.value) return
