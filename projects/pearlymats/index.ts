@@ -1,5 +1,5 @@
 import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
-import { SVG, Grid, Cell } from '~/types/project'
+import { SVG, Grid, Cell, Color } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 
 /**
@@ -102,7 +102,7 @@ export async function init(
   // Fixed settings
   const colors = theme.palette
   const backgroundColor = theme.background
-  const annotationColor = utils.color.parse(theme.annotation)?.toCss('rgba') ?? theme.annotation
+  const annotationColor = (Color.parse(theme.annotation) ?? Color.fromHex('#666')!).toCss('rgba')
 
   // Calculate square size (based on smaller dimension)
   const size = Math.min(container.clientWidth, container.clientHeight)

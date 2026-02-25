@@ -92,19 +92,21 @@ export const theme = {
 All projects have access to `utils` via the context:
 
 ### Color Utilities (Dual Access)
+Use one style per sketch for readability. Examples below use class-style APIs.
 ```typescript
-// Pattern 1: context utils
-const base = utils.color.parse(theme.palette[0]!)
+import { Color } from '~/types/project'
+
+const base = Color.parse(theme.palette[0]!)
 const overlay = base?.withAlpha(0.35).toRgbaString() ?? 'rgba(255, 255, 255, 0.35)'
 
-// Pattern 2: direct class import
-import { Color } from '~/types/project'
 const accent = Color.fromHex('#f0f')?.toCss('rgba') ?? '#f0f'
 const fromHsl = Color.fromHsl(210, 100, 50).toHex()
 
 // Parsing HSL/HSLA strings also works
-const parsed = utils.color.parse('hsla(200, 80%, 50%, 0.4)')
+const parsed = Color.parse('hsla(200, 80%, 50%, 0.4)')
 ```
+
+Equivalent context access is available as `utils.color.*` when preferred.
 
 Useful outputs:
 ```typescript
