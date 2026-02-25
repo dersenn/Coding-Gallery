@@ -9,7 +9,8 @@ import { syncControlState } from '~/composables/useControls'
  * A grid of circles with colors determined by multi-octave simplex noise.
  * 
  * Controls:
- * - Frequency: Base noise frequency (detail level)
+ * - Noise Scale: Overall noise zoom (higher = larger features)
+ * - Stretch X/Y: Axis stretch for directional/striped patterns
  * - Amplitude: Overall noise intensity
  * - Octaves: Number of noise layers (1-4)
  * - Lacunarity: Frequency multiplier per octave (2.0 = each octave doubles frequency)
@@ -59,11 +60,29 @@ export const controls: ProjectControlDefinition[] = [
     controls: [
       {
         type: 'slider',
-        label: 'Frequency',
-        key: 'frequency',
-        default: 0.09,
-        min: 0,
-        max: 0.3,
+        label: 'Noise Scale',
+        key: 'noiseScale',
+        default: 11,
+        min: 2,
+        max: 80,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Stretch X',
+        key: 'stretchX',
+        default: 1,
+        min: 0.2,
+        max: 3,
+        step: 0.01
+      },
+      {
+        type: 'slider',
+        label: 'Stretch Y',
+        key: 'stretchY',
+        default: 1,
+        min: 0.2,
+        max: 3,
         step: 0.01
       },
       {
@@ -115,9 +134,9 @@ export const controls: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Color Steps',
         key: 'colorSteps',
-        default: 6,
+        default: 3,
         min: 1,
-        max: 12,
+        max: 6,
         step: 1
       }
     ]
@@ -133,7 +152,9 @@ export async function init(
 
   const controlState = {
     gridSize: controls.gridSize as number,
-    frequency: controls.frequency as number,
+    noiseScale: controls.noiseScale as number,
+    stretchX: controls.stretchX as number,
+    stretchY: controls.stretchY as number,
     amplitude: controls.amplitude as number,
     octaves: controls.octaves as number,
     lacunarity: controls.lacunarity as number,
@@ -183,7 +204,9 @@ export async function init(
 
     constructor(
       baseCell: Cell,
-      freq: number,
+      scale: number,
+      stretchX: number,
+      stretchY: number,
       amp: number,
       oct: number,
       lac: number,
@@ -204,14 +227,17 @@ export async function init(
 
       // Multi-octave noise (fractional Brownian motion)
       let total = 0
-      let currentFreq = freq
+      const baseScale = Math.max(0.001, scale)
+      let currentFreqX = (1 / baseScale) * Math.max(0.001, stretchX)
+      let currentFreqY = (1 / baseScale) * Math.max(0.001, stretchY)
       let currentAmp = 1.0
       let maxValue = 0
       
       for (let i = 0; i < oct; i++) {
-        total += simplex2(this.col * currentFreq, this.row * currentFreq) * currentAmp
+        total += simplex2(this.col * currentFreqX, this.row * currentFreqY) * currentAmp
         maxValue += currentAmp
-        currentFreq *= lac
+        currentFreqX *= lac
+        currentFreqY *= lac
         currentAmp *= pers
       }
       
@@ -219,11 +245,12 @@ export async function init(
       this.noiseValue = Math.max(-1, Math.min(1, this.noiseValue))
       
       const normalized = (this.noiseValue + 1) / 2
-      const steps = Math.max(1, Math.floor(colorSteps))
+      const steps = Math.min(colors.length, Math.max(1, Math.floor(colorSteps)))
+      const activeColors = colors.slice(0, steps)
       const quantized = steps === 1 ? 0 : Math.floor(normalized * steps) / (steps - 1)
-      const index = Math.min(Math.floor(quantized * colors.length), colors.length - 1)
+      const index = Math.min(Math.floor(quantized * activeColors.length), activeColors.length - 1)
       
-      this.color = colors[index]!
+      this.color = activeColors[index]!
     }
 
     draw() {
@@ -262,7 +289,9 @@ export async function init(
     const cells: PearlyCell[] = grid.map(cell => 
       new PearlyCell(
         cell,
-        controlState.frequency,
+        controlState.noiseScale,
+        controlState.stretchX,
+        controlState.stretchY,
         controlState.amplitude,
         controlState.octaves,
         controlState.lacunarity,

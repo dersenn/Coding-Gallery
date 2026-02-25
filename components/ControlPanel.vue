@@ -39,7 +39,7 @@
           class="w-full flex items-center justify-between text-left"
           @click="toggleSection(section.id)"
         >
-          <span class="text-xs uppercase tracking-wide text-white/80">{{ section.label }}</span>
+          <span class="text-xs uppercase tracking-wide">{{ section.label }}</span>
           <span class="text-sm text-white/70">{{ isSectionOpen(section) ? '−' : '+' }}</span>
         </button>
         <div
