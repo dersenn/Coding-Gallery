@@ -47,3 +47,5 @@ export type CleanupFunction = () => void
 export type { Vec } from '~/utils/generative'
 export { SVG, Path, pPt } from '~/utils/svg'
 export { shortcuts } from '~/utils/shortcuts'
+export { Grid } from '~/utils/grid'
+export { Cell } from '~/utils/cell'

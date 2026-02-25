@@ -1,4 +1,6 @@
 import { createNoise2D, createNoise3D, createNoise4D } from 'simplex-noise'
+import { Grid, type GridConfig } from './grid'
+import { Cell, type CellConfig } from './cell'
 
 // Vector class for 2D/3D operations
 export class Vec {
@@ -106,6 +108,12 @@ export interface GenerativeUtils {
     shuffle: <T>(array: T[]) => T[]
       // Legacy alias: prefer utils.math.divLength
     divLength: (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean) => Vec[]
+  }
+  grid: {
+    create: (config: Omit<GridConfig, 'utils'>) => Grid
+  }
+  cell: {
+    create: (config: CellConfig) => Cell
   }
 }
 
@@ -225,7 +233,8 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
     return oA
   }
 
-  return {
+  // Create utils object for Grid/Cell constructors
+  const utils: GenerativeUtils = {
     seed: {
       get current() {
         return currentHash!.hash
@@ -322,5 +331,18 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
       // Legacy alias for backwards compatibility
       divLength,
     },
+    grid: {
+      create: (config: Omit<GridConfig, 'utils'>) => {
+        return new Grid({ ...config, utils })
+      }
+    },
+    cell: {
+      create: (config: CellConfig) => {
+        return new Cell(config)
+      }
+    }
   }
+
+  return utils
 }
+

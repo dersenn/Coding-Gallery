@@ -49,6 +49,10 @@ export function shortcuts(utils: GenerativeUtils) {
     shuffle: utils.array.shuffle, // shuffle(array) => array
     divLength: utils.math.divLength, // divLength(start, end, divisions) => Vec[]
 
+    // Grid and Cell shortcuts
+    Grid: utils.grid.create, // Grid(config) => Grid
+    Cell: utils.cell.create, // Cell(config) => Cell
+
     // Direct access to Vec class for type annotations
     Vec: utils.vec.create, // Vec(x, y, z?) => Vec
   }

@@ -1,5 +1,5 @@
 import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
-import { SVG } from '~/utils/svg'
+import { SVG, Grid, Cell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 
 /**
@@ -120,57 +120,70 @@ export async function init(
     height: size
   })
 
-  // Cell class - takes noise parameters to use current values
-  class Cell {
+  // Create grid
+  const grid = new Grid({
+    cols: gridSize,
+    rows: gridSize,
+    width: size,
+    height: size,
+    x: 0,
+    y: 0,
+    margin: margin,
+    utils
+  })
+
+  // Cell class - extends base Cell with noise-based color
+  class PearlyCell extends Cell {
     noiseValue: number
     color: string
 
     constructor(
-      public row: number,
-      public col: number,
-      public x: number,
-      public y: number,
-      public cellSize: number,
+      baseCell: Cell,
       freq: number,
       amp: number,
       oct: number,
       lac: number,
       pers: number
     ) {
+      super({
+        x: baseCell.x,
+        y: baseCell.y,
+        width: baseCell.width,
+        height: baseCell.height,
+        row: baseCell.row,
+        col: baseCell.col,
+        index: baseCell.index,
+        level: baseCell.level,
+        grid: baseCell.grid
+      })
+
       // Multi-octave noise (fractional Brownian motion)
       let total = 0
       let currentFreq = freq
-      let currentAmp = 1.0 // Start with amplitude 1.0 for first octave
+      let currentAmp = 1.0
       let maxValue = 0
       
       for (let i = 0; i < oct; i++) {
-        total += simplex2(col * currentFreq, row * currentFreq) * currentAmp
+        total += simplex2(this.col * currentFreq, this.row * currentFreq) * currentAmp
         maxValue += currentAmp
-        currentFreq *= lac // Increase frequency by lacunarity
-        currentAmp *= pers // Decrease amplitude by persistence
+        currentFreq *= lac
+        currentAmp *= pers
       }
       
-      // Normalize by the sum of amplitudes, then apply global amplitude
       this.noiseValue = (total / maxValue) * amp
-      
-      // Clamp to -1, 1 range (amplitude > 1 can push beyond)
       this.noiseValue = Math.max(-1, Math.min(1, this.noiseValue))
       
-      // Map noise value to color index based on colors array length
-      // Normalize from -1,1 to 0,1, then multiply by array length and floor
-      const normalized = (this.noiseValue + 1) / 2 // 0 to 1
+      const normalized = (this.noiseValue + 1) / 2
       const index = Math.min(Math.floor(normalized * colors.length), colors.length - 1)
       
       this.color = colors[index]!
     }
 
-    // Draw the cell as a circle
     draw() {
-      const centerX = this.x + this.cellSize / 2
-      const centerY = this.y + this.cellSize / 2
-      const radius = this.cellSize / 2
+      const center = this.center()
+      const radius = this.width / 2
       
-      svg.makeCircle(v(centerX, centerY), radius, this.color, 'none', 0)
+      svg.makeCircle(center, radius, this.color, 'none', 0)
     }
   }
 
@@ -182,32 +195,42 @@ export async function init(
     // Add background
     svg.makeRect(v(0, 0), size, size, backgroundColor, 'none')
 
-    const gridArea = size - (margin * 2)
-    const cellSize = gridArea / gridSize
-    const cells: Cell[] = []
-
-    // Create grid of cells - pass current noise parameters
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        const x = margin + col * cellSize
-        const y = margin + row * cellSize
-        const cell = new Cell(row, col, x, y, cellSize, frequency, amplitude, octaves, lacunarity, persistence)
-        cells.push(cell)
-      }
+    // Recreate grid if gridSize changed
+    if (grid.cols !== gridSize || grid.rows !== gridSize) {
+      const newGrid = new Grid({
+        cols: gridSize,
+        rows: gridSize,
+        width: size,
+        height: size,
+        x: 0,
+        y: 0,
+        margin: margin,
+        utils
+      })
+      // Replace the grid reference
+      Object.assign(grid, newGrid)
     }
+
+    // Create PearlyCells from grid cells
+    const cells: PearlyCell[] = grid.map(cell => 
+      new PearlyCell(cell, frequency, amplitude, octaves, lacunarity, persistence)
+    )
 
     // Draw all cells
     cells.forEach(cell => cell.draw())
 
     // Draw grid overlay if enabled
     if (showGrid) {
-      // Draw vertical grid lines through cell centers
+      const gridArea = size - (margin * 2)
+      const cellSize = gridArea / gridSize
+
+      // Draw vertical grid lines
       for (let col = 0; col <= gridSize; col++) {
         const x = margin + col * cellSize
         svg.makeLine(v(x, margin), v(x, margin + gridArea), '#666', 0.5)
       }
 
-      // Draw horizontal grid lines through cell centers
+      // Draw horizontal grid lines
       for (let row = 0; row <= gridSize; row++) {
         const y = margin + row * cellSize
         svg.makeLine(v(margin, y), v(margin + gridArea, y), '#666', 0.5)
@@ -215,6 +238,7 @@ export async function init(
 
       // Draw column numbers (top)
       for (let col = 0; col < gridSize; col++) {
+        const cellSize = gridArea / gridSize
         const x = margin + col * cellSize + cellSize / 2
         const text = svg.stage.ownerDocument!.createElementNS('http://www.w3.org/2000/svg', 'text')
         text.setAttribute('x', x.toString())
@@ -228,6 +252,7 @@ export async function init(
 
       // Draw row numbers (left)
       for (let row = 0; row < gridSize; row++) {
+        const cellSize = gridArea / gridSize
         const y = margin + row * cellSize + cellSize / 2
         const text = svg.stage.ownerDocument!.createElementNS('http://www.w3.org/2000/svg', 'text')
         text.setAttribute('x', (margin - 10).toString())
