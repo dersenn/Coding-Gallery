@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ControlDefinition, ProjectActionDefinition } from '~/types/project'
 import { SVG, Grid, Cell, Color } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -16,7 +16,6 @@ import { shortcuts } from '~/utils/shortcuts'
  * 
  * Keyboard shortcuts:
  * - 'd': Download SVG
- * - 'r': Reset to defaults
  */
 
 // Export controls
@@ -83,11 +82,18 @@ export const controls: ControlDefinition[] = [
   }
 ]
 
+export const actions: ProjectActionDefinition[] = [
+  {
+    key: 'download-svg',
+    label: 'Download SVG'
+  }
+]
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, theme, onControlChange } = context
+  const { controls, utils, theme, onControlChange, registerAction } = context
   const { v, map, simplex2 } = shortcuts(utils)
 
   // Get control values
@@ -282,17 +288,11 @@ export async function init(
     draw()
   })
 
-  // Reset to defaults
-  const resetControls = () => {
-    gridSize = 29
-    frequency = 0.15
-    amplitude = 1.0
-    octaves = 2
-    lacunarity = 2.0
-    persistence = 0.5
-    showGrid = false
-    draw()
+  const downloadSvg = () => {
+    svg.save(utils.seed.current, 'pearlymats')
   }
+
+  registerAction('download-svg', downloadSvg)
 
   // Keyboard shortcuts
   const handleKeyPress = (event: KeyboardEvent) => {
@@ -305,12 +305,7 @@ export async function init(
     
     if (event.key.toLowerCase() === 'd') {
       event.preventDefault()
-      svg.save(utils.seed.current, 'pearlymats')
-    }
-    
-    if (event.key.toLowerCase() === 'r') {
-      event.preventDefault()
-      resetControls()
+      downloadSvg()
     }
   }
   

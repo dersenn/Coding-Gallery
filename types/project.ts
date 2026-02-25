@@ -16,6 +16,11 @@ export interface ControlValues {
   [key: string]: number | boolean | string
 }
 
+export interface ProjectActionDefinition {
+  key: string
+  label: string
+}
+
 export interface Project {
   id: string
   title: string
@@ -34,6 +39,7 @@ export interface Project {
 export interface ProjectModule {
   init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
   controls?: ControlDefinition[] // Optional: controls can be defined in the module
+  actions?: ProjectActionDefinition[] // Optional: contextual actions exposed by the module
   theme?: ThemeOverride // Optional: project-level theme overrides
 }
 
@@ -42,6 +48,7 @@ export interface ProjectContext {
   utils: GenerativeUtils
   theme: ThemeTokens
   onControlChange: (callback: (controls: ControlValues) => void) => void
+  registerAction: (key: string, handler: () => void) => void
 }
 
 export type CleanupFunction = () => void

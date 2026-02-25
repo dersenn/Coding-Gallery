@@ -1,5 +1,31 @@
 <template>
   <div class="h-full flex flex-col p-4 font-medium text-sm text-white">
+    <div class="mb-4 flex flex-wrap gap-2">
+      <button
+        type="button"
+        class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+        @click="emit('action', 'new-seed')"
+      >
+        New Seed
+      </button>
+      <button
+        type="button"
+        class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+        @click="emit('action', 'reset-controls')"
+      >
+        Reset
+      </button>
+      <button
+        v-for="action in contextActions"
+        :key="action.key"
+        type="button"
+        class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+        @click="emit('action', action.key)"
+      >
+        {{ action.label }}
+      </button>
+    </div>
+
     <div class="flex-1 min-h-0 overflow-y-auto space-y-4">
       <div v-for="control in controls" :key="control.key">
         <label
@@ -67,11 +93,17 @@
 </template>
 
 <script setup lang="ts">
-import type { ControlDefinition } from '~/types/project'
+import type { ControlDefinition, ProjectActionDefinition } from '~/types/project'
 
 const props = defineProps<{
   controls: ControlDefinition[]
+  contextActions?: ProjectActionDefinition[]
 }>()
 
 const { controlValues, updateControl } = useControls()
+const contextActions = computed(() => props.contextActions ?? [])
+
+const emit = defineEmits<{
+  action: [key: string]
+}>()
 </script>

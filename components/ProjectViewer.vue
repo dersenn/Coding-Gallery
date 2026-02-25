@@ -3,11 +3,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Project, ProjectModule, CleanupFunction } from '~/types/project'
+import type { Project, ProjectModule, CleanupFunction, ProjectActionDefinition } from '~/types/project'
 import { resolveTheme } from '~/utils/theme'
 
 const props = defineProps<{
   project: Project
+  actionRequest?: {
+    key: string
+    nonce: number
+  } | null
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
@@ -16,17 +20,57 @@ const { utils } = useGenerativeUtils()
 
 let cleanup: CleanupFunction | null = null
 let controlCallbacks: Array<(values: any) => void> = []
+let actionHandlers: Record<string, () => void> = {}
 let isLoading = ref(true)
 let error = ref<string | null>(null)
 
 // Emit controls when module is loaded
 const emit = defineEmits<{
   controlsLoaded: [controls: any]
+  actionsLoaded: [actions: ProjectActionDefinition[]]
 }>()
 
 // Use Vite's glob import to load all project modules
 // This creates a map of paths to module loaders
 const projectModules = import.meta.glob('~/projects/**/index.ts') as Record<string, () => Promise<ProjectModule>>
+const DOWNLOAD_SVG_ACTION_KEY = 'download-svg'
+const DOWNLOAD_SVG_ACTION: ProjectActionDefinition = {
+  key: DOWNLOAD_SVG_ACTION_KEY,
+  label: 'Download SVG'
+}
+
+const hasSvgLibrary = computed(() => {
+  return (props.project.libraries || []).some((library) => library.trim().toLowerCase() === 'svg')
+})
+
+const createSvgDownloadFallback = () => {
+  return () => {
+    const svgElement = containerRef.value?.querySelector('svg')
+    if (!svgElement) {
+      console.warn('Download SVG requested, but no SVG element was found in the project container.')
+      return
+    }
+
+    const serialized = new XMLSerializer().serializeToString(svgElement)
+    const withNamespace = serialized.includes('xmlns=')
+      ? serialized
+      : serialized.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
+    const source = withNamespace.startsWith('<?xml')
+      ? withNamespace
+      : `<?xml version="1.0" encoding="UTF-8"?>\n${withNamespace}`
+    const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    const projectId = props.project.id || 'project'
+
+    link.href = url
+    link.download = `${projectId}-${utils.seed.current}.svg`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+}
 
 const loadProject = async () => {
   if (!containerRef.value) return
@@ -40,10 +84,12 @@ const loadProject = async () => {
       cleanup()
       cleanup = null
       controlCallbacks = []
+      actionHandlers = {}
     }
 
     // Clear container
     containerRef.value.innerHTML = ''
+    actionHandlers = {}
 
     // Look up the module loader from the glob import map
     const moduleLoader = projectModules[props.project.entryFile]
@@ -65,6 +111,13 @@ const loadProject = async () => {
       initializeControls(controls)
       emit('controlsLoaded', controls)
     }
+    const moduleActions = module.actions || []
+    const hasModuleDownloadAction = moduleActions.some((action) => action.key === DOWNLOAD_SVG_ACTION_KEY)
+    const shouldInjectDownloadAction = hasSvgLibrary.value && !hasModuleDownloadAction
+    const effectiveActions = shouldInjectDownloadAction
+      ? [...moduleActions, DOWNLOAD_SVG_ACTION]
+      : moduleActions
+    emit('actionsLoaded', effectiveActions)
 
     // Setup context for the project
     const theme = resolveTheme(module.theme)
@@ -74,8 +127,15 @@ const loadProject = async () => {
       theme,
       onControlChange: (callback) => {
         controlCallbacks.push(callback)
+      },
+      registerAction: (key, handler) => {
+        actionHandlers[key] = handler
       }
     })
+
+    if (shouldInjectDownloadAction && !actionHandlers[DOWNLOAD_SVG_ACTION_KEY]) {
+      actionHandlers[DOWNLOAD_SVG_ACTION_KEY] = createSvgDownloadFallback()
+    }
 
     // Log seed to console for debugging
     console.log(`Seed: ?seed=${utils.seed.current}`)
@@ -100,6 +160,15 @@ watch(controlValues, (newValues) => {
 watch(() => props.project, () => {
   loadProject()
 }, { immediate: false })
+
+watch(() => props.actionRequest, (request) => {
+  if (!request) return
+
+  const handler = actionHandlers[request.key]
+  if (handler) {
+    handler()
+  }
+}, { deep: true })
 
 onMounted(() => {
   loadProject()
