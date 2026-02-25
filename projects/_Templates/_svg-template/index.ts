@@ -1,6 +1,10 @@
-import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
-import { SVG, Path } from '~/utils/svg'
-import { shortcuts } from '~/utils/shortcuts'
+import type {
+  ProjectContext,
+  CleanupFunction,
+  ControlDefinition,
+  ProjectActionDefinition
+} from '~/types/project'
+import { SVG, Path, shortcuts } from '~/types/project'
 
 /**
  * SVG Project Template
@@ -45,11 +49,18 @@ export const controls: ControlDefinition[] = [
   // }
 ]
 
+export const actions: ProjectActionDefinition[] = [
+  {
+    key: 'download-svg',
+    label: 'Download SVG'
+  }
+]
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange } = context
+  const { controls, utils, onControlChange, registerAction } = context
   const { v, rnd, map, rad } = shortcuts(utils)
 
   // Create SVG canvas
@@ -108,26 +119,12 @@ export async function init(
     // You might need to clear and redraw, or update elements directly
   })
 
-  // Keyboard shortcut for downloading SVG
-  const handleKeyPress = (event: KeyboardEvent) => {
-    if (
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement
-    ) {
-      return
-    }
-    
-    if (event.key.toLowerCase() === 'd') {
-      event.preventDefault()
-      svg.save(utils.seed.current, 'svg-sketch')
-    }
-  }
-  
-  window.addEventListener('keydown', handleKeyPress)
+  registerAction('download-svg', () => {
+    svg.save(utils.seed.current, 'svg-sketch')
+  })
 
   // Cleanup function - called when project is unmounted
   return () => {
-    window.removeEventListener('keydown', handleKeyPress)
     svg.stage.remove()
   }
 }

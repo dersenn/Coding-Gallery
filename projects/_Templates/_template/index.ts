@@ -12,6 +12,7 @@ import p5 from 'p5'
  * - utils: Global utilities (noise, seed, math)
  * - theme: Global color tokens (with optional project overrides)
  * - onControlChange: Register callback for control updates
+ * - registerAction: Register contextual action handlers
  */
 
 // Export controls - define them here in your sketch
@@ -48,6 +49,11 @@ export const controls: ControlDefinition[] = [
 //   palette: ['#22d3ee', '#a78bfa', '#f472b6']
 // }
 
+// Optional: expose contextual actions shown in the control panel
+// export const actions = [
+//   { key: 'do-something', label: 'Do Something' }
+// ] satisfies import('~/types/project').ProjectActionDefinition[]
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -83,6 +89,11 @@ export async function init(
       // Update your sketch based on new control values
       // Example: const speed = newControls.speed as number
     })
+
+    // Optional: wire handlers for actions exported above
+    // context.registerAction('do-something', () => {
+    //   console.log('Action triggered')
+    // })
   }, container)
 
   // Cleanup function - called when project is unmounted

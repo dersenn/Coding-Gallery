@@ -31,9 +31,9 @@ const emit = defineEmits<{
   actionsLoaded: [actions: ProjectActionDefinition[]]
 }>()
 
-// Use Vite's glob import to load all project modules
+// Use Vite's glob import to load project modules from TS or JS sketches
 // This creates a map of paths to module loaders
-const projectModules = import.meta.glob('~/projects/**/index.ts') as Record<string, () => Promise<ProjectModule>>
+const projectModules = import.meta.glob('~/projects/**/index.{ts,js}') as Record<string, () => Promise<ProjectModule>>
 const DOWNLOAD_SVG_ACTION_KEY = 'download-svg'
 const DOWNLOAD_SVG_ACTION: ProjectActionDefinition = {
   key: DOWNLOAD_SVG_ACTION_KEY,

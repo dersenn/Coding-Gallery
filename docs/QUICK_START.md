@@ -20,7 +20,7 @@ Use this for a fast first run. For full reference, see `../README.md`.
    ```bash
    cp -r projects/_Templates/_template projects/my-first-sketch
    ```
-2. Implement your sketch in `projects/my-first-sketch/index.ts`.
+2. Implement your sketch in `projects/my-first-sketch/index.ts` or `projects/my-first-sketch/index.js`.
 3. Add metadata in `data/projects.json`:
    ```json
    {
@@ -33,11 +33,14 @@ Use this for a fast first run. For full reference, see `../README.md`.
      "entryFile": "/projects/my-first-sketch/index.ts"
    }
    ```
+   `entryFile` supports either `/projects/.../index.ts` or `/projects/.../index.js`.
 4. Open: `/project/my-first-sketch`.
 
 ## Verify key runtime features
 
 - Press `n` on a project page to generate a new seed.
+- Press `r` on a project page to reset controls to defaults.
+- Press `d` on SVG projects to download output (via `download-svg` action or viewer fallback).
 - Check URL updates with `?seed=...`.
 - Open controls and confirm your sketch reacts to control changes.
 

@@ -1,6 +1,10 @@
-import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
-import { SVG } from '~/utils/svg'
-import { shortcuts } from '~/utils/shortcuts'
+import type {
+  ProjectContext,
+  CleanupFunction,
+  ControlDefinition,
+  ProjectActionDefinition
+} from '~/types/project'
+import { SVG, shortcuts } from '~/types/project'
 
 /**
  * Animated SVG Template
@@ -23,12 +27,19 @@ export const controls: ControlDefinition[] = [
   // }
 ]
 
+export const actions: ProjectActionDefinition[] = [
+  {
+    key: 'download-svg',
+    label: 'Download SVG'
+  }
+]
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange } = context
-  const { v, rnd, map, rad, noise2 } = shortcuts(utils)
+  const { controls, utils, onControlChange, registerAction } = context
+  const { v, rnd, map, rad, simplex2 } = shortcuts(utils)
 
   // Create SVG canvas
   // Option 1: Full container size (default)
@@ -94,7 +105,7 @@ export async function init(
       c.el.setAttribute('cy', y.toString())
       
       // Optional: use noise for organic movement
-      const noiseVal = noise2(x * 0.01, y * 0.01)
+      const noiseVal = simplex2(x * 0.01, y * 0.01)
       const r = map(noiseVal, -1, 1, 5, 15)
       c.el.setAttribute('r', r.toString())
     })
@@ -107,30 +118,16 @@ export async function init(
   animate()
 
   // React to control changes
-  onControlChange((newControls: any) => {
+  onControlChange((newControls) => {
     // Update your animation based on controls
   })
 
-  // Keyboard shortcut for downloading SVG
-  const handleKeyPress = (event: KeyboardEvent) => {
-    if (
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement
-    ) {
-      return
-    }
-    
-    if (event.key.toLowerCase() === 'd') {
-      event.preventDefault()
-      svg.save(utils.seed.current, 'svg-animated')
-    }
-  }
-  
-  window.addEventListener('keydown', handleKeyPress)
+  registerAction('download-svg', () => {
+    svg.save(utils.seed.current, 'svg-animated')
+  })
 
   // Cleanup function - IMPORTANT: cancel animation frame!
   return () => {
-    window.removeEventListener('keydown', handleKeyPress)
     isRunning = false
     if (animationId) {
       cancelAnimationFrame(animationId)

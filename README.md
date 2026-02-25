@@ -15,7 +15,7 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 - **Reactive controls** defined in sketch code with URL persistence
 - **SVG engine** with shapes, paths, and bezier curves
 - **p5.js instance mode** to prevent namespace conflicts
-- **TypeScript support** throughout
+- **TypeScript-first support** with optional JS sketch entries
 
 ## Additional Docs
 
@@ -58,7 +58,10 @@ This gallery uses a **JavaScript module architecture** where projects are portab
     ├── shortcuts.ts           # Shorthand functions for hand-coding
     ├── svg.ts                 # SVG engine (shapes, paths, bezier curves)
     ├── grid.ts                # Grid utility (uniform & recursive subdivision)
-    └── cell.ts                # Cell utility (base class with neighbor access)
+    ├── cell.ts                # Cell utility (base class with neighbor access)
+    ├── color.ts               # Color parsing + conversion helpers
+    ├── theme.ts               # Shared theme tokens + override resolver
+    └── download.ts            # SVG filename + metadata export helpers
 ```
 
 ## Creating a New Project
@@ -80,7 +83,7 @@ cp -r projects/_Templates/_svg-template projects/my-svg-project
 
 ### 2. Implement Your Sketch
 
-Edit `projects/my-new-project/index.ts`:
+Edit `projects/my-new-project/index.ts` (or `index.js` for rapid iteration):
 
 ```typescript
 import type { ProjectContext, CleanupFunction } from '~/types/project'
@@ -90,7 +93,7 @@ export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange } = context
+  const { controls, utils, theme, onControlChange, registerAction } = context
 
   const sketch = new p5((p) => {
     p.setup = () => {
@@ -110,13 +113,17 @@ export async function init(
     })
   }, container)
 
+  registerAction('download-svg', () => {
+    // Optional: call your project-specific export logic here
+  })
+
   return () => sketch.remove()
 }
 ```
 
 ### 3. Add Controls (in your sketch file)
 
-Define controls directly in your sketch `index.ts`:
+Define controls directly in your sketch `index.ts` or `index.js`:
 
 ```typescript
 export const controls: ControlDefinition[] = [
@@ -132,7 +139,26 @@ export const controls: ControlDefinition[] = [
 ]
 ```
 
-### 4. Add Metadata
+### 4. Add Optional Contextual Actions
+
+Project modules can expose action buttons in the control panel and keyboard shortcuts via the page shell:
+
+```typescript
+import type { ProjectActionDefinition } from '~/types/project'
+
+export const actions: ProjectActionDefinition[] = [
+  { key: 'download-svg', label: 'Download SVG' }
+]
+
+// Inside init():
+context.registerAction('download-svg', () => {
+  // Trigger project action
+})
+```
+
+For SVG projects, if you do not register `download-svg`, the viewer injects a fallback handler automatically.
+
+### 5. Add Metadata
 
 Add your project to `data/projects.json`:
 
@@ -148,11 +174,13 @@ Add your project to `data/projects.json`:
 }
 ```
 
+`entryFile` can target either `/projects/.../index.ts` or `/projects/.../index.js`.
+
 **Optional fields:**
 - `"hidden": true` - Hide from gallery (still accessible via direct URL)
 - `"github": "https://github.com/..."` - Shows "View on GitHub" link in info panel
 
-### 5. Run and Test
+### 6. Run and Test
 
 ```bash
 npm run dev
@@ -207,7 +235,8 @@ console.log('Seed:', utils.seed.current)
 
 **Keyboard Shortcuts:**
 - Press **'n'** to generate a new random seed and reload the sketch
-- Press **'d'** to download SVG (for SVG projects)
+- Press **'r'** to reset controls to defaults
+- Press **'d'** to download SVG (SVG projects only; requires a `download-svg` action)
 - Seeds are automatically saved in the URL for sharing
 
 ### Math Helpers
@@ -292,7 +321,7 @@ const mapped = map(noise, 0, 1, -100, 100)
 const angle = rad(45)
 ```
 
-Available shortcuts: `v`, `rnd`, `rndInt`, `rndRange`, `coin`, `map`, `lerp`, `clamp`, `norm`, `dist`, `rad`, `deg`, `vDist`, `vLerp`, `vMid`, `noise2`, `noise3`, `shuffle`, `Grid`, `Cell`
+Available shortcuts: `v`, `rnd`, `rndInt`, `rndRange`, `coin`, `map`, `lerp`, `clamp`, `norm`, `dist`, `rad`, `deg`, `vDist`, `vLerp`, `vMid`, `vDot`, `vAng`, `noise2`, `noise3`, `simplex2`, `simplex3`, `shuffle`, `divLength`, `Grid`, `Cell`, `clr`, `Vec`
 
 ### Grid and Cell Utilities
 
@@ -474,8 +503,7 @@ onControlChange((newControls) => {
 For SVG-based generative art, use the SVG templates:
 
 ```typescript
-import { SVG, Path } from '~/utils/svg'
-import { shortcuts } from '~/utils/shortcuts'
+import { SVG, Path, shortcuts } from '~/types/project'
 
 export async function init(container, context) {
   const { v, rnd, map } = shortcuts(context.utils)
@@ -511,14 +539,16 @@ export async function init(container, context) {
 Use `requestAnimationFrame` for animated SVG sketches (see `projects/_Templates/_svg-animated-template/`)
 
 **Download/Save:**
-SVG projects include keyboard shortcut for downloading. Press **'d'** to save:
-- Filename format: `{sketchName}_{seed}_{timestamp}.svg`
-- Includes seed hash for reproducibility
+SVG projects can expose a `download-svg` action. Press **'d'** (or click the action button) to save:
+- Filename format: `{projectId}_{timestamp}_{seed}.svg`
+- Includes export metadata (`projectId`, `seed`, `controls`, timestamps, source URL)
 - Timestamp in format: `YYYY-MM-DD_HH-MM-SS`
 
-The download handler is already implemented in the templates. The `svg.save()` method:
+If you do not register `download-svg`, the viewer can inject a fallback handler for SVG projects. You can also register your own action in `init()`:
 ```typescript
-svg.save(utils.seed.current, 'my-sketch-name')
+context.registerAction('download-svg', () => {
+  // custom download/export behavior
+})
 ```
 
 ## Exporting Standalone Projects
@@ -565,7 +595,7 @@ npm run preview
 - **Nuxt UI** - Component library
 - **p5.js** - Creative coding library
 - **simplex-noise** - Noise generation
-- **TypeScript** - Type safety
+- **TypeScript** - Type safety at the framework/wrapper level with optional sketch-level opt-out (`// @ts-nocheck`)
 
 ## License
 

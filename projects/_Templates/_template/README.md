@@ -9,7 +9,7 @@ Minimal template for creating new p5.js projects in the gallery.
    cp -r projects/_Templates/_template projects/my-sketch
    ```
 
-2. **Edit `index.ts`** - Add your controls and implement your sketch
+2. **Edit `index.ts`** (or rename to `index.js`) - Add your controls and implement your sketch
 
 3. **Add metadata** to `data/projects.json`:
    ```json
@@ -23,6 +23,7 @@ Minimal template for creating new p5.js projects in the gallery.
      "entryFile": "/projects/my-sketch/index.ts"
    }
    ```
+   `entryFile` can point to either `index.ts` or `index.js`.
 
 4. **Run and test**:
    ```bash
@@ -30,9 +31,16 @@ Minimal template for creating new p5.js projects in the gallery.
    ```
    Navigate to `http://localhost:3000/project/my-sketch`
 
+## New Project Checklist
+
+- Keep `controls` export in your project module for UI bindings.
+- Use `context.theme` tokens first, then add an optional `theme` export override if needed.
+- If you expose custom buttons, export `actions` and wire handlers with `context.registerAction(...)`.
+- Prefer convenience re-exports from `~/types/project` (`SVG`, `Path`, `shortcuts`, `Grid`, `Cell`, `Color`) in new templates/projects.
+
 ## Controls
 
-Define controls directly in your `index.ts`:
+Define controls directly in your `index.ts` or `index.js`:
 
 ```typescript
 export const controls: ControlDefinition[] = [
@@ -78,7 +86,7 @@ theme.annotation  // helper lines/labels/debug overlays
 theme.palette     // default color sequence
 ```
 
-Optional project-level override in `index.ts` (override only what you need):
+Optional project-level override in `index.ts` or `index.js` (override only what you need):
 
 ```typescript
 export const theme = {
@@ -192,13 +200,15 @@ onControlChange((newControls) => {
 ## Keyboard Shortcuts
 
 - **'n'** - Generate new seed (keeps your control settings)
+- **'r'** - Reset controls to defaults
+- **'d'** - Download SVG when a `download-svg` action is available
 - Control values persist in URL for sharing
 
 ## Project Structure
 
 ```
 my-sketch/
-├── index.ts          # Your sketch code + controls
+├── index.ts|index.js # Your sketch code + controls
 └── README.md         # Optional documentation
 ```
 
@@ -207,7 +217,7 @@ my-sketch/
 1. **Seeded Random** - All random functions use the URL seed for reproducibility
 2. **Instance Mode** - p5.js runs in instance mode to prevent conflicts
 3. **Cleanup** - Always return a cleanup function to remove the sketch on unmount
-4. **TypeScript** - Use types for better autocomplete, but you can write plain JS too
+4. **TypeScript (optional per sketch)** - Keep TS for autocomplete/safety, or use `index.js` / `// @ts-nocheck` for faster iteration
 5. **URL Sharing** - Share URLs with specific seeds and control values
 
 ## Example Sketch
