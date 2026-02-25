@@ -172,7 +172,7 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange } = context
-  const { v, map, simplex2 } = shortcuts(utils)
+  const { v, map, dist, simplex2 } = shortcuts(utils)
 
   const controlState = {
     gridSize: controls.gridSize as number,
@@ -346,24 +346,33 @@ export async function init(
       cellMap.set(`${cell.row},${cell.col}`, cell)
     })
 
-    const clampToGrid = (value: number): number => {
-      return Math.max(0, Math.min(controlState.gridSize - 1, value))
-    }
+    const distanceToCenter = (candidate: Cell): number =>
+      dist(centerCol, centerRow, candidate.col, candidate.row)
 
-    const getInwardNeighbor = (cell: PearlyCell): PearlyCell | undefined => {
-      const dx = cell.col - centerCol
-      const dy = cell.row - centerRow
-      const dist = Math.hypot(dx, dy)
-      if (dist === 0) return undefined
+    const getInwardNeighbor = (cell: PearlyCell, currentDistance: number): PearlyCell | undefined => {
+      const neighbors = cell.getNeighbors()
+      let bestNeighbor: PearlyCell | undefined
+      let bestDistance = Number.POSITIVE_INFINITY
 
-      const inwardCol = clampToGrid(Math.round(cell.col - (dx / dist)))
-      const inwardRow = clampToGrid(Math.round(cell.row - (dy / dist)))
-      return cellMap.get(`${inwardRow},${inwardCol}`)
+      neighbors.forEach(neighbor => {
+        const dist = distanceToCenter(neighbor)
+        if (dist >= currentDistance) return
+
+        const mappedNeighbor = cellMap.get(`${neighbor.row},${neighbor.col}`)
+        if (!mappedNeighbor) return
+
+        if (dist < bestDistance) {
+          bestDistance = dist
+          bestNeighbor = mappedNeighbor
+        }
+      })
+
+      return bestNeighbor
     }
 
     const cellsByDistance = [...cells].sort((a, b) => {
-      const distA = Math.hypot(a.col - centerCol, a.row - centerRow)
-      const distB = Math.hypot(b.col - centerCol, b.row - centerRow)
+      const distA = distanceToCenter(a)
+      const distB = distanceToCenter(b)
       return distA - distB
     })
 
@@ -373,9 +382,7 @@ export async function init(
         return
       }
 
-      const dx = cell.col - centerCol
-      const dy = cell.row - centerRow
-      const distToCenter = Math.hypot(dx, dy)
+      const distToCenter = distanceToCenter(cell)
 
       if (distToCenter > outerRadiusCells) {
         cell.alpha = outsideAlpha
@@ -387,7 +394,7 @@ export async function init(
         return
       }
 
-      const inwardNeighbor = getInwardNeighbor(cell)
+      const inwardNeighbor = getInwardNeighbor(cell, distToCenter)
       const canPropagateOutward = Boolean(
         inwardNeighbor &&
         inwardNeighbor.alpha === 1 &&
