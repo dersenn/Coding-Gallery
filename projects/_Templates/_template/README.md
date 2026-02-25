@@ -83,6 +83,7 @@ const { theme } = context
 theme.background  // canvas base
 theme.foreground  // default text/stroke
 theme.annotation  // helper lines/labels/debug overlays
+theme.outline     // high-contrast outline/stroke fallback
 theme.palette     // default color sequence
 ```
 

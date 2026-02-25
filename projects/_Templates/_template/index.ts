@@ -47,6 +47,7 @@ export const controls: ControlDefinition[] = [
 //   background: '#111827',
 //   foreground: '#e2e8f0',
 //   annotation: '#475569',
+//   outline: '#ffffff',
 //   palette: ['#22d3ee', '#a78bfa', '#f472b6']
 // }
 
