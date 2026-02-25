@@ -48,6 +48,30 @@ export const controls: ProjectControlDefinition[] = [
         label: 'Show Grid',
         key: 'showGrid',
         default: false
+      },
+      {
+        type: 'toggle',
+        label: 'Circular Cutoff',
+        key: 'circularCutoff',
+        default: true
+      },
+      {
+        type: 'slider',
+        label: 'Inner Limit',
+        key: 'innerLimit',
+        default: 21,
+        min: 3,
+        max: 100,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Outer Limit',
+        key: 'outerLimit',
+        default: 25,
+        min: 3,
+        max: 100,
+        step: 1
       }
     ]
   },
@@ -62,7 +86,7 @@ export const controls: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Noise Scale',
         key: 'noiseScale',
-        default: 11,
+        default: 9,
         min: 2,
         max: 80,
         step: 1
@@ -71,25 +95,25 @@ export const controls: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Stretch X',
         key: 'stretchX',
-        default: 1,
+        default: 1.2,
         min: 0.2,
         max: 3,
-        step: 0.01
+        step: 0.15
       },
       {
         type: 'slider',
         label: 'Stretch Y',
         key: 'stretchY',
-        default: 1,
+        default: 0.75,
         min: 0.2,
         max: 3,
-        step: 0.01
+        step: 0.15
       },
       {
         type: 'slider',
         label: 'Amplitude',
         key: 'amplitude',
-        default: 1.0,
+        default: 1.5,
         min: 0.1,
         max: 2.0,
         step: 0.1
@@ -107,7 +131,7 @@ export const controls: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Lacunarity',
         key: 'lacunarity',
-        default: 2.0,
+        default: 2.4,
         min: 1.5,
         max: 3.0,
         step: 0.1
@@ -116,7 +140,7 @@ export const controls: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Persistence',
         key: 'persistence',
-        default: 0.5,
+        default: 0.9,
         min: 0.1,
         max: 1.0,
         step: 0.1
@@ -160,7 +184,10 @@ export async function init(
     lacunarity: controls.lacunarity as number,
     persistence: controls.persistence as number,
     colorSteps: controls.colorSteps as number,
-    showGrid: controls.showGrid as boolean
+    showGrid: controls.showGrid as boolean,
+    circularCutoff: controls.circularCutoff as boolean,
+    innerLimit: controls.innerLimit as number,
+    outerLimit: controls.outerLimit as number
   }
 
   // Fixed settings
@@ -201,6 +228,7 @@ export async function init(
   class PearlyCell extends Cell {
     noiseValue: number
     color: string
+    alpha: number
 
     constructor(
       baseCell: Cell,
@@ -251,13 +279,18 @@ export async function init(
       const index = Math.min(Math.floor(quantized * activeColors.length), activeColors.length - 1)
       
       this.color = activeColors[index]!
+      this.alpha = 1
     }
 
     draw() {
       const center = this.center()
       const radius = this.width / 2
-      
-      svg.makeCircle(center, radius, this.color, 'none', 0)
+      const parsedColor = Color.parse(this.color)
+      const fillColor = parsedColor
+        ? parsedColor.withAlpha(parsedColor.a * this.alpha).toCss('rgba')
+        : this.color
+
+      svg.makeCircle(center, radius, fillColor, 'none', 0)
     }
   }
 
@@ -285,6 +318,14 @@ export async function init(
       Object.assign(grid, newGrid)
     }
 
+    const innerDiameterCells = Math.max(1, Math.floor(controlState.innerLimit))
+    const outerDiameterCells = Math.max(innerDiameterCells, Math.floor(controlState.outerLimit))
+    const innerRadiusCells = innerDiameterCells / 2
+    const outerRadiusCells = outerDiameterCells / 2
+    const outsideAlpha = 0.15
+    const centerCol = (controlState.gridSize - 1) / 2
+    const centerRow = (controlState.gridSize - 1) / 2
+
     // Create PearlyCells from grid cells
     const cells: PearlyCell[] = grid.map(cell => 
       new PearlyCell(
@@ -299,6 +340,62 @@ export async function init(
         controlState.colorSteps
       )
     )
+
+    const cellMap = new Map<string, PearlyCell>()
+    cells.forEach(cell => {
+      cellMap.set(`${cell.row},${cell.col}`, cell)
+    })
+
+    const clampToGrid = (value: number): number => {
+      return Math.max(0, Math.min(controlState.gridSize - 1, value))
+    }
+
+    const getInwardNeighbor = (cell: PearlyCell): PearlyCell | undefined => {
+      const dx = cell.col - centerCol
+      const dy = cell.row - centerRow
+      const dist = Math.hypot(dx, dy)
+      if (dist === 0) return undefined
+
+      const inwardCol = clampToGrid(Math.round(cell.col - (dx / dist)))
+      const inwardRow = clampToGrid(Math.round(cell.row - (dy / dist)))
+      return cellMap.get(`${inwardRow},${inwardCol}`)
+    }
+
+    const cellsByDistance = [...cells].sort((a, b) => {
+      const distA = Math.hypot(a.col - centerCol, a.row - centerRow)
+      const distB = Math.hypot(b.col - centerCol, b.row - centerRow)
+      return distA - distB
+    })
+
+    cellsByDistance.forEach(cell => {
+      if (!controlState.circularCutoff) {
+        cell.alpha = 1
+        return
+      }
+
+      const dx = cell.col - centerCol
+      const dy = cell.row - centerRow
+      const distToCenter = Math.hypot(dx, dy)
+
+      if (distToCenter > outerRadiusCells) {
+        cell.alpha = outsideAlpha
+        return
+      }
+
+      if (distToCenter <= innerRadiusCells) {
+        cell.alpha = 1
+        return
+      }
+
+      const inwardNeighbor = getInwardNeighbor(cell)
+      const canPropagateOutward = Boolean(
+        inwardNeighbor &&
+        inwardNeighbor.alpha === 1 &&
+        inwardNeighbor.color === cell.color
+      )
+
+      cell.alpha = canPropagateOutward ? 1 : outsideAlpha
+    })
 
     // Draw all cells
     cells.forEach(cell => cell.draw())
