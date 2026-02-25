@@ -3,9 +3,16 @@
 </template>
 
 <script setup lang="ts">
-import type { Project, ProjectModule, CleanupFunction, ProjectActionDefinition } from '~/types/project'
+import type {
+  CleanupFunction,
+  Project,
+  ProjectActionDefinition,
+  ProjectControlDefinition,
+  ProjectModule
+} from '~/types/project'
 import { resolveTheme } from '~/utils/theme'
 import { buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
+import { flattenControls } from '~/composables/useControls'
 
 const props = defineProps<{
   project: Project
@@ -27,7 +34,7 @@ let error = ref<string | null>(null)
 
 // Emit controls when module is loaded
 const emit = defineEmits<{
-  controlsLoaded: [controls: any]
+  controlsLoaded: [controls: ProjectControlDefinition[]]
   actionsLoaded: [actions: ProjectActionDefinition[]]
 }>()
 
@@ -110,7 +117,7 @@ const loadProject = async () => {
     // Initialize controls from module if available, otherwise from project metadata
     const controls = module.controls || props.project.controls
     if (controls) {
-      initializeControls(controls)
+      initializeControls(flattenControls(controls))
       emit('controlsLoaded', controls)
     }
     const moduleActions = module.actions || []

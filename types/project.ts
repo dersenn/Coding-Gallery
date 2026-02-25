@@ -6,11 +6,25 @@ export interface ControlDefinition {
   label: string
   key: string
   default: number | boolean | string
+  group?: string
+  order?: number
   min?: number
   max?: number
   step?: number
   options?: Array<{ label: string; value: string | number }>
 }
+
+export interface ControlGroupDefinition {
+  type: 'group'
+  id: string
+  label: string
+  controls: ControlDefinition[]
+  collapsible?: boolean
+  defaultOpen?: boolean
+  order?: number
+}
+
+export type ProjectControlDefinition = ControlDefinition | ControlGroupDefinition
 
 export interface ControlValues {
   [key: string]: number | boolean | string
@@ -30,7 +44,7 @@ export interface Project {
   thumbnail?: string
   libraries: string[]
   entryFile: string  // Path to JS/TS module (e.g., '/projects/noise-field/index.ts')
-  controls?: ControlDefinition[]
+  controls?: ProjectControlDefinition[]
   github?: string
   hidden?: boolean  // Hide from gallery (still accessible via direct URL)
 }
@@ -38,7 +52,7 @@ export interface Project {
 // Project module interface - all projects must export this
 export interface ProjectModule {
   init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
-  controls?: ControlDefinition[] // Optional: controls can be defined in the module
+  controls?: ProjectControlDefinition[] // Optional: controls can be defined in the module
   actions?: ProjectActionDefinition[] // Optional: contextual actions exposed by the module
   theme?: ThemeOverride // Optional: project-level theme overrides
 }

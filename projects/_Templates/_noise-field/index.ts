@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -12,36 +12,54 @@ interface Particle {
 }
 
 // Export controls - defined in the sketch
-export const controls: ControlDefinition[] = [
+export const controls: ProjectControlDefinition[] = [
   {
-    type: 'slider',
-    label: 'Particle Count',
-    key: 'particleCount',
-    default: 1000,
-    min: 100,
-    max: 5000,
-    step: 100
+    type: 'group',
+    id: 'flow',
+    label: 'Flow',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Particle Count',
+        key: 'particleCount',
+        default: 1000,
+        min: 100,
+        max: 5000,
+        step: 100
+      },
+      {
+        type: 'slider',
+        label: 'Flow Speed',
+        key: 'flowSpeed',
+        default: 0.5,
+        min: 0.1,
+        max: 2,
+        step: 0.1
+      },
+      {
+        type: 'toggle',
+        label: 'Show Trails',
+        key: 'showTrails',
+        default: true
+      }
+    ]
   },
   {
-    type: 'slider',
-    label: 'Flow Speed',
-    key: 'flowSpeed',
-    default: 0.5,
-    min: 0.1,
-    max: 2,
-    step: 0.1
-  },
-  {
-    type: 'toggle',
-    label: 'Show Trails',
-    key: 'showTrails',
-    default: true
-  },
-  {
-    type: 'color',
-    label: 'Background Color',
-    key: 'bgColor',
-    default: '#000000'
+    type: 'group',
+    id: 'color',
+    label: 'Color',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'color',
+        label: 'Background Color',
+        key: 'bgColor',
+        default: '#000000'
+      }
+    ]
   }
 ]
 

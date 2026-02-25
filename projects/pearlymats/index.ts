@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
 import { SVG, Grid, Cell, Color } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 import { syncControlState } from '~/composables/useControls'
@@ -14,70 +14,113 @@ import { syncControlState } from '~/composables/useControls'
  * - Octaves: Number of noise layers (1-4)
  * - Lacunarity: Frequency multiplier per octave (2.0 = each octave doubles frequency)
  * - Persistence: Amplitude multiplier per octave (0.5 = each octave halves amplitude)
+ *
+ * Grouping pattern for future sketches:
+ * - Grid: layout, dimensions, overlays
+ * - Noise: frequency/amplitude/octaves and related field settings
+ * - Color: palette and quantization controls
+ * - Motion: animation speed/phase/timing
+ * - Display: debug and helper toggles
  * 
  */
 
 // Export controls
-export const controls: ControlDefinition[] = [
+export const controls: ProjectControlDefinition[] = [
   {
-    type: 'slider',
-    label: 'Grid Size',
-    key: 'gridSize',
-    default: 29,
-    min: 10,
-    max: 100,
-    step: 1
+    type: 'group',
+    id: 'grid',
+    label: 'Grid',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Grid Size',
+        key: 'gridSize',
+        default: 29,
+        min: 10,
+        max: 100,
+        step: 1
+      },
+      {
+        type: 'toggle',
+        label: 'Show Grid',
+        key: 'showGrid',
+        default: false
+      }
+    ]
   },
   {
-    type: 'slider',
-    label: 'Frequency',
-    key: 'frequency',
-    default: 0.15,
-    min: 0,
-    max: 0.3,
-    step: 0.01
+    type: 'group',
+    id: 'noise',
+    label: 'Noise',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Frequency',
+        key: 'frequency',
+        default: 0.09,
+        min: 0,
+        max: 0.3,
+        step: 0.01
+      },
+      {
+        type: 'slider',
+        label: 'Amplitude',
+        key: 'amplitude',
+        default: 1.0,
+        min: 0.1,
+        max: 2.0,
+        step: 0.1
+      },
+      {
+        type: 'slider',
+        label: 'Octaves',
+        key: 'octaves',
+        default: 2,
+        min: 1,
+        max: 4,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Lacunarity',
+        key: 'lacunarity',
+        default: 2.0,
+        min: 1.5,
+        max: 3.0,
+        step: 0.1
+      },
+      {
+        type: 'slider',
+        label: 'Persistence',
+        key: 'persistence',
+        default: 0.5,
+        min: 0.1,
+        max: 1.0,
+        step: 0.1
+      }
+    ]
   },
   {
-    type: 'slider',
-    label: 'Amplitude',
-    key: 'amplitude',
-    default: 1.0,
-    min: 0.1,
-    max: 2.0,
-    step: 0.1
-  },
-  {
-    type: 'slider',
-    label: 'Octaves',
-    key: 'octaves',
-    default: 2,
-    min: 1,
-    max: 4,
-    step: 1
-  },
-  {
-    type: 'slider',
-    label: 'Lacunarity',
-    key: 'lacunarity',
-    default: 2.0,
-    min: 1.5,
-    max: 3.0,
-    step: 0.1
-  },
-  {
-    type: 'slider',
-    label: 'Persistence',
-    key: 'persistence',
-    default: 0.5,
-    min: 0.1,
-    max: 1.0,
-    step: 0.1
-  },
-  {
-    type: 'toggle',
-    label: 'Show Grid',
-    key: 'showGrid',
-    default: false
+    type: 'group',
+    id: 'color',
+    label: 'Color',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Color Steps',
+        key: 'colorSteps',
+        default: 6,
+        min: 1,
+        max: 12,
+        step: 1
+      }
+    ]
   }
 ]
 
@@ -95,6 +138,7 @@ export async function init(
     octaves: controls.octaves as number,
     lacunarity: controls.lacunarity as number,
     persistence: controls.persistence as number,
+    colorSteps: controls.colorSteps as number,
     showGrid: controls.showGrid as boolean
   }
 
@@ -143,7 +187,8 @@ export async function init(
       amp: number,
       oct: number,
       lac: number,
-      pers: number
+      pers: number,
+      colorSteps: number
     ) {
       super({
         x: baseCell.x,
@@ -174,7 +219,9 @@ export async function init(
       this.noiseValue = Math.max(-1, Math.min(1, this.noiseValue))
       
       const normalized = (this.noiseValue + 1) / 2
-      const index = Math.min(Math.floor(normalized * colors.length), colors.length - 1)
+      const steps = Math.max(1, Math.floor(colorSteps))
+      const quantized = steps === 1 ? 0 : Math.floor(normalized * steps) / (steps - 1)
+      const index = Math.min(Math.floor(quantized * colors.length), colors.length - 1)
       
       this.color = colors[index]!
     }
@@ -219,7 +266,8 @@ export async function init(
         controlState.amplitude,
         controlState.octaves,
         controlState.lacunarity,
-        controlState.persistence
+        controlState.persistence,
+        controlState.colorSteps
       )
     )
 

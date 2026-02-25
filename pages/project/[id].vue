@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import type { ControlDefinition, ProjectActionDefinition } from '~/types/project'
+import type { ProjectActionDefinition, ProjectControlDefinition } from '~/types/project'
 
 const route = useRoute()
 const router = useRouter()
@@ -78,7 +78,7 @@ const { utils } = useGenerativeUtils()
 const { resetControls } = useControls()
 
 const project = computed(() => getProjectById(route.params.id as string))
-const loadedControls = ref<ControlDefinition[]>([])
+const loadedControls = ref<ProjectControlDefinition[]>([])
 const loadedActions = ref<ProjectActionDefinition[]>([])
 const isPanelExpanded = ref(false)
 const viewerInstanceKey = ref(0)
@@ -86,7 +86,7 @@ const actionRequest = ref<{ key: string; nonce: number } | null>(null)
 const actionNonce = ref(0)
 
 // Handle controls loaded from module
-const handleControlsLoaded = (controls: ControlDefinition[]) => {
+const handleControlsLoaded = (controls: ProjectControlDefinition[]) => {
   loadedControls.value = controls || []
 }
 

@@ -123,23 +123,57 @@ export async function init(
 
 ### 3. Add Controls (in your sketch file)
 
-Define controls directly in your sketch `index.ts` or `index.js`:
+Define controls directly in your sketch `index.ts` or `index.js`.
+Grouped controls are recommended for larger sketches, but flat controls are still supported:
 
 ```typescript
-export const controls: ControlDefinition[] = [
+export const controls: ProjectControlDefinition[] = [
   {
-    type: 'slider',
-    label: 'Speed',
-    key: 'speed',
-    default: 1,
-    min: 0.1,
-    max: 5,
-    step: 0.1
+    type: 'group',
+    id: 'motion',
+    label: 'Motion',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Speed',
+        key: 'speed',
+        default: 1,
+        min: 0.1,
+        max: 5,
+        step: 0.1
+      }
+    ]
+  },
+  {
+    type: 'toggle',
+    label: 'Show Trails',
+    key: 'showTrails',
+    default: false,
+    group: 'Display' // Optional metadata-based grouping for flat entries
   }
 ]
 ```
 
-### 4. Add Optional Contextual Actions
+### 4. Control Authoring Guide
+
+Use consistent control groups so sketches stay easy to scan as they grow:
+
+- `Grid`: layout, dimensions, spacing, margins, overlays
+- `Noise`: frequency, amplitude, octaves, lacunarity, persistence
+- `Color`: palette choice, palette size, color steps, color mode
+- `Motion`: speed, phase, animation toggles
+- `Display`: debug overlays, labels, helpers, visibility toggles
+
+Conventions:
+
+- Keep runtime keys flat and stable (for URL sharing): `context.controls[key]`
+- Use `type: 'group'` for primary structure in new sketches/templates
+- Use leaf `group: '...'` metadata only when staying flat or mixing styles
+- Prefer small groups (about 3-8 controls) over one large mixed section
+
+### 5. Add Optional Contextual Actions
 
 Project modules can expose action buttons in the control panel and keyboard shortcuts via the page shell:
 
@@ -158,7 +192,7 @@ context.registerAction('download-svg', () => {
 
 For SVG projects, if you do not register `download-svg`, the viewer injects a fallback handler automatically.
 
-### 5. Add Metadata
+### 6. Add Metadata
 
 Add your project to `data/projects.json`:
 
@@ -180,7 +214,7 @@ Add your project to `data/projects.json`:
 - `"hidden": true` - Hide from gallery (still accessible via direct URL)
 - `"github": "https://github.com/..."` - Shows "View on GitHub" link in info panel
 
-### 6. Run and Test
+### 7. Run and Test
 
 ```bash
 npm run dev

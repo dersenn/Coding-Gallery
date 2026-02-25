@@ -1,7 +1,7 @@
 import type {
   ProjectContext,
   CleanupFunction,
-  ControlDefinition,
+  ProjectControlDefinition,
   ProjectActionDefinition
 } from '~/types/project'
 import { SVG, Path, shortcuts } from '~/types/project'
@@ -28,25 +28,32 @@ import { syncControlState } from '~/composables/useControls'
  */
 
 // Export controls - define them here in your sketch
-export const controls: ControlDefinition[] = [
+export const controls: ProjectControlDefinition[] = [
   // Example controls (uncomment and modify as needed):
   // {
-  //   type: 'slider',
-  //   label: 'Line Count',
-  //   key: 'lineCount',
-  //   default: 10,
-  //   min: 1,
-  //   max: 50,
-  //   step: 1
-  // },
-  // {
-  //   type: 'slider',
-  //   label: 'Stroke Width',
-  //   key: 'strokeWidth',
-  //   default: 2,
-  //   min: 0.5,
-  //   max: 10,
-  //   step: 0.5
+  //   type: 'group',
+  //   id: 'shape',
+  //   label: 'Shape',
+  //   controls: [
+  //     {
+  //       type: 'slider',
+  //       label: 'Line Count',
+  //       key: 'lineCount',
+  //       default: 10,
+  //       min: 1,
+  //       max: 50,
+  //       step: 1
+  //     },
+  //     {
+  //       type: 'slider',
+  //       label: 'Stroke Width',
+  //       key: 'strokeWidth',
+  //       default: 2,
+  //       min: 0.5,
+  //       max: 10,
+  //       step: 0.5
+  //     }
+  //   ]
   // }
 ]
 

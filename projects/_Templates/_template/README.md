@@ -40,30 +40,40 @@ Minimal template for creating new p5.js projects in the gallery.
 
 ## Controls
 
-Define controls directly in your `index.ts` or `index.js`:
+Define controls directly in your `index.ts` or `index.js`.
+Grouped controls are recommended for larger sketches, while flat controls remain fully supported:
 
 ```typescript
-export const controls: ControlDefinition[] = [
+export const controls: ProjectControlDefinition[] = [
   {
-    type: 'slider',
-    label: 'Speed',
-    key: 'speed',
-    default: 1,
-    min: 0.1,
-    max: 5,
-    step: 0.1
+    type: 'group',
+    id: 'motion',
+    label: 'Motion',
+    controls: [
+      {
+        type: 'slider',
+        label: 'Speed',
+        key: 'speed',
+        default: 1,
+        min: 0.1,
+        max: 5,
+        step: 0.1
+      }
+    ]
   },
   {
     type: 'toggle',
     label: 'Show Grid',
     key: 'showGrid',
-    default: false
+    default: false,
+    group: 'Display'
   },
   {
     type: 'color',
     label: 'Background',
     key: 'bgColor',
-    default: '#000000'
+    default: '#000000',
+    group: 'Display'
   }
 ]
 ```
@@ -224,11 +234,18 @@ my-sketch/
 ## Example Sketch
 
 ```typescript
-import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
 import p5 from 'p5'
 
-export const controls: ControlDefinition[] = [
-  { type: 'slider', label: 'Speed', key: 'speed', default: 1, min: 0.1, max: 5, step: 0.1 }
+export const controls: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'motion',
+    label: 'Motion',
+    controls: [
+      { type: 'slider', label: 'Speed', key: 'speed', default: 1, min: 0.1, max: 5, step: 0.1 }
+    ]
+  }
 ]
 
 export async function init(

@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -17,28 +17,33 @@ import { syncControlState } from '~/composables/useControls'
  */
 
 // Export controls - define them here in your sketch
-export const controls: ControlDefinition[] = [
-  // Example controls (uncomment and modify as needed):
+export const controls: ProjectControlDefinition[] = [
+  // Grouped example controls (recommended for larger sketches):
   // {
-  //   type: 'slider',
-  //   label: 'Speed',
-  //   key: 'speed',
-  //   default: 1,
-  //   min: 0.1,
-  //   max: 5,
-  //   step: 0.1
+  //   type: 'group',
+  //   id: 'motion',
+  //   label: 'Motion',
+  //   collapsible: true,
+  //   defaultOpen: true,
+  //   controls: [
+  //     {
+  //       type: 'slider',
+  //       label: 'Speed',
+  //       key: 'speed',
+  //       default: 1,
+  //       min: 0.1,
+  //       max: 5,
+  //       step: 0.1
+  //     }
+  //   ]
   // },
+  // Flat controls still work:
   // {
   //   type: 'toggle',
   //   label: 'Show Grid',
   //   key: 'showGrid',
-  //   default: false
-  // },
-  // {
-  //   type: 'color',
-  //   label: 'Color',
-  //   key: 'color',
-  //   default: '#ff0000'
+  //   default: false,
+  //   group: 'Display'
   // }
 ]
 

@@ -1,4 +1,9 @@
-import type { ControlDefinition, ControlValues } from '~/types/project'
+import type {
+  ControlDefinition,
+  ControlGroupDefinition,
+  ControlValues,
+  ProjectControlDefinition
+} from '~/types/project'
 
 type ControlPrimitive = number | boolean | string
 
@@ -14,13 +19,35 @@ export const syncControlState = <T extends Record<string, ControlPrimitive>>(
   })
 }
 
+const isControlGroup = (
+  control: ProjectControlDefinition
+): control is ControlGroupDefinition => control.type === 'group'
+
+export const flattenControls = (
+  controls?: ProjectControlDefinition[]
+): ControlDefinition[] => {
+  if (!controls) return []
+
+  const flattened: ControlDefinition[] = []
+  controls.forEach((control) => {
+    if (isControlGroup(control)) {
+      flattened.push(...control.controls)
+      return
+    }
+    flattened.push(control)
+  })
+
+  return flattened
+}
+
 export const useControls = () => {
   const route = useRoute()
   const router = useRouter()
   const controlValues = useState<ControlValues>('controlValues', () => ({}))
 
-  const initializeControls = (controls?: ControlDefinition[]) => {
-    if (!controls) {
+  const initializeControls = (controls?: ProjectControlDefinition[]) => {
+    const leafControls = flattenControls(controls)
+    if (!leafControls.length) {
       controlValues.value = {}
       return
     }
@@ -28,12 +55,12 @@ export const useControls = () => {
     const defaults: ControlValues = {}
     
     // First, set defaults
-    controls.forEach(control => {
+    leafControls.forEach(control => {
       defaults[control.key] = control.default
     })
 
     // Then, override with URL params if they exist
-    controls.forEach(control => {
+    leafControls.forEach(control => {
       const urlValue = route.query[control.key]
       if (urlValue !== undefined && urlValue !== null) {
         // Parse based on control type
@@ -63,18 +90,19 @@ export const useControls = () => {
     router.replace({ query: newQuery })
   }
 
-  const resetControls = (controls?: ControlDefinition[]) => {
-    if (!controls) return
+  const resetControls = (controls?: ProjectControlDefinition[]) => {
+    const leafControls = flattenControls(controls)
+    if (!leafControls.length) return
     
     // Remove control params from URL
     const newQuery = { ...route.query }
-    controls.forEach(control => {
+    leafControls.forEach(control => {
       delete newQuery[control.key]
     })
     router.replace({ query: newQuery })
     
     // Reset to defaults
-    initializeControls(controls)
+    initializeControls(leafControls)
   }
 
   return {

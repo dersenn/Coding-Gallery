@@ -1,7 +1,7 @@
 import type {
   ProjectContext,
   CleanupFunction,
-  ControlDefinition,
+  ProjectControlDefinition,
   ProjectActionDefinition
 } from '~/types/project'
 import { SVG, Path, shortcuts } from '~/types/project'
@@ -19,39 +19,57 @@ import { syncControlState } from '~/composables/useControls'
  */
 
 // Export controls - defined in the sketch
-export const controls: ControlDefinition[] = [
+export const controls: ProjectControlDefinition[] = [
   {
-    type: 'slider',
-    label: 'Grid Size',
-    key: 'gridSize',
-    default: 8,
-    min: 3,
-    max: 20,
-    step: 1
+    type: 'group',
+    id: 'grid',
+    label: 'Grid',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Grid Size',
+        key: 'gridSize',
+        default: 8,
+        min: 3,
+        max: 20,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Complexity',
+        key: 'complexity',
+        default: 4,
+        min: 2,
+        max: 8,
+        step: 1
+      }
+    ]
   },
   {
-    type: 'slider',
-    label: 'Complexity',
-    key: 'complexity',
-    default: 4,
-    min: 2,
-    max: 8,
-    step: 1
-  },
-  {
-    type: 'slider',
-    label: 'Stroke Width',
-    key: 'strokeWidth',
-    default: 1.5,
-    min: 0.5,
-    max: 5,
-    step: 0.5
-  },
-  {
-    type: 'toggle',
-    label: 'Show Noise Field',
-    key: 'showNoise',
-    default: false
+    type: 'group',
+    id: 'style',
+    label: 'Style',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Stroke Width',
+        key: 'strokeWidth',
+        default: 1.5,
+        min: 0.5,
+        max: 5,
+        step: 0.5
+      },
+      {
+        type: 'toggle',
+        label: 'Show Noise Field',
+        key: 'showNoise',
+        default: false
+      }
+    ]
   }
 ]
 
