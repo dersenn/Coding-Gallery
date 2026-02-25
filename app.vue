@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="min-h-screen bg-black">
     <NuxtPage :transition="{
       name: 'page',
       mode: 'out-in'
