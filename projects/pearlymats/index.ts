@@ -1,6 +1,7 @@
 import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import { SVG, Grid, Cell, Color } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
+import { syncControlState } from '~/composables/useControls'
 
 /**
  * Pearlymats - Noise-based Grid Pattern
@@ -87,14 +88,15 @@ export async function init(
   const { controls, utils, theme, onControlChange } = context
   const { v, map, simplex2 } = shortcuts(utils)
 
-  // Get control values
-  let gridSize = controls.gridSize as number
-  let frequency = controls.frequency as number
-  let amplitude = controls.amplitude as number
-  let octaves = controls.octaves as number
-  let lacunarity = controls.lacunarity as number
-  let persistence = controls.persistence as number
-  let showGrid = controls.showGrid as boolean
+  const controlState = {
+    gridSize: controls.gridSize as number,
+    frequency: controls.frequency as number,
+    amplitude: controls.amplitude as number,
+    octaves: controls.octaves as number,
+    lacunarity: controls.lacunarity as number,
+    persistence: controls.persistence as number,
+    showGrid: controls.showGrid as boolean
+  }
 
   // Fixed settings
   const colors = theme.palette
@@ -120,8 +122,8 @@ export async function init(
 
   // Create grid
   const grid = new Grid({
-    cols: gridSize,
-    rows: gridSize,
+    cols: controlState.gridSize,
+    rows: controlState.gridSize,
     width: size,
     height: size,
     x: 0,
@@ -194,10 +196,10 @@ export async function init(
     svg.makeRect(v(0, 0), size, size, backgroundColor, 'none')
 
     // Recreate grid if gridSize changed
-    if (grid.cols !== gridSize || grid.rows !== gridSize) {
+    if (grid.cols !== controlState.gridSize || grid.rows !== controlState.gridSize) {
       const newGrid = new Grid({
-        cols: gridSize,
-        rows: gridSize,
+        cols: controlState.gridSize,
+        rows: controlState.gridSize,
         width: size,
         height: size,
         x: 0,
@@ -211,55 +213,58 @@ export async function init(
 
     // Create PearlyCells from grid cells
     const cells: PearlyCell[] = grid.map(cell => 
-      new PearlyCell(cell, frequency, amplitude, octaves, lacunarity, persistence)
+      new PearlyCell(
+        cell,
+        controlState.frequency,
+        controlState.amplitude,
+        controlState.octaves,
+        controlState.lacunarity,
+        controlState.persistence
+      )
     )
 
     // Draw all cells
     cells.forEach(cell => cell.draw())
 
     // Draw grid overlay if enabled
-    if (showGrid) {
+    if (controlState.showGrid) {
       const gridArea = size - (margin * 2)
-      const cellSize = gridArea / gridSize
+      const cellSize = gridArea / controlState.gridSize
 
       // Draw vertical grid lines
-      for (let col = 0; col <= gridSize; col++) {
+      for (let col = 0; col <= controlState.gridSize; col++) {
         const x = margin + col * cellSize
         svg.makeLine(v(x, margin), v(x, margin + gridArea), annotationColor, 0.5)
       }
 
       // Draw horizontal grid lines
-      for (let row = 0; row <= gridSize; row++) {
+      for (let row = 0; row <= controlState.gridSize; row++) {
         const y = margin + row * cellSize
         svg.makeLine(v(margin, y), v(margin + gridArea, y), annotationColor, 0.5)
       }
 
       // Draw column numbers (top)
-      for (let col = 0; col < gridSize; col++) {
-        const cellSize = gridArea / gridSize
+      for (let col = 0; col < controlState.gridSize; col++) {
+        const cellSize = gridArea / controlState.gridSize
         const x = margin + col * cellSize + cellSize / 2
-        const text = svg.stage.ownerDocument!.createElementNS('http://www.w3.org/2000/svg', 'text')
-        text.setAttribute('x', x.toString())
-        text.setAttribute('y', (margin - 10).toString())
-        text.setAttribute('text-anchor', 'middle')
-        text.setAttribute('font-size', '10')
-        text.setAttribute('fill', annotationColor)
-        text.textContent = (col + 1).toString()
-        svg.stage.appendChild(text)
+        svg.makeText(
+          (col + 1).toString(),
+          v(x, margin - 10),
+          annotationColor,
+          { anchor: 'middle', fontSize: 10 }
+        )
       }
 
       // Draw row numbers (left)
-      for (let row = 0; row < gridSize; row++) {
-        const cellSize = gridArea / gridSize
+      for (let row = 0; row < controlState.gridSize; row++) {
+        const cellSize = gridArea / controlState.gridSize
         const y = margin + row * cellSize + cellSize / 2
-        const text = svg.stage.ownerDocument!.createElementNS('http://www.w3.org/2000/svg', 'text')
-        text.setAttribute('x', (margin - 10).toString())
-        text.setAttribute('y', (y + 3).toString())
-        text.setAttribute('text-anchor', 'end')
-        text.setAttribute('font-size', '10')
-        text.setAttribute('fill', annotationColor)
-        text.textContent = (row + 1).toString()
-        svg.stage.appendChild(text)
+        svg.makeText(
+          (row + 1).toString(),
+          v(margin - 10, y + 3),
+          annotationColor,
+          { anchor: 'end', fontSize: 10 }
+        )
       }
     }
   }
@@ -269,13 +274,7 @@ export async function init(
 
   // React to control changes
   onControlChange((newControls) => {
-    gridSize = newControls.gridSize as number
-    frequency = newControls.frequency as number
-    amplitude = newControls.amplitude as number
-    octaves = newControls.octaves as number
-    lacunarity = newControls.lacunarity as number
-    persistence = newControls.persistence as number
-    showGrid = newControls.showGrid as boolean
+    syncControlState(controlState, newControls)
     draw()
   })
 

@@ -1,5 +1,6 @@
 import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import p5 from 'p5'
+import { syncControlState } from '~/composables/useControls'
 
 /**
  * Project Template
@@ -59,6 +60,7 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange } = context
+  const controlState = { ...controls }
 
   const sketch = new p5((p) => {
     p.setup = () => {
@@ -86,8 +88,8 @@ export async function init(
 
     // React to control changes
     onControlChange((newControls) => {
-      // Update your sketch based on new control values
-      // Example: const speed = newControls.speed as number
+      syncControlState(controlState, newControls)
+      // Example: const speed = controlState.speed as number
     })
 
     // Optional: wire handlers for actions exported above

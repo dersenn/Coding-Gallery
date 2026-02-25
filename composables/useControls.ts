@@ -1,5 +1,19 @@
 import type { ControlDefinition, ControlValues } from '~/types/project'
 
+type ControlPrimitive = number | boolean | string
+
+export const syncControlState = <T extends Record<string, ControlPrimitive>>(
+  state: T,
+  incoming: ControlValues
+) => {
+  (Object.keys(state) as Array<keyof T>).forEach((key) => {
+    const value = incoming[key as string]
+    if (value !== undefined) {
+      state[key] = value as T[typeof key]
+    }
+  })
+}
+
 export const useControls = () => {
   const route = useRoute()
   const router = useRouter()

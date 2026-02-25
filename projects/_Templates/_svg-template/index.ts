@@ -5,6 +5,7 @@ import type {
   ProjectActionDefinition
 } from '~/types/project'
 import { SVG, Path, shortcuts } from '~/types/project'
+import { syncControlState } from '~/composables/useControls'
 
 /**
  * SVG Project Template
@@ -62,6 +63,7 @@ export async function init(
 ): Promise<CleanupFunction> {
   const { controls, utils, onControlChange, registerAction } = context
   const { v, rnd, map, rad } = shortcuts(utils)
+  const controlState = { ...controls }
 
   // Create SVG canvas
   // Option 1: Full container size (default)
@@ -115,7 +117,8 @@ export async function init(
 
   // React to control changes
   onControlChange((newControls) => {
-    // Update your sketch based on new control values
+    syncControlState(controlState, newControls)
+    // Update your sketch based on controlState values
     // You might need to clear and redraw, or update elements directly
   })
 

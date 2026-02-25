@@ -5,6 +5,7 @@ import type {
   ProjectActionDefinition
 } from '~/types/project'
 import { SVG, shortcuts } from '~/types/project'
+import { syncControlState } from '~/composables/useControls'
 
 /**
  * Animated SVG Template
@@ -40,6 +41,7 @@ export async function init(
 ): Promise<CleanupFunction> {
   const { controls, utils, onControlChange, registerAction } = context
   const { v, rnd, map, rad, simplex2 } = shortcuts(utils)
+  const controlState = { ...controls }
 
   // Create SVG canvas
   // Option 1: Full container size (default)
@@ -119,6 +121,7 @@ export async function init(
 
   // React to control changes
   onControlChange((newControls) => {
+    syncControlState(controlState, newControls)
     // Update your animation based on controls
   })
 

@@ -5,6 +5,7 @@ import type {
   ProjectActionDefinition
 } from '~/types/project'
 import { SVG, Path, shortcuts } from '~/types/project'
+import { syncControlState } from '~/composables/useControls'
 
 /**
  * SVG Example: Generative Grid Pattern
@@ -68,11 +69,12 @@ export async function init(
   const { controls, utils, onControlChange, registerAction } = context
   const { v, rnd, rndInt, map, rad, noise2 } = shortcuts(utils)
 
-  // Get control values
-  let gridSize = controls.gridSize as number
-  let complexity = controls.complexity as number
-  let showNoise = controls.showNoise as boolean
-  let strokeWidth = controls.strokeWidth as number
+  const controlState = {
+    gridSize: controls.gridSize as number,
+    complexity: controls.complexity as number,
+    showNoise: controls.showNoise as boolean,
+    strokeWidth: controls.strokeWidth as number
+  }
 
   // Create SVG canvas
   const svg = new SVG({
@@ -87,8 +89,8 @@ export async function init(
     // Add white background
     svg.makeRect(v(0, 0), svg.w, svg.h, '#ffffff', 'none')
 
-    const cols = gridSize
-    const rows = gridSize
+    const cols = controlState.gridSize
+    const rows = controlState.gridSize
     const cellW = svg.w / cols
     const cellH = svg.h / rows
 
@@ -101,20 +103,20 @@ export async function init(
 
         // Use noise to determine pattern
         const noiseVal = noise2(i * 0.2, j * 0.2)
-        const pattern = Math.floor(noiseVal * complexity)
+        const pattern = Math.floor(noiseVal * controlState.complexity)
 
         switch (pattern % 4) {
           case 0:
             // Circle
             const r = map(noiseVal, 0, 1, 5, cellW / 3)
-            svg.makeCircle(center, r, 'none', '#000', strokeWidth)
+            svg.makeCircle(center, r, 'none', '#000', controlState.strokeWidth)
             break
 
           case 1:
             // Diagonal line
             const corner1 = v(x, y)
             const corner2 = v(x + cellW, y + cellH)
-            svg.makeLine(corner1, corner2, '#000', strokeWidth)
+            svg.makeLine(corner1, corner2, '#000', controlState.strokeWidth)
             break
 
           case 2:
@@ -126,7 +128,7 @@ export async function init(
             ]
             const path = new Path(pts, false)
             const pathStr = path.buildSpline(0.4)
-            svg.makePath(pathStr, 'none', '#000', strokeWidth)
+            svg.makePath(pathStr, 'none', '#000', controlState.strokeWidth)
             break
 
           case 3:
@@ -136,12 +138,12 @@ export async function init(
               center.x - rectSize / 2,
               center.y - rectSize / 2
             )
-            svg.makeRect(rectPos, rectSize, rectSize, 'none', '#000', strokeWidth)
+            svg.makeRect(rectPos, rectSize, rectSize, 'none', '#000', controlState.strokeWidth)
             break
         }
 
         // Optional: show noise field as background
-        if (showNoise) {
+        if (controlState.showNoise) {
           const opacity = map(noiseVal, 0, 1, 0, 0.3)
           svg.makeRect(
             v(x, y),
@@ -155,7 +157,7 @@ export async function init(
     }
 
     // Add border
-    svg.makeRect(v(0, 0), svg.w, svg.h, 'none', '#00ff00', strokeWidth * 2)
+    svg.makeRect(v(0, 0), svg.w, svg.h, 'none', '#00ff00', controlState.strokeWidth * 2)
 
     // Add some decorative circles at corners
     const cornerRadius = 20
@@ -180,7 +182,7 @@ export async function init(
     }
     const spline = new Path(splinePts, false)
     const splineStr = spline.buildSpline(0.3)
-    svg.makePath(splineStr, 'none', 'rgba(255, 0, 0, 0.6)', strokeWidth * 1.5)
+    svg.makePath(splineStr, 'none', 'rgba(255, 0, 0, 0.6)', controlState.strokeWidth * 1.5)
   }
 
   // Initial draw
@@ -188,10 +190,7 @@ export async function init(
 
   // React to control changes
   onControlChange((newControls) => {
-    gridSize = newControls.gridSize as number
-    complexity = newControls.complexity as number
-    showNoise = newControls.showNoise as boolean
-    strokeWidth = newControls.strokeWidth as number
+    syncControlState(controlState, newControls)
     draw()
   })
 

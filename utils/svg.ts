@@ -15,6 +15,14 @@ export interface SVGConfig {
   height?: number
 }
 
+export interface SVGTextOptions {
+  anchor?: 'start' | 'middle' | 'end'
+  baseline?: 'auto' | 'middle' | 'hanging' | 'text-top' | 'text-bottom' | 'alphabetic' | 'ideographic'
+  fontSize?: number
+  fontFamily?: string
+  fontWeight?: string
+}
+
 export class SVG {
   ns: string
   xl: string
@@ -214,6 +222,34 @@ export class SVG {
     path.setAttribute('stroke-width', strokeW.toString())
     this.stage.append(path)
     return path
+  }
+
+  makeText(
+    text: string,
+    at: Vec,
+    fill: string = this.def.stroke,
+    options: SVGTextOptions = {}
+  ): SVGTextElement {
+    const textEl = document.createElementNS(this.ns, 'text') as SVGTextElement
+    textEl.setAttribute('x', at.x.toString())
+    textEl.setAttribute('y', at.y.toString())
+    textEl.setAttribute('fill', fill)
+    textEl.setAttribute('text-anchor', options.anchor ?? 'start')
+    textEl.setAttribute('font-size', (options.fontSize ?? 12).toString())
+
+    if (options.fontFamily) {
+      textEl.setAttribute('font-family', options.fontFamily)
+    }
+    if (options.fontWeight) {
+      textEl.setAttribute('font-weight', options.fontWeight)
+    }
+    if (options.baseline) {
+      textEl.setAttribute('dominant-baseline', options.baseline)
+    }
+
+    textEl.textContent = text
+    this.stage.append(textEl)
+    return textEl
   }
 }
 

@@ -1,5 +1,6 @@
 import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import p5 from 'p5'
+import { syncControlState } from '~/composables/useControls'
 
 interface Particle {
   x: number
@@ -54,10 +55,12 @@ export async function init(
   // console.log('Current seed:', utils.seed.current)
 
   // Reactive state
-  let particleCount = controls.particleCount as number
-  let flowSpeed = controls.flowSpeed as number
-  let showTrails = controls.showTrails as boolean
-  let bgColor = controls.bgColor as string
+  const controlState = {
+    particleCount: controls.particleCount as number,
+    flowSpeed: controls.flowSpeed as number,
+    showTrails: controls.showTrails as boolean,
+    bgColor: controls.bgColor as string
+  }
   let particles: Particle[] = []
 
   const sketch = new p5((p) => {
@@ -66,19 +69,19 @@ export async function init(
       p.colorMode(p.RGB)
       initParticles()
       
-      if (!showTrails) {
-        p.background(bgColor)
+      if (!controlState.showTrails) {
+        p.background(controlState.bgColor)
       }
     }
 
     p.draw = () => {
-      if (showTrails) {
+      if (controlState.showTrails) {
         // Semi-transparent background for trails
-        p.fill(bgColor + '10')
+        p.fill(controlState.bgColor + '10')
         p.noStroke()
         p.rect(0, 0, p.width, p.height)
       } else {
-        p.background(bgColor)
+        p.background(controlState.bgColor)
       }
 
       p.stroke(255, 255, 255, 150)
@@ -96,8 +99,8 @@ export async function init(
           4
 
         // Update velocity based on flow field
-        particle.vx = Math.cos(angle) * flowSpeed
-        particle.vy = Math.sin(angle) * flowSpeed
+        particle.vx = Math.cos(angle) * controlState.flowSpeed
+        particle.vy = Math.sin(angle) * controlState.flowSpeed
 
         // Store previous position for trail
         particle.prevX = particle.x
@@ -114,7 +117,7 @@ export async function init(
         if (particle.y > p.height) particle.y = 0
 
         // Draw particle trail or point
-        if (showTrails && Math.abs(particle.x - particle.prevX) < 50) {
+        if (controlState.showTrails && Math.abs(particle.x - particle.prevX) < 50) {
           p.line(particle.prevX, particle.prevY, particle.x, particle.y)
         } else {
           p.point(particle.x, particle.y)
@@ -129,7 +132,7 @@ export async function init(
 
     function initParticles() {
       particles = []
-      for (let i = 0; i < particleCount; i++) {
+      for (let i = 0; i < controlState.particleCount; i++) {
         particles.push({
           x: utils.seed.randomRange(0, p.width),
           y: utils.seed.randomRange(0, p.height),
@@ -141,21 +144,13 @@ export async function init(
       }
     }
 
-    function reinitIfNeeded(newCount: number) {
-      if (newCount !== particleCount) {
-        particleCount = newCount
-        initParticles()
-      }
-    }
-
     // React to control changes
     onControlChange((newControls) => {
-      const newParticleCount = newControls.particleCount as number
-      flowSpeed = newControls.flowSpeed as number
-      showTrails = newControls.showTrails as boolean
-      bgColor = newControls.bgColor as string
-
-      reinitIfNeeded(newParticleCount)
+      const previousParticleCount = controlState.particleCount
+      syncControlState(controlState, newControls)
+      if (controlState.particleCount !== previousParticleCount) {
+        initParticles()
+      }
     })
   }, container)
 
