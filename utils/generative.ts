@@ -1,6 +1,7 @@
 import { createNoise2D, createNoise3D, createNoise4D } from 'simplex-noise'
 import { Grid, type GridConfig } from './grid'
 import { Cell, type CellConfig } from './cell'
+import { Color, type ColorInput } from './color'
 
 // Vector class for 2D/3D operations
 export class Vec {
@@ -114,6 +115,13 @@ export interface GenerativeUtils {
   }
   cell: {
     create: (config: CellConfig) => Cell
+  }
+  color: {
+    parse: (input: ColorInput) => Color | null
+    isValid: (input: ColorInput | null | undefined) => boolean
+    fromHex: (hex: string) => Color | null
+    fromRgb: (r: number, g: number, b: number, a?: number) => Color
+    fromHsl: (h: number, s: number, l: number, a?: number) => Color
   }
 }
 
@@ -340,6 +348,13 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
       create: (config: CellConfig) => {
         return new Cell(config)
       }
+    },
+    color: {
+      parse: (input: ColorInput) => Color.parse(input),
+      isValid: (input: ColorInput | null | undefined) => Color.isValid(input),
+      fromHex: (hex: string) => Color.fromHex(hex),
+      fromRgb: (r: number, g: number, b: number, a: number = 1) => Color.fromRgb(r, g, b, a),
+      fromHsl: (h: number, s: number, l: number, a: number = 1) => Color.fromHsl(h, s, l, a)
     }
   }
 

@@ -11,5 +11,6 @@ Use this folder for supporting docs while keeping the repository root focused on
 
 - Seed system details: `SEED_SYSTEM.md`
 - SVG engine details: `SVG_IMPLEMENTATION.md`
+- Grid and Cell utilities: See main `../README.md` (Grid and Cell Utilities section)
 - Migration history: `IMPLEMENTATION_SUMMARY.md`
 - Future project-structure plan: `PROJECT_STRUCTURE_PLAN.md`

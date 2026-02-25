@@ -87,7 +87,7 @@ export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange } = context
+  const { controls, utils, theme, onControlChange } = context
   const { v, map, simplex2 } = shortcuts(utils)
 
   // Get control values
@@ -100,8 +100,9 @@ export async function init(
   let showGrid = controls.showGrid as boolean
 
   // Fixed settings
-  const colors = ['#ff0000', '#ffff00', '#00ff00', '#0000ff', '#ff00ff'] // Array of colors to cycle through
-  const backgroundColor = '#000000'
+  const colors = theme.palette
+  const backgroundColor = theme.background
+  const annotationColor = utils.color.parse(theme.annotation)?.toCss('rgba') ?? theme.annotation
 
   // Calculate square size (based on smaller dimension)
   const size = Math.min(container.clientWidth, container.clientHeight)
@@ -227,13 +228,13 @@ export async function init(
       // Draw vertical grid lines
       for (let col = 0; col <= gridSize; col++) {
         const x = margin + col * cellSize
-        svg.makeLine(v(x, margin), v(x, margin + gridArea), '#666', 0.5)
+        svg.makeLine(v(x, margin), v(x, margin + gridArea), annotationColor, 0.5)
       }
 
       // Draw horizontal grid lines
       for (let row = 0; row <= gridSize; row++) {
         const y = margin + row * cellSize
-        svg.makeLine(v(margin, y), v(margin + gridArea, y), '#666', 0.5)
+        svg.makeLine(v(margin, y), v(margin + gridArea, y), annotationColor, 0.5)
       }
 
       // Draw column numbers (top)
@@ -245,7 +246,7 @@ export async function init(
         text.setAttribute('y', (margin - 10).toString())
         text.setAttribute('text-anchor', 'middle')
         text.setAttribute('font-size', '10')
-        text.setAttribute('fill', '#666')
+        text.setAttribute('fill', annotationColor)
         text.textContent = (col + 1).toString()
         svg.stage.appendChild(text)
       }
@@ -259,7 +260,7 @@ export async function init(
         text.setAttribute('y', (y + 3).toString())
         text.setAttribute('text-anchor', 'end')
         text.setAttribute('font-size', '10')
-        text.setAttribute('fill', '#666')
+        text.setAttribute('fill', annotationColor)
         text.textContent = (row + 1).toString()
         svg.stage.appendChild(text)
       }

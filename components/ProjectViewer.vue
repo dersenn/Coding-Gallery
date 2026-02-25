@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import type { Project, ProjectModule, CleanupFunction } from '~/types/project'
+import { resolveTheme } from '~/utils/theme'
 
 const props = defineProps<{
   project: Project
@@ -66,9 +67,11 @@ const loadProject = async () => {
     }
 
     // Setup context for the project
+    const theme = resolveTheme(module.theme)
     cleanup = await module.init(containerRef.value, {
       controls: toRaw(controlValues.value),
       utils,
+      theme,
       onControlChange: (callback) => {
         controlCallbacks.push(callback)
       }

@@ -10,6 +10,7 @@ import p5 from 'p5'
  * Available context:
  * - controls: Reactive control values (defined below)
  * - utils: Global utilities (noise, seed, math)
+ * - theme: Global color tokens (with optional project overrides)
  * - onControlChange: Register callback for control updates
  */
 
@@ -39,24 +40,32 @@ export const controls: ControlDefinition[] = [
   // }
 ]
 
+// Optional: override only the color tokens your sketch needs
+// export const theme = {
+//   background: '#111827',
+//   foreground: '#e2e8f0',
+//   annotation: '#475569',
+//   palette: ['#22d3ee', '#a78bfa', '#f472b6']
+// }
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange } = context
+  const { controls, utils, theme, onControlChange } = context
 
   const sketch = new p5((p) => {
     p.setup = () => {
       p.createCanvas(container.clientWidth, container.clientHeight)
-      p.background(220)
+      p.background(theme.background)
     }
 
     p.draw = () => {
       // Your sketch code here
-      p.background(220)
+      p.background(theme.background)
       
       // Example: draw a circle
-      p.fill(0)
+      p.fill(theme.foreground)
       p.circle(p.width / 2, p.height / 2, 50)
       
       // Example: use global utilities

@@ -4,7 +4,7 @@
     "title": "Pearly Mats",
     "description": "Pearly Mats",
     "date": "2026-02",
-    "tags": ["svg", "generative", "noise", "grid"],
+    "tags": ["svg", "noise", "grid"],
     "libraries": ["svg", "simplex-noise"],
     "entryFile": "/projects/pearlymats/index.ts",
     "hidden": false

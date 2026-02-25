@@ -11,7 +11,7 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 - **Full-screen sketches** with overlay UI
 - **Portable projects** that can be easily exported
 - **Multiple rendering modes** - p5.js, SVG, or raw canvas
-- **Global utilities** (noise, seed, math, vectors, shortcuts) shared across all projects
+- **Global utilities** (noise, seed, math, vectors, grids, shortcuts) shared across all projects
 - **Reactive controls** defined in sketch code with URL persistence
 - **SVG engine** with shapes, paths, and bezier curves
 - **p5.js instance mode** to prevent namespace conflicts
@@ -56,7 +56,9 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 └── utils/
     ├── generative.ts          # Generative art utilities (noise, seed, math, Vec)
     ├── shortcuts.ts           # Shorthand functions for hand-coding
-    └── svg.ts                 # SVG engine (shapes, paths, bezier curves)
+    ├── svg.ts                 # SVG engine (shapes, paths, bezier curves)
+    ├── grid.ts                # Grid utility (uniform & recursive subdivision)
+    └── cell.ts                # Cell utility (base class with neighbor access)
 ```
 
 ## Creating a New Project
@@ -290,7 +292,103 @@ const mapped = map(noise, 0, 1, -100, 100)
 const angle = rad(45)
 ```
 
-Available shortcuts: `v`, `rnd`, `rndInt`, `rndRange`, `coin`, `map`, `lerp`, `clamp`, `norm`, `dist`, `rad`, `deg`, `vDist`, `vLerp`, `vMid`, `noise2`, `noise3`, `shuffle`
+Available shortcuts: `v`, `rnd`, `rndInt`, `rndRange`, `coin`, `map`, `lerp`, `clamp`, `norm`, `dist`, `rad`, `deg`, `vDist`, `vLerp`, `vMid`, `noise2`, `noise3`, `shuffle`, `Grid`, `Cell`
+
+### Grid and Cell Utilities
+
+Create grids with neighbor checking and recursive subdivision:
+
+```typescript
+import { Grid, Cell } from '~/types/project'
+
+// Create a uniform grid
+const grid = new Grid({
+  cols: 10,
+  rows: 10,
+  width: 500,
+  height: 500,
+  x: 0,
+  y: 0,
+  margin: 20,
+  utils
+})
+
+// Access cells
+const cell = grid.at(5, 5)              // 2D access by row, col
+const cellByIndex = grid.cellAt(55)     // 1D access by index
+
+// Iterate over cells
+grid.forEach((cell, row, col) => {
+  // Draw or process each cell
+})
+
+const customCells = grid.map((cell) => {
+  return new MyCustomCell(cell)
+})
+
+// Get neighbors (O(1) lookup)
+const neighbors = cell.getNeighbors()    // All 8 neighbors
+const cardinal = cell.getNeighbors4()    // Only top, right, bottom, left
+const top = cell.getNeighbor('top')      // Specific neighbor
+
+// Cell utilities
+const center = cell.center()             // Vec of cell center
+const isInside = cell.contains(x, y)     // Point-in-cell test
+const dist = cell.distance(otherCell)    // Distance between centers
+const isEdge = cell.isEdge()             // Check if on grid boundary
+const isCorner = cell.isCorner()         // Check if corner cell
+
+// Recursive subdivision
+const subdividedCells = grid.subdivide({
+  maxLevel: 3,
+  chance: 50,                            // 50% chance to stop subdividing
+  subdivisionCols: 2,                    // Split into 2x2 per level
+  subdivisionRows: 2
+})
+
+// Or use custom condition
+const subdividedCells = grid.subdivide({
+  maxLevel: 4,
+  condition: (cell, level) => {
+    // Custom logic to determine if subdivision should stop
+    return level < 4 && Math.random() > 0.3
+  }
+})
+
+// Extend Cell for project-specific behavior
+class MyCell extends Cell {
+  color: string
+  
+  constructor(baseCell: Cell) {
+    super(baseCell)
+    this.color = getRandomColor()
+  }
+  
+  draw(svg: SVG) {
+    svg.makeRect(
+      utils.vec.create(this.x, this.y),
+      this.width,
+      this.height,
+      this.color
+    )
+  }
+}
+```
+
+**Grid Features:**
+- Dual indexing (2D array + 1D flat array)
+- O(1) neighbor lookups
+- Iteration methods (`forEach`, `map`, `filter`)
+- Recursive subdivision with chance or custom conditions
+- Helper methods (`getEdgeCells()`, `getCornerCells()`, `randomCell()`)
+
+**Cell Features:**
+- Position and dimensions (x, y, width, height)
+- Grid coordinates (row, col, index)
+- Neighbor access (8-directional or 4-cardinal)
+- Utility methods (center, contains, distance, edge/corner checks)
+- Extendable for project-specific properties and methods
+- Subdivision support (level, parent tracking)
 
 ## Control Types
 

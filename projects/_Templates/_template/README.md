@@ -66,9 +66,52 @@ const speed = controls.speed as number
 const showGrid = controls.showGrid as boolean
 ```
 
+## Theme Tokens (Minimal)
+
+Projects receive shared color tokens through `context.theme`:
+
+```typescript
+const { theme } = context
+theme.background  // canvas base
+theme.foreground  // default text/stroke
+theme.annotation  // helper lines/labels/debug overlays
+theme.palette     // default color sequence
+```
+
+Optional project-level override in `index.ts` (override only what you need):
+
+```typescript
+export const theme = {
+  background: '#111827',
+  palette: ['#22d3ee', '#a78bfa', '#f472b6']
+}
+```
+
 ## Available Utilities
 
 All projects have access to `utils` via the context:
+
+### Color Utilities (Dual Access)
+```typescript
+// Pattern 1: context utils
+const base = utils.color.parse(theme.palette[0]!)
+const overlay = base?.withAlpha(0.35).toRgbaString() ?? 'rgba(255, 255, 255, 0.35)'
+
+// Pattern 2: direct class import
+import { Color } from '~/types/project'
+const accent = Color.fromHex('#f0f')?.toCss('rgba') ?? '#f0f'
+const fromHsl = Color.fromHsl(210, 100, 50).toHex()
+
+// Parsing HSL/HSLA strings also works
+const parsed = utils.color.parse('hsla(200, 80%, 50%, 0.4)')
+```
+
+Useful outputs:
+```typescript
+color.toHex()         // #rrggbb
+color.toRgbaString()  // rgba(r, g, b, a)
+color.toP5Tuple()     // [r, g, b, a255]
+```
 
 ### Seeded Random
 ```typescript
@@ -179,7 +222,7 @@ export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils } = context
+  const { controls, utils, theme } = context
   let speed = controls.speed as number
 
   const sketch = new p5((p) => {
@@ -188,8 +231,8 @@ export async function init(
     }
 
     p.draw = () => {
-      p.background(0)
-      p.fill(255)
+      p.background(theme.background)
+      p.fill(theme.foreground)
       p.circle(p.width/2, p.height/2, 100 * speed)
     }
 

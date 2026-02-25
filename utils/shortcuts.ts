@@ -52,6 +52,9 @@ export function shortcuts(utils: GenerativeUtils) {
     // Grid and Cell shortcuts
     Grid: utils.grid.create, // Grid(config) => Grid
     Cell: utils.cell.create, // Cell(config) => Cell
+    
+    // Color shortcuts
+    clr: utils.color.parse, // clr(input) => Color | null
 
     // Direct access to Vec class for type annotations
     Vec: utils.vec.create, // Vec(x, y, z?) => Vec

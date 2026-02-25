@@ -1,4 +1,5 @@
 import type { GenerativeUtils } from '~/utils/generative'
+import type { ThemeOverride, ThemeTokens } from '~/utils/theme'
 
 export interface ControlDefinition {
   type: 'slider' | 'toggle' | 'select' | 'color'
@@ -33,11 +34,13 @@ export interface Project {
 export interface ProjectModule {
   init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
   controls?: ControlDefinition[] // Optional: controls can be defined in the module
+  theme?: ThemeOverride // Optional: project-level theme overrides
 }
 
 export interface ProjectContext {
   controls: ControlValues
   utils: GenerativeUtils
+  theme: ThemeTokens
   onControlChange: (callback: (controls: ControlValues) => void) => void
 }
 
@@ -49,3 +52,4 @@ export { SVG, Path, pPt } from '~/utils/svg'
 export { shortcuts } from '~/utils/shortcuts'
 export { Grid } from '~/utils/grid'
 export { Cell } from '~/utils/cell'
+export { Color } from '~/utils/color'
