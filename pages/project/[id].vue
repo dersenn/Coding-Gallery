@@ -144,6 +144,14 @@ const handleKeyboardShortcut = (event: KeyboardEvent) => {
   if (event.key.toLowerCase() === 'n') {
     event.preventDefault()
     void handleControlAction('new-seed')
+    return
+  }
+
+  if (event.key.toLowerCase() === 'd') {
+    const hasDownloadAction = loadedActions.value.some((action) => action.key === 'download-svg')
+    if (!hasDownloadAction) return
+    event.preventDefault()
+    void handleControlAction('download-svg')
   }
 }
 

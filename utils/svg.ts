@@ -1,4 +1,5 @@
 import { Vec } from './generative'
+import { buildSvgDownloadFilename, serializeSvgWithMetadata, type DownloadControlValues } from './download'
 
 /**
  * SVG Engine - Port from original engine.js
@@ -65,37 +66,20 @@ export class SVG {
     return stage
   }
 
-  save(seed?: string, sketchName?: string): void {
-    const str = new XMLSerializer().serializeToString(this.stage)
+  save(seed?: string, sketchName?: string, controls?: DownloadControlValues): void {
+    const str = serializeSvgWithMetadata(this.stage, {
+      projectId: sketchName || this.id,
+      seed,
+      controls,
+      sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined
+    })
     const blob = new Blob([str], this.mime)
 
     const link = document.createElement('a')
-    let hashStr = ''
-    let sketchStr = ''
-
-    if (seed) {
-      hashStr += `_${seed}`
-    }
-    if (sketchName) {
-      sketchStr += sketchName
-    }
-
-    // Format timestamp as readable date string
-    const now = new Date()
-    const timestamp = now
-      .toLocaleString('sv-SE', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      })
-      .replace(/[:.]/g, '-')
-      .replace(/\s/g, '_') // YYYY-MM-DD_HH-MM-SS in local timezone
-
-    link.download = `${sketchStr}${hashStr}_${timestamp}.svg`
+    link.download = buildSvgDownloadFilename({
+      projectId: sketchName || this.id,
+      seed
+    })
     link.href = URL.createObjectURL(blob)
     link.click()
     URL.revokeObjectURL(link.href)

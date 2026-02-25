@@ -1,4 +1,4 @@
-import type { ProjectContext, CleanupFunction, ControlDefinition, ProjectActionDefinition } from '~/types/project'
+import type { ProjectContext, CleanupFunction, ControlDefinition } from '~/types/project'
 import { SVG, Grid, Cell, Color } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -14,8 +14,6 @@ import { shortcuts } from '~/utils/shortcuts'
  * - Lacunarity: Frequency multiplier per octave (2.0 = each octave doubles frequency)
  * - Persistence: Amplitude multiplier per octave (0.5 = each octave halves amplitude)
  * 
- * Keyboard shortcuts:
- * - 'd': Download SVG
  */
 
 // Export controls
@@ -82,18 +80,11 @@ export const controls: ControlDefinition[] = [
   }
 ]
 
-export const actions: ProjectActionDefinition[] = [
-  {
-    key: 'download-svg',
-    label: 'Download SVG'
-  }
-]
-
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, theme, onControlChange, registerAction } = context
+  const { controls, utils, theme, onControlChange } = context
   const { v, map, simplex2 } = shortcuts(utils)
 
   // Get control values
@@ -288,32 +279,8 @@ export async function init(
     draw()
   })
 
-  const downloadSvg = () => {
-    svg.save(utils.seed.current, 'pearlymats')
-  }
-
-  registerAction('download-svg', downloadSvg)
-
-  // Keyboard shortcuts
-  const handleKeyPress = (event: KeyboardEvent) => {
-    if (
-      event.target instanceof HTMLInputElement ||
-      event.target instanceof HTMLTextAreaElement
-    ) {
-      return
-    }
-    
-    if (event.key.toLowerCase() === 'd') {
-      event.preventDefault()
-      downloadSvg()
-    }
-  }
-  
-  window.addEventListener('keydown', handleKeyPress)
-
   // Cleanup function
   return () => {
-    window.removeEventListener('keydown', handleKeyPress)
     svg.stage.remove()
   }
 }

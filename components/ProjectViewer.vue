@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import type { Project, ProjectModule, CleanupFunction, ProjectActionDefinition } from '~/types/project'
 import { resolveTheme } from '~/utils/theme'
+import { buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
 
 const props = defineProps<{
   project: Project
@@ -51,20 +52,21 @@ const createSvgDownloadFallback = () => {
       return
     }
 
-    const serialized = new XMLSerializer().serializeToString(svgElement)
-    const withNamespace = serialized.includes('xmlns=')
-      ? serialized
-      : serialized.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
-    const source = withNamespace.startsWith('<?xml')
-      ? withNamespace
-      : `<?xml version="1.0" encoding="UTF-8"?>\n${withNamespace}`
+    const source = serializeSvgWithMetadata(svgElement, {
+      projectId: props.project.id,
+      seed: utils.seed.current,
+      controls: toRaw(controlValues.value),
+      sourceUrl: window.location.href
+    })
     const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    const projectId = props.project.id || 'project'
 
     link.href = url
-    link.download = `${projectId}-${utils.seed.current}.svg`
+    link.download = buildSvgDownloadFilename({
+      projectId: props.project.id,
+      seed: utils.seed.current
+    })
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

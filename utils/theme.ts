@@ -14,7 +14,7 @@ export interface ThemeOverride {
 
 export const defaultTheme: ThemeTokens = {
   background: '#000000',
-  foreground: '#ffffff',
+  foreground: '#00ff00',
   annotation: '#666666',
   palette: ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f']
 }
