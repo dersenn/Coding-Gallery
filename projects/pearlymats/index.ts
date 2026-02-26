@@ -1,19 +1,39 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
 import { SVG, Grid, Cell, Color } from '~/types/project'
-import { normalizeColorList, resolveActiveColors } from '~/utils/color'
+import { buildPaletteMap, getPaletteByKey, normalizeColorList, resolveActiveColors } from '~/utils/color'
 import { shortcuts } from '~/utils/shortcuts'
 import { syncControlState } from '~/composables/useControls'
 import { defaultTheme } from '~/utils/theme'
 
 const CUSTOM_PALETTE_STORAGE_KEY = 'pearlymats:customPalette'
 const FALLBACK_CUSTOM_PALETTE = ['#fdf2f8', '#ddd6fe', '#bfdbfe']
-const PEARL_PALETTE = ['#fdf2f8', '#ddd6fe', '#bfdbfe', '#a7f3d0', '#f5d0fe', '#fde68a']
-const NEON_PALETTE = ['#ff006e', '#8338ec', '#3a86ff', '#00f5d4', '#ffbe0b', '#fb5607']
-const EARTH_PALETTE = ['#6b4226', '#a98467', '#d5bdaf', '#9c6644', '#7f5539', '#b08968']
-const STANDARD_PALETTE_LABELS = normalizeColorList(defaultTheme.palette)
-const PEARL_PALETTE_LABELS = normalizeColorList(PEARL_PALETTE)
-const NEON_PALETTE_LABELS = normalizeColorList(NEON_PALETTE)
-const EARTH_PALETTE_LABELS = normalizeColorList(EARTH_PALETTE)
+const STANDARD_PALETTE_KEY = 'standard'
+const CUSTOM_PALETTE_KEY = 'custom'
+const NAMED_PALETTES: Record<string, string[]> = {
+  pearl: ['#fdf2f8', '#ddd6fe', '#bfdbfe', '#a7f3d0', '#f5d0fe', '#fde68a'],
+  neon: ['#ff006e', '#8338ec', '#3a86ff', '#00f5d4', '#ffbe0b', '#fb5607'],
+  earth: ['#6b4226', '#a98467', '#d5bdaf', '#9c6644', '#7f5539', '#b08968']
+}
+const BUILTIN_PALETTE_LABELS_BY_PRESET: Record<string, string[]> = {
+  [STANDARD_PALETTE_KEY]: normalizeColorList(defaultTheme.palette),
+  ...Object.fromEntries(
+    Object.entries(NAMED_PALETTES).map(([key, palette]) => [key, normalizeColorList(palette)])
+  )
+}
+const PALETTE_PRESET_OPTIONS = [
+  { label: 'Standard', value: STANDARD_PALETTE_KEY },
+  { label: 'Pearl', value: 'pearl' },
+  { label: 'Neon', value: 'neon' },
+  { label: 'Earth', value: 'earth' },
+  { label: 'Custom', value: CUSTOM_PALETTE_KEY }
+]
+const PALETTE_VISIBLE_COUNT_BY_PRESET: Record<string, number> = {
+  [STANDARD_PALETTE_KEY]: BUILTIN_PALETTE_LABELS_BY_PRESET[STANDARD_PALETTE_KEY]!.length,
+  pearl: BUILTIN_PALETTE_LABELS_BY_PRESET.pearl!.length,
+  neon: BUILTIN_PALETTE_LABELS_BY_PRESET.neon!.length,
+  earth: BUILTIN_PALETTE_LABELS_BY_PRESET.earth!.length,
+  [CUSTOM_PALETTE_KEY]: 0
+}
 const readPersistedCustomPalette = (): string[] => {
   if (!import.meta.client) return [...FALLBACK_CUSTOM_PALETTE]
   try {
@@ -183,14 +203,8 @@ export const controls: ProjectControlDefinition[] = [
         type: 'select',
         label: 'Palette',
         key: 'palettePreset',
-        default: 'standard',
-        options: [
-          { label: 'Standard', value: 'standard' },
-          { label: 'Pearl', value: 'pearl' },
-          { label: 'Neon', value: 'neon' },
-          { label: 'Earth', value: 'earth' },
-          { label: 'Custom', value: 'custom' }
-        ]
+        default: STANDARD_PALETTE_KEY,
+        options: PALETTE_PRESET_OPTIONS
       },
       {
         type: 'checkbox-group',
@@ -198,31 +212,15 @@ export const controls: ProjectControlDefinition[] = [
         key: 'selectedPaletteIndices',
         default: [0, 1, 2],
         visibleCountFromSelectKey: 'palettePreset',
-        visibleCountBySelectValue: {
-          standard: 6,
-          pearl: 6,
-          neon: 6,
-          earth: 6,
-          custom: 0
-        },
+        visibleCountBySelectValue: PALETTE_VISIBLE_COUNT_BY_PRESET,
         visibleCountFromKey: 'customPalette',
-        optionLabelsBySelectValue: {
-          standard: STANDARD_PALETTE_LABELS,
-          pearl: PEARL_PALETTE_LABELS,
-          neon: NEON_PALETTE_LABELS,
-          earth: EARTH_PALETTE_LABELS
-        },
+        optionLabelsBySelectValue: BUILTIN_PALETTE_LABELS_BY_PRESET,
         optionLabelsFromKeyBySelectValue: {
-          custom: 'customPalette'
+          [CUSTOM_PALETTE_KEY]: 'customPalette'
         },
-        optionSwatchesBySelectValue: {
-          standard: STANDARD_PALETTE_LABELS,
-          pearl: PEARL_PALETTE_LABELS,
-          neon: NEON_PALETTE_LABELS,
-          earth: EARTH_PALETTE_LABELS
-        },
+        optionSwatchesBySelectValue: BUILTIN_PALETTE_LABELS_BY_PRESET,
         optionSwatchesFromKeyBySelectValue: {
-          custom: 'customPalette'
+          [CUSTOM_PALETTE_KEY]: 'customPalette'
         },
         options: [
           { label: '#000000', value: 0 },
@@ -243,7 +241,7 @@ export const controls: ProjectControlDefinition[] = [
         minItems: 1,
         maxItems: 8,
         visibleWhenSelectKey: 'palettePreset',
-        visibleWhenSelectValue: 'custom'
+        visibleWhenSelectValue: CUSTOM_PALETTE_KEY
       }
     ]
   }
@@ -275,12 +273,7 @@ export async function init(
   }
 
   // Fixed settings
-  const colorPalettes: Record<string, string[]> = {
-    standard: normalizeColorList(theme.palette),
-    pearl: normalizeColorList(PEARL_PALETTE),
-    neon: normalizeColorList(NEON_PALETTE),
-    earth: normalizeColorList(EARTH_PALETTE)
-  }
+  const colorPalettes = buildPaletteMap(theme.palette, NAMED_PALETTES)
   const backgroundColor = theme.background
   const annotationColor = (Color.parse(theme.annotation) ?? Color.fromHex('#666')!).toCss('rgba')
 
@@ -413,13 +406,13 @@ export async function init(
     const outsideAlpha = 0.15
     const centerCol = (controlState.gridSize - 1) / 2
     const centerRow = (controlState.gridSize - 1) / 2
-    const standardPalette = colorPalettes.standard ?? normalizeColorList(theme.palette)
-    const paletteColors = colorPalettes[controlState.palettePreset] ?? standardPalette
+    const standardPalette = getPaletteByKey(colorPalettes, STANDARD_PALETTE_KEY)
+    const paletteColors = getPaletteByKey(colorPalettes, controlState.palettePreset)
     const activeColors = resolveActiveColors({
       paletteColors,
       selectedValues: controlState.selectedPaletteIndices,
       customColors: controlState.customPalette,
-      useCustomPalette: controlState.palettePreset === 'custom',
+      useCustomPalette: controlState.palettePreset === CUSTOM_PALETTE_KEY,
       fallbackColors: standardPalette
     })
 

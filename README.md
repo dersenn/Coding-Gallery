@@ -173,6 +173,19 @@ Conventions:
 - Use leaf `group: '...'` metadata only when staying flat or mixing styles
 - Prefer small groups (about 3-8 controls) over one large mixed section
 
+Named palette pattern (shared utility):
+
+```typescript
+import { buildPaletteMap, getPaletteByKey } from '~/utils/color'
+
+const paletteMap = buildPaletteMap(theme.palette, {
+  pearl: ['#fdf2f8', '#ddd6fe', '#bfdbfe'],
+  neon: ['#ff006e', '#8338ec', '#3a86ff']
+})
+
+const paletteColors = getPaletteByKey(paletteMap, controls.palettePreset as string)
+```
+
 ### 5. Add Optional Contextual Actions
 
 Project modules can expose action buttons in the control panel and keyboard shortcuts via the page shell:

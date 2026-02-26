@@ -281,6 +281,7 @@ export class Color {
 }
 
 const DEFAULT_FALLBACK_COLORS = ['#ffffff']
+export type PaletteMap = Record<string, string[]>
 
 export interface ResolveActiveColorsOptions {
   paletteColors: string[]
@@ -316,6 +317,36 @@ export const normalizeColorList = (
     .filter((color): color is string => color !== null)
 
   return fallbackColors.length ? fallbackColors : [...DEFAULT_FALLBACK_COLORS]
+}
+
+export const buildPaletteMap = (
+  themePalette: string[],
+  namedPalettes: Record<string, string[]> = {}
+): PaletteMap => {
+  const standard = normalizeColorList(themePalette)
+  const paletteMap: PaletteMap = { standard }
+
+  Object.entries(namedPalettes).forEach(([key, palette]) => {
+    if (!key || key === 'standard') return
+    paletteMap[key] = normalizeColorList(palette, standard)
+  })
+
+  return paletteMap
+}
+
+export const getPaletteByKey = (
+  paletteMap: PaletteMap,
+  selectedKey: string | null | undefined
+): string[] => {
+  if (selectedKey && paletteMap[selectedKey]) {
+    return paletteMap[selectedKey]!
+  }
+  if (paletteMap.standard?.length) {
+    return paletteMap.standard
+  }
+
+  const firstEntry = Object.values(paletteMap)[0]
+  return firstEntry?.length ? firstEntry : [...DEFAULT_FALLBACK_COLORS]
 }
 
 const normalizeSelectedIndices = (

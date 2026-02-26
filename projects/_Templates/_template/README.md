@@ -134,6 +134,22 @@ color.toRgbaString()  // rgba(r, g, b, a)
 color.toP5Tuple()     // [r, g, b, a255]
 ```
 
+Named palettes (shared utility pattern):
+```typescript
+import { buildPaletteMap, getPaletteByKey, resolveActiveColors } from '~/utils/color'
+
+const paletteMap = buildPaletteMap(theme.palette, {
+  warm: ['#f97316', '#fb7185', '#facc15'],
+  cool: ['#22d3ee', '#6366f1', '#a78bfa']
+})
+
+const paletteColors = getPaletteByKey(paletteMap, controls.palettePreset as string)
+const activeColors = resolveActiveColors({
+  paletteColors,
+  selectedValues: controls.selectedPaletteIndices as number[]
+})
+```
+
 ### Seeded Random
 ```typescript
 utils.seed.random()                    // Random 0-1
