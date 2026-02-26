@@ -1,24 +1,8 @@
 export default defineNuxtPlugin(() => {
   if (import.meta.client) {
-    const handleKeyPress = async (event: KeyboardEvent) => {
-      // Only trigger if not typing in input/textarea
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement
-      ) {
-        return
-      }
-
-      switch (event.key.toLowerCase()) {
-        case 'n': {
-          event.preventDefault()
-          const { generateNewSeed } = useSeedFromURL()
-          await generateNewSeed()
-          break
-        }
-        // Future: Add more global shortcuts here
-        // Projects can still register their own shortcuts (like 'd' for download)
-      }
+    const handleKeyPress = (_event: KeyboardEvent) => {
+      // Reserved for non-project global shortcuts.
+      // Project viewer shortcuts (n/r/d) are handled in pages/project/[id].vue.
     }
 
     window.addEventListener('keydown', handleKeyPress)

@@ -52,7 +52,7 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 ├── types/
 │   └── project.ts             # TypeScript interfaces
 ├── plugins/
-│   └── keyboard-shortcuts.client.ts  # Global keyboard shortcuts (n=new seed)
+│   └── keyboard-shortcuts.client.ts  # Global keyboard shortcut hook
 └── utils/
     ├── generative.ts          # Generative art utilities (noise, seed, math, Vec)
     ├── shortcuts.ts           # Shorthand functions for hand-coding
@@ -281,9 +281,10 @@ console.log('Seed:', utils.seed.current)
 ```
 
 **Keyboard Shortcuts:**
-- Press **'n'** to generate a new random seed and reload the sketch
-- Press **'r'** to reset controls to defaults
-- Press **'d'** to download SVG (SVG projects only; requires a `download-svg` action)
+- Press **'n'** to generate a new random seed in-place
+- Press **'r'** to reload the sketch view in-place
+- Press **'d'** to reset controls to defaults
+- Press **'s'** to save SVG output (SVG projects only; requires a `download-svg` action)
 - Seeds are automatically saved in the URL for sharing
 
 ### Math Helpers
@@ -586,7 +587,7 @@ export async function init(container, context) {
 Use `requestAnimationFrame` for animated SVG sketches (see `projects/_Templates/_svg-animated-template/`)
 
 **Download/Save:**
-SVG projects can expose a `download-svg` action. Press **'d'** (or click the action button) to save:
+SVG projects can expose a `download-svg` action. Press **'s'** (or click the action button) to save:
 - Filename format: `{projectId}_{timestamp}_{seed}.svg`
 - Includes export metadata (`projectId`, `seed`, `controls`, timestamps, source URL)
 - Timestamp in format: `YYYY-MM-DD_HH-MM-SS`

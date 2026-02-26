@@ -10,7 +10,7 @@ The gallery uses an sfc32-based seeded RNG with base58 hash strings (fxhash-styl
 
 - On project pages, seed is read from `?seed=...` when present.
 - If absent, a new seed is generated.
-- Press `n` to generate a new seed and reload.
+- Press `n` to generate a new seed in-place (no full page reload).
 - Current seed is logged to console on project load.
 
 ## Main APIs
@@ -37,7 +37,7 @@ Noise is seed-synchronized via `context.utils.noise.*`.
 - URL has valid `?seed=...`.
 - No code overrides seed unexpectedly.
 - All random/noise values come from `utils.seed` / `utils.noise`.
-- Keyboard shortcut plugin is active on project pages.
+- Project-page shortcut handler is active (`pages/project/[id].vue`).
 
 ## Related docs
 

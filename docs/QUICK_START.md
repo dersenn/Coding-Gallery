@@ -39,8 +39,9 @@ Use this for a fast first run. For full reference, see `../README.md`.
 ## Verify key runtime features
 
 - Press `n` on a project page to generate a new seed.
-- Press `r` on a project page to reset controls to defaults.
-- Press `d` on SVG projects to download output (via `download-svg` action or viewer fallback).
+- Press `r` on a project page to reload the sketch view in-place.
+- Press `d` on a project page to reset controls to defaults.
+- Press `s` on SVG projects to save output (via `download-svg` action or viewer fallback).
 - Check URL updates with `?seed=...`.
 - Open controls and confirm your sketch reacts to control changes.
 

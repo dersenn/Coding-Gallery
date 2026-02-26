@@ -26,6 +26,9 @@
           {{ action.label }}
         </button>
       </div>
+      <p class="text-xs text-white/70">
+        Shortcuts: <span class="font-mono">n</span> seed, <span class="font-mono">r</span> refresh, <span class="font-mono">d</span> defaults, <span class="font-mono">s</span> save
+      </p>
     </div>
 
     <div class="flex-1 min-h-0 overflow-y-auto space-y-4">

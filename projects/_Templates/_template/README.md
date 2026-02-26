@@ -227,8 +227,9 @@ onControlChange((newControls) => {
 ## Keyboard Shortcuts
 
 - **'n'** - Generate new seed (keeps your control settings)
-- **'r'** - Reset controls to defaults
-- **'d'** - Download SVG when a `download-svg` action is available
+- **'r'** - Reload sketch view in-place
+- **'d'** - Reset controls to defaults
+- **'s'** - Save SVG when a `download-svg` action is available
 - Control values persist in URL for sharing
 
 ## Project Structure
