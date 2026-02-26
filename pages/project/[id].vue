@@ -51,6 +51,7 @@
             <ControlPanel
               :controls="loadedControls"
               :context-actions="loadedActions"
+              :panel-state-key="project.id"
               class="h-full"
               @action="handleControlAction"
             />

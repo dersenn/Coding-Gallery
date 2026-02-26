@@ -27,9 +27,37 @@ Common aliases for quick coding:
 
 ### SVG classes (`utils/svg.ts`)
 
-- `SVG`: stage and shape creation (`makeLine`, `makeCircle`, `makeRect`, `makePath`, etc.)
+- `SVG`: stage and shape creation (`makeLine`, `makeCircle`, `makeRect`, `makePath`, `makeText`, etc.)
 - `Path`: polygon and bezier/spline builders (`buildPolygon`, `buildQuadBez`, `buildSpline`)
 - `save(seed?, sketchName?)` for deterministic filename exports
+
+### Text rendering (`SVG.makeText`)
+
+Use `makeText` for labels/annotations instead of manual SVG DOM creation.
+
+```typescript
+svg.makeText('12', v(120, 32), '#666', {
+  anchor: 'middle',
+  fontSize: 10
+})
+```
+
+Signature:
+
+```typescript
+makeText(
+  text: string,
+  at: Vec,
+  fill?: string,
+  options?: {
+    anchor?: 'start' | 'middle' | 'end'
+    baseline?: 'auto' | 'middle' | 'hanging' | 'text-top' | 'text-bottom' | 'alphabetic' | 'ideographic'
+    fontSize?: number
+    fontFamily?: string
+    fontWeight?: string
+  }
+): SVGTextElement
+```
 
 ## Templates and examples
 

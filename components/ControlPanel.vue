@@ -132,11 +132,16 @@ import type {
 const props = defineProps<{
   controls: ProjectControlDefinition[]
   contextActions?: ProjectActionDefinition[]
+  panelStateKey?: string
 }>()
 
 const { controlValues, updateControl } = useControls()
 const contextActions = computed(() => props.contextActions ?? [])
 const openSections = ref<Record<string, boolean>>({})
+const panelStateStorageKey = computed(() => {
+  if (!props.panelStateKey) return null
+  return `controlSections:${props.panelStateKey}`
+})
 
 interface ControlSection {
   id: string
@@ -144,6 +149,38 @@ interface ControlSection {
   controls: ControlDefinition[]
   collapsible: boolean
   defaultOpen: boolean
+}
+
+const readPersistedSections = (): Record<string, boolean> => {
+  if (!import.meta.client || !panelStateStorageKey.value) return {}
+
+  const raw = localStorage.getItem(panelStateStorageKey.value)
+  if (!raw) return {}
+
+  try {
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {}
+    }
+
+    const validEntries = Object.entries(parsed).filter((entry): entry is [string, boolean] => {
+      return typeof entry[0] === 'string' && typeof entry[1] === 'boolean'
+    })
+
+    return Object.fromEntries(validEntries)
+  } catch {
+    return {}
+  }
+}
+
+const persistSections = (sections: Record<string, boolean>) => {
+  if (!import.meta.client || !panelStateStorageKey.value) return
+
+  try {
+    localStorage.setItem(panelStateStorageKey.value, JSON.stringify(sections))
+  } catch {
+    // Ignore storage errors (quota/private mode) to keep panel functional.
+  }
 }
 
 const isControlGroup = (
@@ -191,22 +228,32 @@ const normalizedSections = computed<ControlSection[]>(() => {
 watch(
   normalizedSections,
   (sections) => {
-    const next = { ...openSections.value }
-    const activeIds = new Set(sections.map((section) => section.id))
+    if (sections.length === 0) {
+      openSections.value = {}
+      return
+    }
+
+    const persisted = readPersistedSections()
+    const next: Record<string, boolean> = {}
 
     sections.forEach((section) => {
-      if (next[section.id] === undefined) {
-        next[section.id] = section.defaultOpen
+      const persistedValue = persisted[section.id]
+      if (persistedValue !== undefined) {
+        next[section.id] = persistedValue
+        return
       }
-    })
 
-    Object.keys(next).forEach((id) => {
-      if (!activeIds.has(id)) {
-        delete next[id]
+      const currentValue = openSections.value[section.id]
+      if (currentValue !== undefined) {
+        next[section.id] = currentValue
+        return
       }
+
+      next[section.id] = section.defaultOpen
     })
 
     openSections.value = next
+    persistSections(next)
   },
   { immediate: true }
 )
@@ -215,6 +262,7 @@ const isSectionOpen = (section: ControlSection) => !section.collapsible || openS
 
 const toggleSection = (sectionId: string) => {
   openSections.value[sectionId] = !(openSections.value[sectionId] !== false)
+  persistSections(openSections.value)
 }
 
 const emit = defineEmits<{
