@@ -1,6 +1,13 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
 import { SVG, Grid, Cell, Color } from '~/types/project'
-import { buildPaletteMap, getPaletteByKey, normalizeColorList, resolveActiveColors } from '~/utils/color'
+import {
+  buildColorOptionLabels,
+  buildPaletteMap,
+  getPaletteByKey,
+  normalizeColorList,
+  resolveActiveColors,
+  type PaletteColorInput
+} from '~/utils/color'
 import { shortcuts } from '~/utils/shortcuts'
 import { syncControlState } from '~/composables/useControls'
 import { defaultTheme } from '~/utils/theme'
@@ -9,15 +16,52 @@ const CUSTOM_PALETTE_STORAGE_KEY = 'pearlymats:customPalette'
 const FALLBACK_CUSTOM_PALETTE = ['#fdf2f8', '#ddd6fe', '#bfdbfe']
 const STANDARD_PALETTE_KEY = 'standard'
 const CUSTOM_PALETTE_KEY = 'custom'
-const NAMED_PALETTES: Record<string, string[]> = {
+const BEAD_PALETTE: PaletteColorInput[] = [
+  { code: 'P96', name: 'Cranapple', hex: '#801922' },
+  { code: 'P05', name: 'Red', hex: '#F01820' },
+  { code: 'P38', name: 'Magenta', hex: '#F22A7B' },
+  { code: 'P83', name: 'Pink', hex: '#E44892' },
+  { code: 'P79', name: 'Light Pink', hex: '#F6B3DD' },
+  { code: 'P33', name: 'Peach', hex: '#EEBAB2' },
+  { code: 'P04', name: 'Orange', hex: '#ED6120' },
+  { code: 'P179', name: 'Evergreen', hex: '#114938' },
+  { code: 'P10', name: 'Dark Green', hex: '#1C753E' },
+  { code: 'P61', name: 'Kiwi Lime', hex: '#6CBE13' },
+  { code: 'P53', name: 'Pastel Green', hex: '#76C882' },
+  { code: 'P97', name: 'Prickly Pear', hex: '#BDDA01' },
+  { code: 'P03', name: 'Yellow', hex: '#ECD800' },
+  { code: 'P57', name: 'Cheddar', hex: '#F1AA0C' },
+  { code: 'P08', name: 'Dark Blue', hex: '#2B3F87' },
+  { code: 'P09', name: 'Light Blue', hex: '#3370C0' },
+  { code: 'P58', name: 'Toothpaste', hex: '#93C8D4' },
+  { code: 'P62', name: 'Turquoise', hex: '#2B89C6' },
+  { code: 'P81', name: 'Light Gray', hex: '#EEE3CF' },
+  { code: 'P01', name: 'White', hex: '#F1F1F1' },
+  { code: 'P02', name: 'Cream', hex: '#E0DEA9' },
+  { code: 'P18', name: 'Black', hex: '#2E2F32' },
+  { code: 'P92', name: 'Dark Grey', hex: '#4D5156' },
+  { code: 'P17', name: 'Grey', hex: '#8A8D91' },
+  { code: 'P21', name: 'Light Brown', hex: '#815D34' },
+  { code: 'P12', name: 'Brown', hex: '#513931' },
+  { code: 'P54', name: 'Pastel Lavender', hex: '#8A72C1' },
+  { code: 'P07', name: 'Purple', hex: '#604089' }
+]
+const NAMED_PALETTES: Record<string, PaletteColorInput[]> = {
   pearl: ['#fdf2f8', '#ddd6fe', '#bfdbfe', '#a7f3d0', '#f5d0fe', '#fde68a'],
   neon: ['#ff006e', '#8338ec', '#3a86ff', '#00f5d4', '#ffbe0b', '#fb5607'],
-  earth: ['#6b4226', '#a98467', '#d5bdaf', '#9c6644', '#7f5539', '#b08968']
+  earth: ['#6b4226', '#a98467', '#d5bdaf', '#9c6644', '#7f5539', '#b08968'],
+  beads: BEAD_PALETTE
 }
-const BUILTIN_PALETTE_LABELS_BY_PRESET: Record<string, string[]> = {
+const BUILTIN_PALETTE_SWATCHES_BY_PRESET: Record<string, string[]> = {
   [STANDARD_PALETTE_KEY]: normalizeColorList(defaultTheme.palette),
   ...Object.fromEntries(
     Object.entries(NAMED_PALETTES).map(([key, palette]) => [key, normalizeColorList(palette)])
+  )
+}
+const BUILTIN_PALETTE_LABELS_BY_PRESET: Record<string, string[]> = {
+  [STANDARD_PALETTE_KEY]: buildColorOptionLabels(defaultTheme.palette),
+  ...Object.fromEntries(
+    Object.entries(NAMED_PALETTES).map(([key, palette]) => [key, buildColorOptionLabels(palette)])
   )
 }
 const PALETTE_PRESET_OPTIONS = [
@@ -25,15 +69,21 @@ const PALETTE_PRESET_OPTIONS = [
   { label: 'Pearl', value: 'pearl' },
   { label: 'Neon', value: 'neon' },
   { label: 'Earth', value: 'earth' },
+  { label: 'Beads', value: 'beads' },
   { label: 'Custom', value: CUSTOM_PALETTE_KEY }
 ]
 const PALETTE_VISIBLE_COUNT_BY_PRESET: Record<string, number> = {
-  [STANDARD_PALETTE_KEY]: BUILTIN_PALETTE_LABELS_BY_PRESET[STANDARD_PALETTE_KEY]!.length,
-  pearl: BUILTIN_PALETTE_LABELS_BY_PRESET.pearl!.length,
-  neon: BUILTIN_PALETTE_LABELS_BY_PRESET.neon!.length,
-  earth: BUILTIN_PALETTE_LABELS_BY_PRESET.earth!.length,
+  [STANDARD_PALETTE_KEY]: BUILTIN_PALETTE_SWATCHES_BY_PRESET[STANDARD_PALETTE_KEY]!.length,
+  pearl: BUILTIN_PALETTE_SWATCHES_BY_PRESET.pearl!.length,
+  neon: BUILTIN_PALETTE_SWATCHES_BY_PRESET.neon!.length,
+  earth: BUILTIN_PALETTE_SWATCHES_BY_PRESET.earth!.length,
+  beads: BUILTIN_PALETTE_SWATCHES_BY_PRESET.beads!.length,
   [CUSTOM_PALETTE_KEY]: 0
 }
+const MAX_SELECTABLE_COLORS = Math.max(
+  8,
+  ...Object.values(PALETTE_VISIBLE_COUNT_BY_PRESET)
+)
 const readPersistedCustomPalette = (): string[] => {
   if (!import.meta.client) return [...FALLBACK_CUSTOM_PALETTE]
   try {
@@ -98,20 +148,14 @@ export const controls: ProjectControlDefinition[] = [
         optionLabelsFromKeyBySelectValue: {
           [CUSTOM_PALETTE_KEY]: 'customPalette'
         },
-        optionSwatchesBySelectValue: BUILTIN_PALETTE_LABELS_BY_PRESET,
+        optionSwatchesBySelectValue: BUILTIN_PALETTE_SWATCHES_BY_PRESET,
         optionSwatchesFromKeyBySelectValue: {
           [CUSTOM_PALETTE_KEY]: 'customPalette'
         },
-        options: [
-          { label: '#000000', value: 0 },
-          { label: '#000000', value: 1 },
-          { label: '#000000', value: 2 },
-          { label: '#000000', value: 3 },
-          { label: '#000000', value: 4 },
-          { label: '#000000', value: 5 },
-          { label: '#000000', value: 6 },
-          { label: '#000000', value: 7 }
-        ]
+        options: Array.from({ length: MAX_SELECTABLE_COLORS }, (_, index) => ({
+          label: '#000000',
+          value: index
+        }))
       },
       {
         type: 'color-list',

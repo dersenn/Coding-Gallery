@@ -117,21 +117,23 @@ export class Color {
   readonly g: number
   readonly b: number
   readonly a: number
+  readonly name?: string
 
-  constructor(r: number, g: number, b: number, a: number = 1) {
+  constructor(r: number, g: number, b: number, a: number = 1, name?: string) {
     this.r = clampByte(r)
     this.g = clampByte(g)
     this.b = clampByte(b)
     this.a = clampAlpha(a)
+    this.name = name?.trim() || undefined
   }
 
-  static fromRgb(r: number, g: number, b: number, a: number = 1): Color {
-    return new Color(r, g, b, a)
+  static fromRgb(r: number, g: number, b: number, a: number = 1, name?: string): Color {
+    return new Color(r, g, b, a, name)
   }
 
-  static fromHsl(h: number, s: number, l: number, a: number = 1): Color {
+  static fromHsl(h: number, s: number, l: number, a: number = 1, name?: string): Color {
     const [r, g, b] = hslToRgb(h, s, l)
-    return new Color(r, g, b, a)
+    return new Color(r, g, b, a, name)
   }
 
   static fromHex(hex: string): Color | null {
@@ -232,11 +234,15 @@ export class Color {
   }
 
   clone(): Color {
-    return new Color(this.r, this.g, this.b, this.a)
+    return new Color(this.r, this.g, this.b, this.a, this.name)
   }
 
   withAlpha(alpha: number): Color {
-    return new Color(this.r, this.g, this.b, alpha)
+    return new Color(this.r, this.g, this.b, alpha, this.name)
+  }
+
+  withName(name?: string): Color {
+    return new Color(this.r, this.g, this.b, this.a, name)
   }
 
   toHex(includeAlpha: boolean = false): string {
@@ -280,7 +286,16 @@ export class Color {
   }
 }
 
-const DEFAULT_FALLBACK_COLORS = ['#ffffff']
+export interface PaletteColorDefinition {
+  hex: string
+  name?: string
+  code?: string
+}
+
+export type PaletteColorInput = string | PaletteColorDefinition
+
+const DEFAULT_FALLBACK_HEX_COLORS = ['#ffffff']
+const DEFAULT_FALLBACK_COLORS: PaletteColorInput[] = DEFAULT_FALLBACK_HEX_COLORS
 export type PaletteMap = Record<string, string[]>
 
 export interface ResolveActiveColorsOptions {
@@ -293,35 +308,67 @@ export interface ResolveActiveColorsOptions {
   fallbackColors?: string[]
 }
 
+const getPaletteColorHex = (input: PaletteColorInput): string => {
+  return typeof input === 'string' ? input : input.hex
+}
+
 const toNormalizedHex = (input: string): string | null => {
   const parsed = Color.parse(input)
   if (!parsed) return null
   return parsed.toHex(parsed.a < 1)
 }
 
+const getPaletteColorLabel = (input: PaletteColorInput, fallbackHex: string): string => {
+  if (typeof input === 'string') return fallbackHex
+  const trimmedName = input.name?.trim()
+  return trimmedName || fallbackHex
+}
+
 export const normalizeColorList = (
-  input: string[],
-  fallback: string[] = DEFAULT_FALLBACK_COLORS
+  input: PaletteColorInput[],
+  fallback: PaletteColorInput[] = DEFAULT_FALLBACK_COLORS
 ): string[] => {
   const uniqueColors = new Set<string>()
 
   input.forEach((color) => {
-    const normalized = toNormalizedHex(color)
+    const normalized = toNormalizedHex(getPaletteColorHex(color))
     if (normalized) uniqueColors.add(normalized)
   })
 
   if (uniqueColors.size > 0) return [...uniqueColors]
 
   const fallbackColors = fallback
-    .map((color) => toNormalizedHex(color))
+    .map((color) => toNormalizedHex(getPaletteColorHex(color)))
     .filter((color): color is string => color !== null)
 
-  return fallbackColors.length ? fallbackColors : [...DEFAULT_FALLBACK_COLORS]
+  return fallbackColors.length ? fallbackColors : [...DEFAULT_FALLBACK_HEX_COLORS]
+}
+
+export const buildColorOptionLabels = (
+  input: PaletteColorInput[],
+  fallback: PaletteColorInput[] = DEFAULT_FALLBACK_COLORS
+): string[] => {
+  const normalizedColors = normalizeColorList(input, fallback)
+  const labelsByHex = new Map<string, string>()
+
+  input.forEach((entry) => {
+    const normalized = toNormalizedHex(getPaletteColorHex(entry))
+    if (!normalized || labelsByHex.has(normalized)) return
+    labelsByHex.set(normalized, getPaletteColorLabel(entry, normalized))
+  })
+
+  fallback.forEach((entry) => {
+    const normalized = toNormalizedHex(getPaletteColorHex(entry))
+    if (!normalized || labelsByHex.has(normalized)) return
+    labelsByHex.set(normalized, getPaletteColorLabel(entry, normalized))
+  })
+
+  return normalizedColors.map((hex) => labelsByHex.get(hex) ?? hex)
 }
 
 export const buildPaletteMap = (
-  themePalette: string[],
-  namedPalettes: Record<string, string[]> = {}
+  themePalette: PaletteColorInput[],
+  namedPalettes: Record<string, PaletteColorInput[]> = {}
 ): PaletteMap => {
   const standard = normalizeColorList(themePalette)
   const paletteMap: PaletteMap = { standard }
@@ -346,7 +393,7 @@ export const getPaletteByKey = (
   }
 
   const firstEntry = Object.values(paletteMap)[0]
-  return firstEntry?.length ? firstEntry : [...DEFAULT_FALLBACK_COLORS]
+  return firstEntry?.length ? firstEntry : [...DEFAULT_FALLBACK_HEX_COLORS]
 }
 
 const normalizeSelectedIndices = (

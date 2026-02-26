@@ -1,29 +1,31 @@
 <template>
   <div class="h-full flex flex-col p-4 font-medium text-sm text-white">
-    <div class="mb-4 flex flex-wrap gap-2">
+    <div class="mb-4 space-y-2">
       <button
         type="button"
-        class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+        class="w-full px-3 py-2 rounded-md bg-white/20 hover:bg-white/30 transition-colors font-semibold"
         @click="emit('action', 'new-seed')"
       >
         New Seed
       </button>
-      <button
-        type="button"
-        class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
-        @click="emit('action', 'reset-controls')"
-      >
-        Reset
-      </button>
-      <button
-        v-for="action in contextActions"
-        :key="action.key"
-        type="button"
-        class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
-        @click="emit('action', action.key)"
-      >
-        {{ action.label }}
-      </button>
+      <div class="flex gap-2">
+        <button
+          type="button"
+          class="flex-1 px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+          @click="emit('action', 'reset-controls')"
+        >
+          Reset
+        </button>
+        <button
+          v-for="action in contextActions"
+          :key="action.key"
+          type="button"
+          class="flex-1 px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+          @click="emit('action', action.key)"
+        >
+          {{ action.label }}
+        </button>
+      </div>
     </div>
 
     <div class="flex-1 min-h-0 overflow-y-auto space-y-4">
