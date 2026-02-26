@@ -47,6 +47,21 @@ const DOWNLOAD_SVG_ACTION: ProjectActionDefinition = {
   label: 'Download SVG'
 }
 
+const sendDebugLog = (
+  payload: {
+    runId: string
+    hypothesisId: string
+    location: string
+    message: string
+    data: Record<string, unknown>
+  }
+) => {
+  if (!import.meta.client) return
+  // #region agent log
+  fetch('http://127.0.0.1:7244/ingest/b79eac65-0a84-4591-a7e4-76cc58bbc566',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4a3b58'},body:JSON.stringify({sessionId:'4a3b58',...payload,timestamp:Date.now()})}).catch(()=>{})
+  // #endregion
+}
+
 const hasSvgLibrary = computed(() => {
   return (props.project.libraries || []).some((library) => library.trim().toLowerCase() === 'svg')
 })
@@ -161,6 +176,18 @@ const loadProject = async () => {
 watch(controlValues, (newValues) => {
   if (controlCallbacks.length > 0) {
     const rawValues = toRaw(newValues)
+    if (rawValues.amplitude !== undefined) {
+      sendDebugLog({
+        runId: 'initial',
+        hypothesisId: 'H2',
+        location: 'components/ProjectViewer.vue:watch(controlValues)',
+        message: 'Control watcher broadcasting amplitude',
+        data: {
+          amplitude: rawValues.amplitude,
+          callbackCount: controlCallbacks.length
+        }
+      })
+    }
     controlCallbacks.forEach(cb => cb(rawValues))
   }
 }, { deep: true })

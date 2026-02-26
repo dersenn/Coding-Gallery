@@ -98,6 +98,21 @@ const readPersistedCustomPalette = (): string[] => {
 }
 const DEFAULT_CUSTOM_PALETTE = readPersistedCustomPalette()
 
+const sendDebugLog = (
+  payload: {
+    runId: string
+    hypothesisId: string
+    location: string
+    message: string
+    data: Record<string, unknown>
+  }
+) => {
+  if (!import.meta.client) return
+  // #region agent log
+  fetch('http://127.0.0.1:7244/ingest/b79eac65-0a84-4591-a7e4-76cc58bbc566',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4a3b58'},body:JSON.stringify({sessionId:'4a3b58',...payload,timestamp:Date.now()})}).catch(()=>{})
+  // #endregion
+}
+
 /**
  * Pearlymats - Noise-based Grid Pattern
  * 
@@ -462,6 +477,18 @@ export async function init(
       useCustomPalette: controlState.palettePreset === CUSTOM_PALETTE_KEY,
       fallbackColors: standardPalette
     })
+    sendDebugLog({
+      runId: 'initial',
+      hypothesisId: 'H4',
+      location: 'projects/pearlymats/index.ts:draw',
+      message: 'Draw start with amplitude and palette state',
+      data: {
+        amplitude: controlState.amplitude,
+        selectedPaletteIndicesCount: controlState.selectedPaletteIndices.length,
+        activeColorsCount: activeColors.length,
+        palettePreset: controlState.palettePreset
+      }
+    })
 
     // Create PearlyCells from grid cells
     const cells: PearlyCell[] = grid.map(cell => 
@@ -477,6 +504,35 @@ export async function init(
         activeColors
       )
     )
+    const noiseStats = cells.reduce(
+      (acc, cell) => {
+        const noise = cell.noiseValue
+        if (noise < acc.minNoise) acc.minNoise = noise
+        if (noise > acc.maxNoise) acc.maxNoise = noise
+        acc.sumNoise += noise
+        acc.uniqueColors.add(cell.color)
+        return acc
+      },
+      {
+        minNoise: Number.POSITIVE_INFINITY,
+        maxNoise: Number.NEGATIVE_INFINITY,
+        sumNoise: 0,
+        uniqueColors: new Set<string>()
+      }
+    )
+    sendDebugLog({
+      runId: 'initial',
+      hypothesisId: 'H5',
+      location: 'projects/pearlymats/index.ts:draw',
+      message: 'Noise/color distribution after amplitude applied',
+      data: {
+        amplitude: controlState.amplitude,
+        minNoise: Number.isFinite(noiseStats.minNoise) ? noiseStats.minNoise : null,
+        maxNoise: Number.isFinite(noiseStats.maxNoise) ? noiseStats.maxNoise : null,
+        avgNoise: cells.length > 0 ? noiseStats.sumNoise / cells.length : null,
+        uniqueColorCount: noiseStats.uniqueColors.size
+      }
+    })
 
     // Build a lookup map so utility neighbor cells can be resolved back to PearlyCell instances
     const cellMap = new Map<string, PearlyCell>()
@@ -682,7 +738,26 @@ export async function init(
 
   // React to control changes
   onControlChange((newControls) => {
+    sendDebugLog({
+      runId: 'initial',
+      hypothesisId: 'H3',
+      location: 'projects/pearlymats/index.ts:onControlChange',
+      message: 'Received control change for amplitude sync',
+      data: {
+        incomingAmplitude: newControls.amplitude,
+        previousAmplitude: controlState.amplitude
+      }
+    })
     syncControlState(controlState, newControls)
+    sendDebugLog({
+      runId: 'initial',
+      hypothesisId: 'H3',
+      location: 'projects/pearlymats/index.ts:onControlChange',
+      message: 'Amplitude after syncControlState',
+      data: {
+        syncedAmplitude: controlState.amplitude
+      }
+    })
     if (import.meta.client) {
       const normalizedCustomPalette = normalizeColorList(controlState.customPalette, FALLBACK_CUSTOM_PALETTE)
       controlState.customPalette = normalizedCustomPalette
