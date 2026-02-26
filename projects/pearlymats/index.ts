@@ -74,50 +74,54 @@ const DEFAULT_CUSTOM_PALETTE = readPersistedCustomPalette()
 export const controls: ProjectControlDefinition[] = [
   {
     type: 'group',
-    id: 'grid',
-    label: 'Grid',
+    id: 'color',
+    label: 'Color',
     collapsible: true,
-    defaultOpen: false,
+    defaultOpen: true,
     controls: [
       {
-        type: 'slider',
-        label: 'Grid Size',
-        key: 'gridSize',
-        default: 29,
-        min: 10,
-        max: 100,
-        step: 1
+        type: 'select',
+        label: 'Palette',
+        key: 'palettePreset',
+        default: STANDARD_PALETTE_KEY,
+        options: PALETTE_PRESET_OPTIONS
       },
       {
-        type: 'toggle',
-        label: 'Show Grid',
-        key: 'showGrid',
-        default: false
+        type: 'checkbox-group',
+        label: 'Selectable Colors',
+        key: 'selectedPaletteIndices',
+        default: [0, 1, 2],
+        visibleCountFromSelectKey: 'palettePreset',
+        visibleCountBySelectValue: PALETTE_VISIBLE_COUNT_BY_PRESET,
+        visibleCountFromKey: 'customPalette',
+        optionLabelsBySelectValue: BUILTIN_PALETTE_LABELS_BY_PRESET,
+        optionLabelsFromKeyBySelectValue: {
+          [CUSTOM_PALETTE_KEY]: 'customPalette'
+        },
+        optionSwatchesBySelectValue: BUILTIN_PALETTE_LABELS_BY_PRESET,
+        optionSwatchesFromKeyBySelectValue: {
+          [CUSTOM_PALETTE_KEY]: 'customPalette'
+        },
+        options: [
+          { label: '#000000', value: 0 },
+          { label: '#000000', value: 1 },
+          { label: '#000000', value: 2 },
+          { label: '#000000', value: 3 },
+          { label: '#000000', value: 4 },
+          { label: '#000000', value: 5 },
+          { label: '#000000', value: 6 },
+          { label: '#000000', value: 7 }
+        ]
       },
       {
-        type: 'toggle',
-        label: 'Circular Cutoff',
-        key: 'circularCutoff',
-        default: true
-      },
-      // Cutoff ring shape controls: inner/outer diameters in cell space.
-      {
-        type: 'slider',
-        label: 'Inner Limit',
-        key: 'innerLimit',
-        default: 21,
-        min: 3,
-        max: 100,
-        step: 1
-      },
-      {
-        type: 'slider',
-        label: 'Outer Limit',
-        key: 'outerLimit',
-        default: 25,
-        min: 3,
-        max: 100,
-        step: 1
+        type: 'color-list',
+        label: 'Custom Palette',
+        key: 'customPalette',
+        default: DEFAULT_CUSTOM_PALETTE,
+        minItems: 1,
+        maxItems: 8,
+        visibleWhenSelectKey: 'palettePreset',
+        visibleWhenSelectValue: CUSTOM_PALETTE_KEY
       }
     ]
   },
@@ -195,54 +199,50 @@ export const controls: ProjectControlDefinition[] = [
   },
   {
     type: 'group',
-    id: 'color',
-    label: 'Color',
+    id: 'grid',
+    label: 'Grid',
     collapsible: true,
-    defaultOpen: true,
+    defaultOpen: false,
     controls: [
       {
-        type: 'select',
-        label: 'Palette',
-        key: 'palettePreset',
-        default: STANDARD_PALETTE_KEY,
-        options: PALETTE_PRESET_OPTIONS
+        type: 'slider',
+        label: 'Grid Size',
+        key: 'gridSize',
+        default: 29,
+        min: 10,
+        max: 100,
+        step: 1
       },
       {
-        type: 'checkbox-group',
-        label: 'Selectable Colors',
-        key: 'selectedPaletteIndices',
-        default: [0, 1, 2],
-        visibleCountFromSelectKey: 'palettePreset',
-        visibleCountBySelectValue: PALETTE_VISIBLE_COUNT_BY_PRESET,
-        visibleCountFromKey: 'customPalette',
-        optionLabelsBySelectValue: BUILTIN_PALETTE_LABELS_BY_PRESET,
-        optionLabelsFromKeyBySelectValue: {
-          [CUSTOM_PALETTE_KEY]: 'customPalette'
-        },
-        optionSwatchesBySelectValue: BUILTIN_PALETTE_LABELS_BY_PRESET,
-        optionSwatchesFromKeyBySelectValue: {
-          [CUSTOM_PALETTE_KEY]: 'customPalette'
-        },
-        options: [
-          { label: '#000000', value: 0 },
-          { label: '#000000', value: 1 },
-          { label: '#000000', value: 2 },
-          { label: '#000000', value: 3 },
-          { label: '#000000', value: 4 },
-          { label: '#000000', value: 5 },
-          { label: '#000000', value: 6 },
-          { label: '#000000', value: 7 }
-        ]
+        type: 'toggle',
+        label: 'Show Grid',
+        key: 'showGrid',
+        default: false
       },
       {
-        type: 'color-list',
-        label: 'Custom Palette',
-        key: 'customPalette',
-        default: DEFAULT_CUSTOM_PALETTE,
-        minItems: 1,
-        maxItems: 8,
-        visibleWhenSelectKey: 'palettePreset',
-        visibleWhenSelectValue: CUSTOM_PALETTE_KEY
+        type: 'toggle',
+        label: 'Circular Cutoff',
+        key: 'circularCutoff',
+        default: true
+      },
+      // Cutoff ring shape controls: inner/outer diameters in cell space.
+      {
+        type: 'slider',
+        label: 'Inner Limit',
+        key: 'innerLimit',
+        default: 21,
+        min: 3,
+        max: 100,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Outer Limit',
+        key: 'outerLimit',
+        default: 25,
+        min: 3,
+        max: 100,
+        step: 1
       }
     ]
   }
