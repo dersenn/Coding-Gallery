@@ -1,18 +1,77 @@
 import type { GenerativeUtils } from '~/utils/generative'
 import type { ThemeOverride, ThemeTokens } from '~/utils/theme'
 
-export interface ControlDefinition {
-  type: 'slider' | 'toggle' | 'select' | 'color'
+export type ControlPrimitiveValue = number | boolean | string
+export type ControlArrayValue = Array<string | number>
+export type ControlValue = ControlPrimitiveValue | ControlArrayValue
+
+export interface ControlOptionDefinition {
+  label: string
+  value: string | number
+  swatch?: string
+}
+
+interface BaseControlDefinition {
   label: string
   key: string
-  default: number | boolean | string
   group?: string
   order?: number
-  min?: number
-  max?: number
-  step?: number
-  options?: Array<{ label: string; value: string | number }>
 }
+
+export interface SliderControlDefinition extends BaseControlDefinition {
+  type: 'slider'
+  default: number
+  min: number
+  max: number
+  step: number
+}
+
+export interface ToggleControlDefinition extends BaseControlDefinition {
+  type: 'toggle'
+  default: boolean
+}
+
+export interface SelectControlDefinition extends BaseControlDefinition {
+  type: 'select'
+  default: string | number
+  options: ControlOptionDefinition[]
+}
+
+export interface ColorControlDefinition extends BaseControlDefinition {
+  type: 'color'
+  default: string
+}
+
+export interface CheckboxGroupControlDefinition extends BaseControlDefinition {
+  type: 'checkbox-group'
+  default: Array<string | number>
+  options: ControlOptionDefinition[]
+  visibleCountFromSelectKey?: string
+  visibleCountBySelectValue?: Record<string, number>
+  visibleCountFromKey?: string
+  optionLabelsBySelectValue?: Record<string, string[]>
+  optionLabelsFromKeyBySelectValue?: Record<string, string>
+  optionSwatchesBySelectValue?: Record<string, string[]>
+  optionSwatchesFromKeyBySelectValue?: Record<string, string>
+}
+
+export interface ColorListControlDefinition extends BaseControlDefinition {
+  type: 'color-list'
+  default: string[]
+  minItems?: number
+  maxItems?: number
+  visibleWhenSelectKey?: string
+  visibleWhenSelectValue?: string | number
+  visibleWhenSelectValues?: Array<string | number>
+}
+
+export type ControlDefinition =
+  | SliderControlDefinition
+  | ToggleControlDefinition
+  | SelectControlDefinition
+  | ColorControlDefinition
+  | CheckboxGroupControlDefinition
+  | ColorListControlDefinition
 
 export interface ControlGroupDefinition {
   type: 'group'
@@ -27,7 +86,7 @@ export interface ControlGroupDefinition {
 export type ProjectControlDefinition = ControlDefinition | ControlGroupDefinition
 
 export interface ControlValues {
-  [key: string]: number | boolean | string
+  [key: string]: ControlValue
 }
 
 export interface ProjectActionDefinition {

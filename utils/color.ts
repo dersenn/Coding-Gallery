@@ -279,3 +279,81 @@ export class Color {
     return [this.r, this.g, this.b, clampByte(this.a * 255)]
   }
 }
+
+const DEFAULT_FALLBACK_COLORS = ['#ffffff']
+
+export interface ResolveActiveColorsOptions {
+  paletteColors: string[]
+  selectedValues?: Array<string | number>
+  colorCount?: number
+  customColors?: string[]
+  useCustomPalette?: boolean
+  applyColorCountWhenSelected?: boolean
+  fallbackColors?: string[]
+}
+
+const toNormalizedHex = (input: string): string | null => {
+  const parsed = Color.parse(input)
+  if (!parsed) return null
+  return parsed.toHex(parsed.a < 1)
+}
+
+export const normalizeColorList = (
+  input: string[],
+  fallback: string[] = DEFAULT_FALLBACK_COLORS
+): string[] => {
+  const uniqueColors = new Set<string>()
+
+  input.forEach((color) => {
+    const normalized = toNormalizedHex(color)
+    if (normalized) uniqueColors.add(normalized)
+  })
+
+  if (uniqueColors.size > 0) return [...uniqueColors]
+
+  const fallbackColors = fallback
+    .map((color) => toNormalizedHex(color))
+    .filter((color): color is string => color !== null)
+
+  return fallbackColors.length ? fallbackColors : [...DEFAULT_FALLBACK_COLORS]
+}
+
+const normalizeSelectedIndices = (
+  selectedValues: Array<string | number> | undefined,
+  length: number
+): number[] => {
+  if (!selectedValues?.length) return []
+
+  const indices: number[] = []
+  selectedValues.forEach((value) => {
+    const parsed = typeof value === 'number' ? value : Number.parseInt(value, 10)
+    if (!Number.isInteger(parsed)) return
+    if (parsed < 0 || parsed >= length) return
+    if (indices.includes(parsed)) return
+    indices.push(parsed)
+  })
+
+  return indices
+}
+
+export const resolveActiveColors = (options: ResolveActiveColorsOptions): string[] => {
+  const basePalette = normalizeColorList(options.paletteColors, options.fallbackColors)
+  const customPalette = normalizeColorList(options.customColors ?? [], basePalette)
+  const sourcePalette = options.useCustomPalette ? customPalette : basePalette
+
+  const selectedIndices = normalizeSelectedIndices(options.selectedValues, sourcePalette.length)
+  const selectedColors = selectedIndices.length
+    ? selectedIndices.map((index) => sourcePalette[index]!)
+    : sourcePalette
+
+  if (selectedIndices.length > 0 && options.applyColorCountWhenSelected === false) {
+    return selectedColors.length ? selectedColors : [sourcePalette[0]!]
+  }
+
+  const limit = options.colorCount === undefined
+    ? selectedColors.length
+    : Math.max(1, Math.floor(options.colorCount))
+
+  const limitedColors = selectedColors.slice(0, Math.min(limit, selectedColors.length))
+  return limitedColors.length ? limitedColors : [sourcePalette[0]!]
+}

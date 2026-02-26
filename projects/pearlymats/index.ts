@@ -1,7 +1,32 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
 import { SVG, Grid, Cell, Color } from '~/types/project'
+import { normalizeColorList, resolveActiveColors } from '~/utils/color'
 import { shortcuts } from '~/utils/shortcuts'
 import { syncControlState } from '~/composables/useControls'
+import { defaultTheme } from '~/utils/theme'
+
+const CUSTOM_PALETTE_STORAGE_KEY = 'pearlymats:customPalette'
+const FALLBACK_CUSTOM_PALETTE = ['#fdf2f8', '#ddd6fe', '#bfdbfe']
+const PEARL_PALETTE = ['#fdf2f8', '#ddd6fe', '#bfdbfe', '#a7f3d0', '#f5d0fe', '#fde68a']
+const NEON_PALETTE = ['#ff006e', '#8338ec', '#3a86ff', '#00f5d4', '#ffbe0b', '#fb5607']
+const EARTH_PALETTE = ['#6b4226', '#a98467', '#d5bdaf', '#9c6644', '#7f5539', '#b08968']
+const STANDARD_PALETTE_LABELS = normalizeColorList(defaultTheme.palette)
+const PEARL_PALETTE_LABELS = normalizeColorList(PEARL_PALETTE)
+const NEON_PALETTE_LABELS = normalizeColorList(NEON_PALETTE)
+const EARTH_PALETTE_LABELS = normalizeColorList(EARTH_PALETTE)
+const readPersistedCustomPalette = (): string[] => {
+  if (!import.meta.client) return [...FALLBACK_CUSTOM_PALETTE]
+  try {
+    const raw = localStorage.getItem(CUSTOM_PALETTE_STORAGE_KEY)
+    if (!raw) return [...FALLBACK_CUSTOM_PALETTE]
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return [...FALLBACK_CUSTOM_PALETTE]
+    return normalizeColorList(parsed.map((entry) => String(entry)), FALLBACK_CUSTOM_PALETTE)
+  } catch {
+    return [...FALLBACK_CUSTOM_PALETTE]
+  }
+}
+const DEFAULT_CUSTOM_PALETTE = readPersistedCustomPalette()
 
 /**
  * Pearlymats - Noise-based Grid Pattern
@@ -32,7 +57,7 @@ export const controls: ProjectControlDefinition[] = [
     id: 'grid',
     label: 'Grid',
     collapsible: true,
-    defaultOpen: true,
+    defaultOpen: false,
     controls: [
       {
         type: 'slider',
@@ -80,7 +105,7 @@ export const controls: ProjectControlDefinition[] = [
     id: 'noise',
     label: 'Noise',
     collapsible: true,
-    defaultOpen: true,
+    defaultOpen: false,
     controls: [
       {
         type: 'slider',
@@ -155,13 +180,70 @@ export const controls: ProjectControlDefinition[] = [
     defaultOpen: true,
     controls: [
       {
-        type: 'slider',
-        label: 'Color Steps',
-        key: 'colorSteps',
-        default: 3,
-        min: 1,
-        max: 6,
-        step: 1
+        type: 'select',
+        label: 'Palette',
+        key: 'palettePreset',
+        default: 'standard',
+        options: [
+          { label: 'Standard', value: 'standard' },
+          { label: 'Pearl', value: 'pearl' },
+          { label: 'Neon', value: 'neon' },
+          { label: 'Earth', value: 'earth' },
+          { label: 'Custom', value: 'custom' }
+        ]
+      },
+      {
+        type: 'checkbox-group',
+        label: 'Selectable Colors',
+        key: 'selectedPaletteIndices',
+        default: [0, 1, 2],
+        visibleCountFromSelectKey: 'palettePreset',
+        visibleCountBySelectValue: {
+          standard: 6,
+          pearl: 6,
+          neon: 6,
+          earth: 6,
+          custom: 0
+        },
+        visibleCountFromKey: 'customPalette',
+        optionLabelsBySelectValue: {
+          standard: STANDARD_PALETTE_LABELS,
+          pearl: PEARL_PALETTE_LABELS,
+          neon: NEON_PALETTE_LABELS,
+          earth: EARTH_PALETTE_LABELS
+        },
+        optionLabelsFromKeyBySelectValue: {
+          custom: 'customPalette'
+        },
+        optionSwatchesBySelectValue: {
+          standard: STANDARD_PALETTE_LABELS,
+          pearl: PEARL_PALETTE_LABELS,
+          neon: NEON_PALETTE_LABELS,
+          earth: EARTH_PALETTE_LABELS
+        },
+        optionSwatchesFromKeyBySelectValue: {
+          custom: 'customPalette'
+        },
+        options: [
+          { label: '#000000', value: 0 },
+          { label: '#000000', value: 1 },
+          { label: '#000000', value: 2 },
+          { label: '#000000', value: 3 },
+          { label: '#000000', value: 4 },
+          { label: '#000000', value: 5 },
+          { label: '#000000', value: 6 },
+          { label: '#000000', value: 7 }
+        ]
+      },
+      {
+        type: 'color-list',
+        label: 'Custom Palette',
+        key: 'customPalette',
+        default: DEFAULT_CUSTOM_PALETTE,
+        minItems: 1,
+        maxItems: 8,
+        visibleWhenSelectKey: 'palettePreset',
+        visibleWhenSelectValue: 'custom'
       }
     ]
   }
@@ -183,7 +265,9 @@ export async function init(
     octaves: controls.octaves as number,
     lacunarity: controls.lacunarity as number,
     persistence: controls.persistence as number,
-    colorSteps: controls.colorSteps as number,
+    palettePreset: controls.palettePreset as string,
+    selectedPaletteIndices: controls.selectedPaletteIndices as number[],
+    customPalette: controls.customPalette as string[],
     showGrid: controls.showGrid as boolean,
     circularCutoff: controls.circularCutoff as boolean,
     innerLimit: controls.innerLimit as number,
@@ -191,7 +275,12 @@ export async function init(
   }
 
   // Fixed settings
-  const colors = theme.palette
+  const colorPalettes: Record<string, string[]> = {
+    standard: normalizeColorList(theme.palette),
+    pearl: normalizeColorList(PEARL_PALETTE),
+    neon: normalizeColorList(NEON_PALETTE),
+    earth: normalizeColorList(EARTH_PALETTE)
+  }
   const backgroundColor = theme.background
   const annotationColor = (Color.parse(theme.annotation) ?? Color.fromHex('#666')!).toCss('rgba')
 
@@ -239,7 +328,7 @@ export async function init(
       oct: number,
       lac: number,
       pers: number,
-      colorSteps: number
+      activeColors: string[]
     ) {
       super({
         x: baseCell.x,
@@ -273,10 +362,9 @@ export async function init(
       this.noiseValue = Math.max(-1, Math.min(1, this.noiseValue))
       
       const normalized = (this.noiseValue + 1) / 2
-      const steps = Math.min(colors.length, Math.max(1, Math.floor(colorSteps)))
-      const activeColors = colors.slice(0, steps)
+      const steps = Math.max(1, activeColors.length)
       const quantized = steps === 1 ? 0 : Math.floor(normalized * steps) / (steps - 1)
-      const index = Math.min(Math.floor(quantized * activeColors.length), activeColors.length - 1)
+      const index = Math.min(Math.floor(quantized * steps), steps - 1)
       
       this.color = activeColors[index]!
       this.alpha = 1
@@ -325,6 +413,15 @@ export async function init(
     const outsideAlpha = 0.15
     const centerCol = (controlState.gridSize - 1) / 2
     const centerRow = (controlState.gridSize - 1) / 2
+    const standardPalette = colorPalettes.standard ?? normalizeColorList(theme.palette)
+    const paletteColors = colorPalettes[controlState.palettePreset] ?? standardPalette
+    const activeColors = resolveActiveColors({
+      paletteColors,
+      selectedValues: controlState.selectedPaletteIndices,
+      customColors: controlState.customPalette,
+      useCustomPalette: controlState.palettePreset === 'custom',
+      fallbackColors: standardPalette
+    })
 
     // Create PearlyCells from grid cells
     const cells: PearlyCell[] = grid.map(cell => 
@@ -337,7 +434,7 @@ export async function init(
         controlState.octaves,
         controlState.lacunarity,
         controlState.persistence,
-        controlState.colorSteps
+        activeColors
       )
     )
 
@@ -456,6 +553,11 @@ export async function init(
   // React to control changes
   onControlChange((newControls) => {
     syncControlState(controlState, newControls)
+    if (import.meta.client) {
+      const normalizedCustomPalette = normalizeColorList(controlState.customPalette, FALLBACK_CUSTOM_PALETTE)
+      controlState.customPalette = normalizedCustomPalette
+      localStorage.setItem(CUSTOM_PALETTE_STORAGE_KEY, JSON.stringify(normalizedCustomPalette))
+    }
     draw()
   })
 

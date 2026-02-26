@@ -1,4 +1,4 @@
-export type DownloadControlValues = Record<string, number | boolean | string>
+export type DownloadControlValues = Record<string, number | boolean | string | Array<string | number>>
 
 function sanitizeToken(value: string): string {
   return value

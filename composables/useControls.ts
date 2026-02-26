@@ -1,13 +1,13 @@
 import type {
   ControlDefinition,
   ControlGroupDefinition,
+  ControlPrimitiveValue,
+  ControlValue,
   ControlValues,
   ProjectControlDefinition
 } from '~/types/project'
 
-type ControlPrimitive = number | boolean | string
-
-export const syncControlState = <T extends Record<string, ControlPrimitive>>(
+export const syncControlState = <T extends Record<string, ControlValue>>(
   state: T,
   incoming: ControlValues
 ) => {
@@ -45,6 +45,54 @@ export const useControls = () => {
   const router = useRouter()
   const controlValues = useState<ControlValues>('controlValues', () => ({}))
 
+  const normalizeQueryValues = (value: string | string[] | null | undefined): string[] => {
+    if (value === undefined || value === null) return []
+    if (Array.isArray(value)) return value.filter((entry): entry is string => typeof entry === 'string')
+    if (value === '') return []
+    if (value.includes(',')) {
+      return value
+        .split(',')
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0)
+    }
+    return [value]
+  }
+
+  const coerceScalarWithDefault = (sample: ControlPrimitiveValue, value: string): ControlPrimitiveValue => {
+    if (typeof sample === 'number') {
+      const parsed = Number.parseFloat(value)
+      return Number.isFinite(parsed) ? parsed : sample
+    }
+    if (typeof sample === 'boolean') {
+      return value === 'true'
+    }
+    return value
+  }
+
+  const parseControlValueFromQuery = (control: ControlDefinition, value: string | string[] | null | undefined): ControlValue => {
+    if (control.type === 'checkbox-group' || control.type === 'color-list') {
+      const values = normalizeQueryValues(value)
+      if (!control.default.length) return values
+
+      const sample = control.default[0]
+      if (typeof sample === 'number') {
+        return values
+          .map((entry) => Number.parseFloat(entry))
+          .filter((entry) => Number.isFinite(entry))
+      }
+      return values
+    }
+
+    const normalized = normalizeQueryValues(value)
+    if (!normalized.length) return control.default
+    return coerceScalarWithDefault(control.default as ControlPrimitiveValue, normalized[0]!)
+  }
+
+  const serializeControlValueForQuery = (value: ControlValue): string | string[] => {
+    if (Array.isArray(value)) return value.map((entry) => String(entry))
+    return String(value)
+  }
+
   const initializeControls = (controls?: ProjectControlDefinition[]) => {
     const leafControls = flattenControls(controls)
     if (!leafControls.length) {
@@ -63,30 +111,18 @@ export const useControls = () => {
     leafControls.forEach(control => {
       const urlValue = route.query[control.key]
       if (urlValue !== undefined && urlValue !== null) {
-        // Parse based on control type
-        switch (control.type) {
-          case 'slider':
-            defaults[control.key] = parseFloat(urlValue as string)
-            break
-          case 'toggle':
-            defaults[control.key] = urlValue === 'true'
-            break
-          case 'color':
-          case 'select':
-            defaults[control.key] = urlValue as string
-            break
-        }
+        defaults[control.key] = parseControlValueFromQuery(control, urlValue as string | string[] | null)
       }
     })
 
     controlValues.value = defaults
   }
 
-  const updateControl = (key: string, value: number | boolean | string) => {
+  const updateControl = (key: string, value: ControlValue) => {
     controlValues.value[key] = value
     
     // Persist to URL
-    const newQuery = { ...route.query, [key]: value.toString() }
+    const newQuery = { ...route.query, [key]: serializeControlValueForQuery(value) }
     router.replace({ query: newQuery })
   }
 

@@ -54,7 +54,8 @@
           class="space-y-4"
           :class="section.label || section.collapsible ? 'mt-3' : ''"
         >
-          <div v-for="control in section.controls" :key="control.key">
+          <template v-for="control in section.controls" :key="control.key">
+            <div v-if="isControlVisible(control)">
             <label
               v-if="control.type !== 'toggle'"
               class="flex items-center justify-between font-medium mb-2"
@@ -93,7 +94,7 @@
             <select
               v-else-if="control.type === 'select'"
               :value="controlValues[control.key]"
-              @change="updateControl(control.key, ($event.target as HTMLSelectElement).value)"
+              @change="updateSelectControlValue(control.key, ($event.target as HTMLSelectElement).value)"
               class="w-full px-3 py-2 bg-black/30 rounded-md focus:outline-none focus:ring-2 focus:ring-foreground text-white font-medium"
             >
               <option
@@ -106,6 +107,66 @@
               </option>
             </select>
 
+            <!-- Checkbox Group -->
+            <div
+              v-else-if="control.type === 'checkbox-group'"
+              class="space-y-2"
+            >
+              <label
+                v-for="option in getVisibleCheckboxOptions(control)"
+                :key="option.value"
+                class="flex items-center gap-2 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :checked="isCheckboxOptionSelected(control, option.value)"
+                  @change="toggleCheckboxOption(control, option.value, ($event.target as HTMLInputElement).checked)"
+                  class="w-4 h-4 rounded cursor-pointer accent-foreground"
+                />
+                <span
+                  v-if="getCheckboxOptionSwatch(control, option)"
+                  class="inline-block w-3 h-3 rounded border border-white/30"
+                  :style="{ backgroundColor: getCheckboxOptionSwatch(control, option) }"
+                />
+                <span>{{ getCheckboxOptionLabel(control, option) }}</span>
+              </label>
+            </div>
+
+            <!-- Color List -->
+            <div
+              v-else-if="control.type === 'color-list'"
+              class="space-y-2"
+            >
+              <div
+                v-for="(value, index) in getColorListValues(control.key)"
+                :key="`${control.key}-${index}`"
+                class="flex items-center gap-2"
+              >
+                <input
+                  type="color"
+                  :value="value"
+                  @input="updateColorListValue(control.key, index, ($event.target as HTMLInputElement).value)"
+                  class="flex-1 h-9 rounded cursor-pointer bg-black/30"
+                />
+                <button
+                  type="button"
+                  class="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  :disabled="!canRemoveColor(control)"
+                  @click="removeColorListValue(control, index)"
+                >
+                  -
+                </button>
+              </div>
+              <button
+                type="button"
+                class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                :disabled="!canAddColor(control)"
+                @click="addColorListValue(control)"
+              >
+                Add color
+              </button>
+            </div>
+
             <!-- Color -->
             <input
               v-else-if="control.type === 'color'"
@@ -114,7 +175,8 @@
               @input="updateControl(control.key, ($event.target as HTMLInputElement).value)"
               class="w-full h-10 rounded cursor-pointer bg-black/30 font-medium"
             />
-          </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -123,8 +185,12 @@
 
 <script setup lang="ts">
 import type {
+  CheckboxGroupControlDefinition,
+  ColorListControlDefinition,
   ControlDefinition,
   ControlGroupDefinition,
+  ControlOptionDefinition,
+  ControlValue,
   ProjectActionDefinition,
   ProjectControlDefinition
 } from '~/types/project'
@@ -268,4 +334,198 @@ const toggleSection = (sectionId: string) => {
 const emit = defineEmits<{
   action: [key: string]
 }>()
+
+const asArrayValue = (value: ControlValue | undefined): Array<string | number> => {
+  if (!Array.isArray(value)) return []
+  return value
+}
+
+const isCheckboxOptionSelected = (
+  control: CheckboxGroupControlDefinition,
+  optionValue: string | number
+): boolean => {
+  const selected = asArrayValue(controlValues.value[control.key])
+  return selected.some((value) => String(value) === String(optionValue))
+}
+
+const toggleCheckboxOption = (
+  control: CheckboxGroupControlDefinition,
+  optionValue: string | number,
+  checked: boolean
+) => {
+  const selected = asArrayValue(controlValues.value[control.key])
+  const sample = control.default[0]
+  const normalize = (value: string | number) => (
+    typeof sample === 'number' ? Number(value) : String(value)
+  )
+  const current = selected.map(normalize)
+  const target = normalize(optionValue)
+  const next = checked
+    ? (current.some((value) => value === target) ? current : [...current, target])
+    : current.filter((value) => value !== target)
+
+  updateControl(control.key, next as number[] | string[])
+}
+
+const resolveVisibleCountFromControlValue = (value: ControlValue | undefined): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.floor(value))
+  }
+  if (Array.isArray(value)) {
+    return value.length
+  }
+  return null
+}
+
+const getVisibleCheckboxOptions = (control: CheckboxGroupControlDefinition) => {
+  let visibleCount = control.options.length
+
+  if (control.visibleCountFromSelectKey && control.visibleCountBySelectValue) {
+    const selectValue = controlValues.value[control.visibleCountFromSelectKey]
+    const mapped = control.visibleCountBySelectValue[String(selectValue)]
+    if (mapped !== undefined) {
+      visibleCount = Math.max(0, Math.floor(mapped))
+    }
+  }
+
+  if (control.visibleCountFromKey && visibleCount <= 0) {
+    const fallbackCount = resolveVisibleCountFromControlValue(controlValues.value[control.visibleCountFromKey])
+    if (fallbackCount !== null) {
+      visibleCount = fallbackCount
+    }
+  }
+
+  return control.options.slice(0, Math.max(0, visibleCount))
+}
+
+const getCheckboxSelectValue = (control: CheckboxGroupControlDefinition): string | null => {
+  if (!control.visibleCountFromSelectKey) return null
+  const value = controlValues.value[control.visibleCountFromSelectKey]
+  return typeof value === 'string' || typeof value === 'number' ? String(value) : null
+}
+
+const getColorListByKey = (key: string | undefined): string[] => {
+  if (!key) return []
+  const value = controlValues.value[key]
+  if (!Array.isArray(value)) return []
+  return value
+    .map((entry) => String(entry))
+    .filter((entry) => /^#[0-9a-fA-F]{6}$/.test(entry))
+}
+
+const getCheckboxOptionIndex = (control: CheckboxGroupControlDefinition, option: ControlOptionDefinition): number => {
+  return getVisibleCheckboxOptions(control)
+    .findIndex((candidate) => String(candidate.value) === String(option.value))
+}
+
+const getCheckboxOptionLabel = (
+  control: CheckboxGroupControlDefinition,
+  option: ControlOptionDefinition
+): string => {
+  const selectValue = getCheckboxSelectValue(control)
+  const optionIndex = getCheckboxOptionIndex(control, option)
+  if (optionIndex < 0) return option.label
+
+  if (selectValue && control.optionLabelsBySelectValue?.[selectValue]?.[optionIndex]) {
+    return control.optionLabelsBySelectValue[selectValue]![optionIndex]!
+  }
+
+  if (selectValue && control.optionLabelsFromKeyBySelectValue?.[selectValue]) {
+    const labels = getColorListByKey(control.optionLabelsFromKeyBySelectValue[selectValue])
+    if (labels[optionIndex]) return labels[optionIndex]!
+  }
+
+  return option.label
+}
+
+const getCheckboxOptionSwatch = (
+  control: CheckboxGroupControlDefinition,
+  option: ControlOptionDefinition
+): string | undefined => {
+  const selectValue = getCheckboxSelectValue(control)
+  const optionIndex = getCheckboxOptionIndex(control, option)
+  if (optionIndex < 0) return option.swatch
+
+  if (selectValue && control.optionSwatchesBySelectValue?.[selectValue]?.[optionIndex]) {
+    return control.optionSwatchesBySelectValue[selectValue]![optionIndex]!
+  }
+
+  if (selectValue && control.optionSwatchesFromKeyBySelectValue?.[selectValue]) {
+    const swatches = getColorListByKey(control.optionSwatchesFromKeyBySelectValue[selectValue])
+    if (swatches[optionIndex]) return swatches[optionIndex]!
+  }
+
+  return option.swatch
+}
+
+const getColorListValues = (key: string): string[] => {
+  const value = controlValues.value[key]
+  if (!Array.isArray(value)) return []
+  return value
+    .map((entry) => String(entry))
+    .filter((entry) => /^#[0-9a-fA-F]{6}$/.test(entry))
+}
+
+const isControlVisible = (control: ControlDefinition): boolean => {
+  if (control.type !== 'color-list') return true
+  if (!control.visibleWhenSelectKey) return true
+
+  const selectValue = controlValues.value[control.visibleWhenSelectKey]
+  if (selectValue === undefined) return false
+
+  if (control.visibleWhenSelectValues && control.visibleWhenSelectValues.length > 0) {
+    return control.visibleWhenSelectValues
+      .some((value) => String(value) === String(selectValue))
+  }
+
+  if (control.visibleWhenSelectValue !== undefined) {
+    return String(control.visibleWhenSelectValue) === String(selectValue)
+  }
+
+  return true
+}
+
+const canAddColor = (control: ColorListControlDefinition): boolean => {
+  const values = getColorListValues(control.key)
+  return control.maxItems === undefined || values.length < control.maxItems
+}
+
+const canRemoveColor = (control: ColorListControlDefinition): boolean => {
+  const values = getColorListValues(control.key)
+  const minItems = control.minItems ?? 1
+  return values.length > minItems
+}
+
+const updateColorListValue = (key: string, index: number, value: string) => {
+  const values = getColorListValues(key)
+  if (index < 0 || index >= values.length) return
+  values[index] = value
+  updateControl(key, values)
+}
+
+const addColorListValue = (control: ColorListControlDefinition) => {
+  if (!canAddColor(control)) return
+  const values = getColorListValues(control.key)
+  const fallback = values[values.length - 1] ?? '#ffffff'
+  updateControl(control.key, [...values, fallback])
+}
+
+const removeColorListValue = (control: ColorListControlDefinition, index: number) => {
+  if (!canRemoveColor(control)) return
+  const values = getColorListValues(control.key)
+  if (index < 0 || index >= values.length) return
+  const next = values.filter((_, valueIndex) => valueIndex !== index)
+  updateControl(control.key, next)
+}
+
+const updateSelectControlValue = (key: string, value: string) => {
+  const current = controlValues.value[key]
+  if (typeof current === 'number') {
+    const parsed = Number.parseFloat(value)
+    updateControl(key, Number.isFinite(parsed) ? parsed : current)
+    return
+  }
+
+  updateControl(key, value)
+}
 </script>
