@@ -431,14 +431,17 @@ export async function init(
       )
     )
 
+    // Build a lookup map so utility neighbor cells can be resolved back to PearlyCell instances
     const cellMap = new Map<string, PearlyCell>()
     cells.forEach(cell => {
       cellMap.set(`${cell.row},${cell.col}`, cell)
     })
 
+    // Measure distance in cell-space (row/col steps), not pixel-space
     const distanceToCenter = (candidate: Cell): number =>
       dist(centerCol, centerRow, candidate.col, candidate.row)
 
+    // Choose the most inward neighbor (closest to center) among utility-provided neighbors
     const getInwardNeighbor = (cell: PearlyCell, currentDistance: number): PearlyCell | undefined => {
       const neighbors = cell.getNeighbors()
       let bestNeighbor: PearlyCell | undefined
@@ -460,12 +463,14 @@ export async function init(
       return bestNeighbor
     }
 
+    // Evaluate cells from center outward so propagation decisions are stable
     const cellsByDistance = [...cells].sort((a, b) => {
       const distA = distanceToCenter(a)
       const distB = distanceToCenter(b)
       return distA - distB
     })
 
+    // Apply hard circular cutoff with inward same-color propagation in the transition band
     cellsByDistance.forEach(cell => {
       if (!controlState.circularCutoff) {
         cell.alpha = 1
