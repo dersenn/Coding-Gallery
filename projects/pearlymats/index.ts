@@ -414,12 +414,21 @@ export async function init(
       this.noiseValue = (total / maxValue) * amp
       this.noiseValue = Math.max(-1, Math.min(1, this.noiseValue))
       
-      const normalized = (this.noiseValue + 1) / 2
       const steps = Math.max(1, activeColors.length)
-      const quantized = steps === 1 ? 0 : Math.floor(normalized * steps) / (steps - 1)
-      const index = Math.min(Math.floor(quantized * steps), steps - 1)
-      
-      this.color = activeColors[index]!
+      if (steps === 2) {
+        // In 2-color mode, sign-only threshold makes amplitude appear inert.
+        // Use a deterministic per-cell threshold whose influence shrinks with higher amplitude.
+        const normalized = (this.noiseValue + 1) / 2
+        const ampInfluence = Math.max(0, Math.min(1, amp / 2))
+        const thresholdNoise = (simplex2(this.col * 0.217 + 19.3, this.row * 0.217 - 7.4) + 1) / 2
+        const threshold = 0.5 + (thresholdNoise - 0.5) * (1 - ampInfluence)
+        this.color = normalized >= threshold ? activeColors[1]! : activeColors[0]!
+      } else {
+        const normalized = (this.noiseValue + 1) / 2
+        const quantized = steps === 1 ? 0 : Math.floor(normalized * steps) / (steps - 1)
+        const index = Math.min(Math.floor(quantized * steps), steps - 1)
+        this.color = activeColors[index]!
+      }
       this.alpha = 1
     }
 
@@ -492,6 +501,14 @@ export async function init(
         activeColors
       )
     )
+    const nonNegativeNoiseCount = cells.filter((cell) => cell.noiseValue >= 0).length
+    const secondColor = activeColors[1]
+    const secondColorCount = secondColor
+      ? cells.filter((cell) => cell.color === secondColor).length
+      : 0
+    const avgNoise = cells.length
+      ? cells.reduce((sum, cell) => sum + cell.noiseValue, 0) / cells.length
+      : 0
 
     // Build a lookup map so utility neighbor cells can be resolved back to PearlyCell instances
     const cellMap = new Map<string, PearlyCell>()
@@ -645,6 +662,12 @@ export async function init(
         : (shouldSoftPathFill || shouldHoleFill ? 1 : outsideAlpha)
       cell.alpha = nextAlpha
     })
+
+    const visibleCells = cells.filter((cell) => cell.alpha === 1)
+    const visibleSecondColor = activeColors[1]
+    const visibleSecondColorCount = visibleSecondColor
+      ? visibleCells.filter((cell) => cell.color === visibleSecondColor).length
+      : 0
 
     // Draw all cells
     cells.forEach(cell => cell.draw())

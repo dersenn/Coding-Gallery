@@ -31,6 +31,12 @@ Current keyboard mapping on project pages:
 - Uses the currently selected color count (not hardcoded).
 - Example: if 5 colors are checked, `r` generates a new random set of 5.
 
+## Known conflict to revisit
+
+- `d` is currently mapped to `reset-controls` and removes control-related query params before restoring defaults.
+- On `pearlymats`, this can counteract the newer in-session tuning flow (notably palette/selection state that `r` now re-randomizes).
+- Follow-up decision needed: keep `d` as hard reset, remap it, disable it for `pearlymats`, or implement a soft reset that preserves key state.
+
 ## UI polish
 
 - Added a compact shortcuts legend to the control panel:
