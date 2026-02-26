@@ -118,7 +118,7 @@ const handleControlAction = async (key: string) => {
   if (key === 'new-seed') {
     const seed = createSeed()
     utils.seed.set(seed)
-    await router.replace({
+    await router.push({
       query: {
         ...route.query,
         seed
@@ -202,7 +202,7 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
     event.preventDefault()
     const randomReloadSelection = getPearlymatsReloadColorSelection()
     if (randomReloadSelection) {
-      await router.replace({
+      await router.push({
         query: {
           ...route.query,
           selectedPaletteIndices: randomReloadSelection

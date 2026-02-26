@@ -79,7 +79,8 @@
                 :max="control.max"
                 :step="control.step"
                 :value="controlValues[control.key]"
-                @input="updateControl(control.key, parseFloat(($event.target as HTMLInputElement).value))"
+                @input="updateControl(control.key, parseFloat(($event.target as HTMLInputElement).value), { history: 'replace' })"
+                @change="commitControl(control.key)"
                 class="w-full accent-foreground font-medium"
               />
             </div>
@@ -177,7 +178,8 @@
               v-else-if="control.type === 'color'"
               type="color"
               :value="controlValues[control.key]"
-              @input="updateControl(control.key, ($event.target as HTMLInputElement).value)"
+              @input="updateControl(control.key, ($event.target as HTMLInputElement).value, { history: 'replace' })"
+              @change="commitControl(control.key)"
               class="w-full h-10 rounded cursor-pointer bg-black/30 font-medium"
             />
             </div>
@@ -206,7 +208,7 @@ const props = defineProps<{
   panelStateKey?: string
 }>()
 
-const { controlValues, updateControl } = useControls()
+const { controlValues, updateControl, commitControl } = useControls()
 const contextActions = computed(() => props.contextActions ?? [])
 const openSections = ref<Record<string, boolean>>({})
 const panelStateStorageKey = computed(() => {

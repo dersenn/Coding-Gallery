@@ -93,6 +93,22 @@ export const useControls = () => {
     return String(value)
   }
 
+  const buildControlValuesFromQuery = (controls: ControlDefinition[]): ControlValues => {
+    const nextValues: ControlValues = {}
+    controls.forEach((control) => {
+      nextValues[control.key] = control.default
+    })
+
+    controls.forEach((control) => {
+      const urlValue = route.query[control.key]
+      if (urlValue !== undefined && urlValue !== null) {
+        nextValues[control.key] = parseControlValueFromQuery(control, urlValue as string | string[] | null)
+      }
+    })
+
+    return nextValues
+  }
+
   const initializeControls = (controls?: ProjectControlDefinition[]) => {
     const leafControls = flattenControls(controls)
     if (!leafControls.length) {
@@ -100,30 +116,34 @@ export const useControls = () => {
       return
     }
 
-    const defaults: ControlValues = {}
-    
-    // First, set defaults
-    leafControls.forEach(control => {
-      defaults[control.key] = control.default
-    })
-
-    // Then, override with URL params if they exist
-    leafControls.forEach(control => {
-      const urlValue = route.query[control.key]
-      if (urlValue !== undefined && urlValue !== null) {
-        defaults[control.key] = parseControlValueFromQuery(control, urlValue as string | string[] | null)
-      }
-    })
-
-    controlValues.value = defaults
+    controlValues.value = buildControlValuesFromQuery(leafControls)
   }
 
-  const updateControl = (key: string, value: ControlValue) => {
-    controlValues.value[key] = value
-    
-    // Persist to URL
+  type ControlHistoryMode = 'push' | 'replace'
+
+  const syncQueryWithControl = (key: string, value: ControlValue, history: ControlHistoryMode) => {
     const newQuery = { ...route.query, [key]: serializeControlValueForQuery(value) }
-    router.replace({ query: newQuery })
+    if (history === 'replace') {
+      return router.replace({ query: newQuery })
+    }
+    return router.push({ query: newQuery })
+  }
+
+  const updateControl = (
+    key: string,
+    value: ControlValue,
+    options?: { history?: ControlHistoryMode }
+  ) => {
+    controlValues.value[key] = value
+
+    // Persist to URL; default to push so browser back/forward can step controls.
+    void syncQueryWithControl(key, value, options?.history ?? 'push')
+  }
+
+  const commitControl = (key: string) => {
+    const value = controlValues.value[key]
+    if (value === undefined) return
+    void syncQueryWithControl(key, value, 'push')
   }
 
   const resetControls = async (controls?: ProjectControlDefinition[]) => {
@@ -135,16 +155,17 @@ export const useControls = () => {
     leafControls.forEach(control => {
       delete newQuery[control.key]
     })
-    await router.replace({ query: newQuery })
+    await router.push({ query: newQuery })
     
     // Reset to defaults
-    initializeControls(leafControls)
+    initializeControls(controls)
   }
 
   return {
     controlValues,
     initializeControls,
     updateControl,
+    commitControl,
     resetControls
   }
 }

@@ -12,7 +12,6 @@ import type {
 } from '~/types/project'
 import { resolveTheme } from '~/utils/theme'
 import { buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
-import { flattenControls } from '~/composables/useControls'
 
 const props = defineProps<{
   project: Project
@@ -25,12 +24,14 @@ const props = defineProps<{
 const containerRef = ref<HTMLElement | null>(null)
 const { controlValues, initializeControls } = useControls()
 const { utils } = useGenerativeUtils()
+const route = useRoute()
 
 let cleanup: CleanupFunction | null = null
 let controlCallbacks: Array<(values: any) => void> = []
 let actionHandlers: Record<string, () => void> = {}
 let isLoading = ref(true)
 let error = ref<string | null>(null)
+const activeProjectControls = ref<ProjectControlDefinition[]>([])
 
 // Emit controls when module is loaded
 const emit = defineEmits<{
@@ -116,8 +117,9 @@ const loadProject = async () => {
 
     // Initialize controls from module if available, otherwise from project metadata
     const controls = module.controls || props.project.controls
+    activeProjectControls.value = controls || []
     if (controls) {
-      initializeControls(flattenControls(controls))
+      initializeControls(controls)
       emit('controlsLoaded', controls)
     }
     const moduleActions = module.actions || []
@@ -169,6 +171,14 @@ watch(controlValues, (newValues) => {
 watch(() => props.project, () => {
   loadProject()
 }, { immediate: false })
+
+watch(
+  () => route.query,
+  () => {
+    if (!activeProjectControls.value.length) return
+    initializeControls(activeProjectControls.value)
+  }
+)
 
 watch(() => props.actionRequest, (request) => {
   if (!request) return
