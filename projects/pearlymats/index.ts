@@ -100,6 +100,7 @@ export const controls: ProjectControlDefinition[] = [
         key: 'circularCutoff',
         default: true
       },
+      // Cutoff ring shape controls: inner/outer diameters in cell space.
       {
         type: 'slider',
         label: 'Inner Limit',
@@ -252,7 +253,7 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange } = context
-  const { v, map, dist, simplex2 } = shortcuts(utils)
+  const { v, dist, simplex2 } = shortcuts(utils)
 
   const controlState = {
     gridSize: controls.gridSize as number,
@@ -367,6 +368,7 @@ export async function init(
       const center = this.center()
       const radius = this.width / 2
       const parsedColor = Color.parse(this.color)
+      // Final opacity application: alpha is multiplied into the selected bead color.
       const fillColor = parsedColor
         ? parsedColor.withAlpha(parsedColor.a * this.alpha).toCss('rgba')
         : this.color
@@ -403,6 +405,7 @@ export async function init(
     const outerDiameterCells = Math.max(innerDiameterCells, Math.floor(controlState.outerLimit))
     const innerRadiusCells = innerDiameterCells / 2
     const outerRadiusCells = outerDiameterCells / 2
+    // "Off" state opacity outside/failed cells; set to 0 for fully hidden cells.
     const outsideAlpha = 0.15
     const centerCol = (controlState.gridSize - 1) / 2
     const centerRow = (controlState.gridSize - 1) / 2
@@ -441,28 +444,6 @@ export async function init(
     const distanceToCenter = (candidate: Cell): number =>
       dist(centerCol, centerRow, candidate.col, candidate.row)
 
-    // Choose the most inward neighbor (closest to center) among utility-provided neighbors
-    const getInwardNeighbor = (cell: PearlyCell, currentDistance: number): PearlyCell | undefined => {
-      const neighbors = cell.getNeighbors()
-      let bestNeighbor: PearlyCell | undefined
-      let bestDistance = Number.POSITIVE_INFINITY
-
-      neighbors.forEach(neighbor => {
-        const dist = distanceToCenter(neighbor)
-        if (dist >= currentDistance) return
-
-        const mappedNeighbor = cellMap.get(`${neighbor.row},${neighbor.col}`)
-        if (!mappedNeighbor) return
-
-        if (dist < bestDistance) {
-          bestDistance = dist
-          bestNeighbor = mappedNeighbor
-        }
-      })
-
-      return bestNeighbor
-    }
-
     // Evaluate cells from center outward so propagation decisions are stable
     const cellsByDistance = [...cells].sort((a, b) => {
       const distA = distanceToCenter(a)
@@ -470,7 +451,8 @@ export async function init(
       return distA - distB
     })
 
-    // Apply hard circular cutoff with inward same-color propagation in the transition band
+    // Main local rule: only inward 4-neighbor same-color support can turn a cell "on".
+    // This avoids diagonal-only links while preserving edge texture.
     cellsByDistance.forEach(cell => {
       if (!controlState.circularCutoff) {
         cell.alpha = 1
@@ -489,14 +471,120 @@ export async function init(
         return
       }
 
-      const inwardNeighbor = getInwardNeighbor(cell, distToCenter)
-      const canPropagateOutward = Boolean(
-        inwardNeighbor &&
-        inwardNeighbor.alpha === 1 &&
-        inwardNeighbor.color === cell.color
+      const inwardCardinalNeighbors = cell
+        .getNeighbors4()
+        .map(neighbor => cellMap.get(`${neighbor.row},${neighbor.col}`))
+        .filter((neighbor): neighbor is PearlyCell => Boolean(neighbor))
+        .filter(neighbor => distanceToCenter(neighbor) < distToCenter)
+      const hasCardinalSupport = inwardCardinalNeighbors.some(
+        neighbor => neighbor.alpha === 1 && neighbor.color === cell.color
       )
+      cell.alpha = hasCardinalSupport ? 1 : outsideAlpha
+    })
 
-      cell.alpha = canPropagateOutward ? 1 : outsideAlpha
+    const cellByKey = new Map<string, PearlyCell>()
+    cells.forEach(cell => {
+      cellByKey.set(`${cell.row},${cell.col}`, cell)
+    })
+
+    const reachableBy4Path = new Set<string>()
+    const queue: PearlyCell[] = []
+    cells.forEach(cell => {
+      if (distanceToCenter(cell) <= innerRadiusCells) {
+        const key = `${cell.row},${cell.col}`
+        reachableBy4Path.add(key)
+        queue.push(cell)
+      }
+    })
+
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      const currentKey = `${current.row},${current.col}`
+      const currentDist = distanceToCenter(current)
+      if (currentDist > outerRadiusCells) continue
+
+      current.getNeighbors4().forEach(neighborBase => {
+        const neighbor = cellByKey.get(`${neighborBase.row},${neighborBase.col}`)
+        if (!neighbor) return
+        const neighborDist = distanceToCenter(neighbor)
+        if (neighborDist > outerRadiusCells) return
+        if (neighbor.color !== current.color) return
+        const neighborKey = `${neighbor.row},${neighbor.col}`
+        if (reachableBy4Path.has(neighborKey)) return
+        reachableBy4Path.add(neighborKey)
+        queue.push(neighbor)
+      })
+
+      if (!reachableBy4Path.has(currentKey)) {
+        reachableBy4Path.add(currentKey)
+      }
+    }
+
+    // Connectivity map (any color): identifies enclosed pockets that are still center-reachable.
+    const reachableBy4PathAnyColor = new Set<string>()
+    const queueAnyColor: PearlyCell[] = []
+    cells.forEach(cell => {
+      if (distanceToCenter(cell) <= innerRadiusCells) {
+        const key = `${cell.row},${cell.col}`
+        reachableBy4PathAnyColor.add(key)
+        queueAnyColor.push(cell)
+      }
+    })
+
+    while (queueAnyColor.length > 0) {
+      const current = queueAnyColor.shift()!
+      const currentDist = distanceToCenter(current)
+      if (currentDist > outerRadiusCells) continue
+
+      current.getNeighbors4().forEach(neighborBase => {
+        const neighbor = cellByKey.get(`${neighborBase.row},${neighborBase.col}`)
+        if (!neighbor) return
+        const neighborDist = distanceToCenter(neighbor)
+        if (neighborDist > outerRadiusCells) return
+        const neighborKey = `${neighbor.row},${neighbor.col}`
+        if (reachableBy4PathAnyColor.has(neighborKey)) return
+        reachableBy4PathAnyColor.add(neighborKey)
+        queueAnyColor.push(neighbor)
+      })
+    }
+
+    const prePathAlphaByKey = new Map<string, number>()
+    cells.forEach(cell => {
+      prePathAlphaByKey.set(`${cell.row},${cell.col}`, cell.alpha)
+    })
+
+    cells.forEach(cell => {
+      const distToCenter = distanceToCenter(cell)
+      if (distToCenter <= innerRadiusCells || distToCenter > outerRadiusCells) return
+      const key = `${cell.row},${cell.col}`
+      const isReachable4Path = reachableBy4Path.has(key)
+      const isReachable4PathAnyColor = reachableBy4PathAnyColor.has(key)
+      const previousAlpha = cell.alpha
+      // Local support count from pre-path alpha; higher counts make rescue fills stricter.
+      const acceptedCardinalNeighborCount = cell
+        .getNeighbors4()
+        .map(neighborBase => prePathAlphaByKey.get(`${neighborBase.row},${neighborBase.col}`) ?? outsideAlpha)
+        .filter(alpha => alpha === 1)
+        .length
+      // Soft same-color rescue: restores organic edge where local pass missed valid path cells.
+      const softPathFillNoise = (simplex2(cell.col * 0.29 - 5.7, cell.row * 0.29 + 13.2) + 1) / 2
+      const softPathFillEligible = isReachable4Path && previousAlpha < 1
+      const shouldSoftPathFill = softPathFillEligible && (
+        acceptedCardinalNeighborCount >= 2 ||
+        softPathFillNoise > 0.58
+      )
+      // Hole fill rescue: fills enclosed blanks that are center-reachable only via mixed colors.
+      const holeFillEligible = !isReachable4Path && isReachable4PathAnyColor && acceptedCardinalNeighborCount >= 3
+      const holeFillNoise = (simplex2(cell.col * 0.37 + 17.1, cell.row * 0.37 - 9.4) + 1) / 2
+      const shouldHoleFill = holeFillEligible && (
+        acceptedCardinalNeighborCount >= 4 ||
+        holeFillNoise > 0.62
+      )
+      // Binary final decision: on (1) or off (outsideAlpha), no intermediate alpha in this pass.
+      const nextAlpha = previousAlpha === 1
+        ? 1
+        : (shouldSoftPathFill || shouldHoleFill ? 1 : outsideAlpha)
+      cell.alpha = nextAlpha
     })
 
     // Draw all cells
