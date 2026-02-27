@@ -1,31 +1,35 @@
-import type { CleanupFunction, ProjectContext, ProjectControlDefinition } from '~/types/project'
+import type { CleanupFunction, ProjectContext, ProjectControlDefinition, Vec } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
-
-interface TrailPoint {
-  x: number
-  y: number
-}
+import { shortcuts } from '~/utils/shortcuts'
 
 class ParticleTrail {
   x: number
   y: number
   size: number
   memory: number
-  history: TrailPoint[]
+  history: Vec[]
+  v: (x: number, y: number, z?: number) => Vec
 
-  constructor(x: number, y: number, size: number, memory: number) {
+  constructor(
+    x: number,
+    y: number,
+    size: number,
+    memory: number,
+    v: (x: number, y: number, z?: number) => Vec
+  ) {
     this.x = x
     this.y = y
     this.size = size
     this.memory = memory
     this.history = []
+    this.v = v
   }
 
   update(mouseX: number, mouseY: number) {
     this.x = mouseX
     this.y = mouseY
-    this.history.push({ x: this.x, y: this.y })
+    this.history.push(this.v(this.x, this.y))
     if (this.history.length > this.memory) {
       this.history.splice(0, this.history.length - this.memory)
     }
@@ -74,7 +78,8 @@ export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, onControlChange } = context
+  const { controls, theme, onControlChange } = context
+  const { v } = shortcuts(context.utils)
 
   const controlState = {
     memory: controls.memory as number,
@@ -86,11 +91,13 @@ export async function init(
   const sketch = new p5((p) => {
     p.setup = () => {
       p.createCanvas(container.clientWidth, container.clientHeight)
-      trail = new ParticleTrail(p.mouseX, p.mouseY, controlState.size, controlState.memory)
+      trail = new ParticleTrail(p.mouseX, p.mouseY, controlState.size, controlState.memory, v)
     }
 
     p.draw = () => {
-      p.background(255)
+      p.background(theme.background)
+      p.noStroke()
+      p.fill(theme.foreground)
       trail.memory = controlState.memory
       trail.size = controlState.size
       trail.update(p.mouseX, p.mouseY)

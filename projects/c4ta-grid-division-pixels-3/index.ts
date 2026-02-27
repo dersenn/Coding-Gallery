@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition } from '~/types/project'
-import { Grid } from '~/types/project'
+import { Grid, Cell, shortcuts } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -47,6 +47,7 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange } = context
+  const { rndInt } = shortcuts(utils)
 
   const controlState = {
     levels: controls.levels as number,
@@ -56,13 +57,16 @@ export async function init(
 
   const rootCols = 2
   const rootRows = 2
+  const activePalette = theme.palette.slice(0, 3)
 
+  // Step 1: sample from the active theme palette for each tile fill.
   const randomColor = () => {
-    const index = utils.seed.randomInt(0, Math.max(0, theme.palette.length - 1))
-    return theme.palette[index] ?? theme.foreground
+    const index = rndInt(0, Math.max(0, activePalette.length - 1))
+    return activePalette[index] ?? theme.foreground
   }
 
   const sketch = new p5((p) => {
+    // Step 2: render a recursive 2x2 subdivision region as leaf Cells.
     const drawRecursiveTiles = (x: number, y: number, w: number, h: number) => {
       const grid = new Grid({
         cols: rootCols,
@@ -81,13 +85,15 @@ export async function init(
         subdivisionRows: rootRows
       })
 
+      // Grid.subdivide() returns Cell leaves; draw each cell directly.
       p.noStroke()
-      for (const cell of cells) {
+      for (const cell of cells as Cell[]) {
         p.fill(randomColor())
         p.rect(cell.x, cell.y, cell.width, cell.height)
       }
     }
 
+    // Step 3: draw a moving recursive container each frame (legacy accumulation behavior).
     const drawMovingContainer = () => {
       const levels = Math.max(1, Math.floor(controlState.levels))
       const maxDivisionsX = rootCols ** (levels + 1)
@@ -95,10 +101,10 @@ export async function init(
       const minTileW = p.width / maxDivisionsX
       const minTileH = p.height / maxDivisionsY
 
-      const containerPosX =
-        Math.floor(utils.seed.randomRange(0, maxDivisionsX / rootCols + 1)) * minTileW
-      const containerPosY =
-        Math.floor(utils.seed.randomRange(0, maxDivisionsY / rootRows + 1)) * minTileH
+      const containerSlotX = rndInt(0, Math.floor(maxDivisionsX / rootCols))
+      const containerSlotY = rndInt(0, Math.floor(maxDivisionsY / rootRows))
+      const containerPosX = containerSlotX * minTileW
+      const containerPosY = containerSlotY * minTileH
 
       drawRecursiveTiles(
         containerPosX,
@@ -109,6 +115,7 @@ export async function init(
     }
 
     p.setup = () => {
+      // Step 4: initialize canvas and paint the base recursive grid once.
       p.createCanvas(container.clientWidth, container.clientHeight)
       p.frameRate(Math.max(1, Math.floor(controlState.fps)))
       drawRecursiveTiles(0, 0, p.width, p.height)
@@ -126,6 +133,7 @@ export async function init(
     }
 
     onControlChange((newControls) => {
+      // Step 5: apply control updates and redraw the base layer deterministically.
       const prevFps = controlState.fps
       syncControlState(controlState, newControls)
 
