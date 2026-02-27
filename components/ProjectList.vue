@@ -8,6 +8,7 @@
     >
       <UCard class="bg-black/50 backdrop-blur-md font-medium"
       :ui="{
+        root: 'ring-0',
         header: 'p-0',
         body: 'p-0',
         footer: 'p-0',
