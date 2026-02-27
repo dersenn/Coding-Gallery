@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   
   modules: ['@nuxt/ui'],
+
+  runtimeConfig: {
+    hiddenProjectsToken: ''
+  },
   
   css: ['~/assets/css/main.css'],
   

@@ -227,6 +227,19 @@ Add your project to `data/projects.json`:
 - `"hidden": true` - Hide from gallery (still accessible via direct URL)
 - `"github": "https://github.com/..."` - Shows "View on GitHub" link in info panel
 
+To reveal hidden projects on the gallery page, set a token in your environment and use it as a query parameter:
+
+```bash
+# Example: .env
+NUXT_HIDDEN_PROJECTS_TOKEN=your-random-token
+```
+
+Then open:
+
+```text
+/?showHidden=your-random-token
+```
+
 ### 7. Run and Test
 
 ```bash

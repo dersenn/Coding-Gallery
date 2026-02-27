@@ -1,3 +1,5 @@
 /.cursor
 /.nuxt
 /node_modules
+.env
+.env.*

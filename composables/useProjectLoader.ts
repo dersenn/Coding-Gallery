@@ -9,7 +9,11 @@ export const useProjectLoader = () => {
     return projects.value.find(p => p.id === id)
   }
 
-  const getVisibleProjects = (): Project[] => {
+  const getVisibleProjects = (includeHidden: boolean = false): Project[] => {
+    if (includeHidden) {
+      return projects.value
+    }
+
     return projects.value.filter(p => !p.hidden)
   }
 

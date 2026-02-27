@@ -31,6 +31,12 @@
 </template>
 
 <script setup lang="ts">
+const props = withDefaults(defineProps<{
+  showHidden?: boolean
+}>(), {
+  showHidden: false
+})
+
 const { getVisibleProjects } = useProjectLoader()
-const projects = computed(() => getVisibleProjects())
+const projects = computed(() => getVisibleProjects(props.showHidden))
 </script>
