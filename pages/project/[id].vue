@@ -25,11 +25,11 @@
     <div
       v-if="project"
       class="absolute top-0 right-0 z-20 transition-all duration-300 ease-out"
-      :class="isPanelExpanded ? 'bottom-0 w-80' : 'w-auto'"
+      :class="canShowControlsUI && isPanelExpanded ? 'bottom-0 w-80' : 'w-auto'"
     >
       <div
         class="flex flex-col text-white transition-all duration-300 ease-out"
-        :class="isPanelExpanded
+        :class="canShowControlsUI && isPanelExpanded
           ? `h-full ${showControls ? 'bg-black/50 backdrop-blur-md' : ''}`
           : ''"
       >
@@ -38,6 +38,7 @@
         >
           <h1 class="text-2xl leading-tight">{{ project.title }}</h1>
           <UButton
+            v-if="canShowControlsUI"
             :icon="showControls ? 'i-heroicons-eye-slash' : 'i-heroicons-adjustments-horizontal'"
             @click="showControls = !showControls"
             size="xl"
@@ -47,7 +48,7 @@
         </div>
 
         <Transition name="slide-left" @after-leave="handleControlsAfterLeave">
-          <div v-if="showControls" class="flex-1 min-h-0">
+          <div v-if="canShowControlsUI && showControls" class="flex-1 min-h-0">
             <ControlPanel
               :controls="loadedControls"
               :context-actions="loadedActions"
@@ -85,6 +86,7 @@ const { utils } = useGenerativeUtils()
 const { controlValues, resetControls } = useControls()
 
 const project = computed(() => getProjectById(route.params.id as string))
+const canShowControlsUI = computed(() => !!project.value && !project.value.noControls)
 const loadedControls = ref<ProjectControlDefinition[]>([])
 const loadedActions = ref<ProjectActionDefinition[]>([])
 const isPanelExpanded = ref(false)
@@ -235,12 +237,22 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
 
 // Restore showControls state from localStorage
 const showControls = ref(false)
-onMounted(() => {
+const restoreShowControlsPreference = () => {
+  if (!canShowControlsUI.value) {
+    showControls.value = false
+    isPanelExpanded.value = false
+    return
+  }
+
   const savedState = localStorage.getItem('showControls')
   if (savedState !== null) {
     showControls.value = savedState === 'true'
     isPanelExpanded.value = showControls.value
   }
+}
+
+onMounted(() => {
+  restoreShowControlsPreference()
   window.addEventListener('keydown', handleKeyboardShortcut)
 })
 
@@ -250,10 +262,19 @@ onUnmounted(() => {
 
 // Persist showControls state to localStorage
 watch(showControls, (newValue) => {
+  if (!canShowControlsUI.value) {
+    isPanelExpanded.value = false
+    return
+  }
+
   if (newValue) {
     isPanelExpanded.value = true
   }
   localStorage.setItem('showControls', newValue.toString())
+})
+
+watch(canShowControlsUI, () => {
+  restoreShowControlsPreference()
 })
 
 watch(() => route.params.id, () => {

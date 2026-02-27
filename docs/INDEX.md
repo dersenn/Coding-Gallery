@@ -13,6 +13,7 @@ Use this folder for supporting docs while keeping the repository root focused on
 - SVG engine details: `SVG_IMPLEMENTATION.md`
 - Grid and Cell utilities: See main `../README.md` (Grid and Cell Utilities section)
 - Migration audits: `audits/` (use `SKETCHNAME_MIGRATION_AUDIT.md`, e.g. `PEARLYMATS_MIGRATION_AUDIT.md`)
+- Legacy source manifests: `legacy-manifests/`
 - Migration history: `IMPLEMENTATION_SUMMARY.md`
 - Future project-structure plan: `PROJECT_STRUCTURE_PLAN.md`
 

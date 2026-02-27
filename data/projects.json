@@ -10,6 +10,39 @@
     "hidden": false
   },
   {
+    "id": "c4ta-trails",
+    "title": "C4TA Trails",
+    "description": "Trail circles following cursor history (migrated from C4TA p5)",
+    "date": "2021-10",
+    "tags": ["p5js", "legacy-migration", "trail"],
+    "libraries": ["p5"],
+    "entryFile": "/projects/c4ta-trails/index.ts",
+    "noControls": true,
+    "hidden": false
+  },
+  {
+    "id": "c4ta-clickclass-2",
+    "title": "C4TA Clickclass 2",
+    "description": "Bouncing node polygon with click-to-add interaction (migrated from C4TA p5)",
+    "date": "2021-11",
+    "tags": ["p5js", "legacy-migration", "interactive", "geometry"],
+    "libraries": ["p5"],
+    "entryFile": "/projects/c4ta-clickclass-2/index.ts",
+    "noControls": true,
+    "hidden": false
+  },
+  {
+    "id": "c4ta-grid-division-pixels-3",
+    "title": "C4TA Grid Division Pixels 3",
+    "description": "Recursive grid pixel divisions with moving container, mapped to theme palette",
+    "date": "2021-10",
+    "tags": ["p5js", "legacy-migration", "grid", "recursive"],
+    "libraries": ["p5"],
+    "entryFile": "/projects/c4ta-grid-division-pixels-3/index.ts",
+    "noControls": true,
+    "hidden": false
+  },
+  {
     "id": "template",
     "title": "Template",
     "description": "Template",

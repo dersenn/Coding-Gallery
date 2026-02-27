@@ -104,6 +104,7 @@ export interface Project {
   libraries: string[]
   entryFile: string  // Path to JS/TS module (e.g., '/projects/noise-field/index.ts')
   controls?: ProjectControlDefinition[]
+  noControls?: boolean // Hide controls panel/toggle for sketches without controls
   github?: string
   hidden?: boolean  // Hide from gallery (still accessible via direct URL)
 }
