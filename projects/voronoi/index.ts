@@ -19,6 +19,7 @@ interface DelaunayTriangle {
   radius: number
 }
 
+
 export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
@@ -36,10 +37,11 @@ export async function init(
   })
 
   const pointCount = 20
+  const border = 50;
 
   // Step 1: generate seed-driven points across the full stage.
   const points: Vec[] = Array.from({ length: pointCount }, () => {
-    return v(rnd() * svg.w, rnd() * svg.h)
+    return v(rnd() * (svg.w - border * 2) + border, rnd() * (svg.h - border * 2) + border)
   })
 
   const allTriangles = (pts: Vec[]): Array<[Vec, Vec, Vec]> => {
@@ -112,9 +114,12 @@ export async function init(
     const path = new Path([triangle.a, triangle.b, triangle.c], true)
     const paletteIndex = utils.seed.randomInt(0, Math.max(0, theme.palette.length - 1))
     const parsed = Color.parse(theme.palette[paletteIndex] ?? theme.foreground)
-    const stroke = (parsed?.withAlpha(0.3).toRgbaString()) ?? theme.foreground
-    svg.makePath(path.buildPolygon(), 'transparent', stroke, 2)
-    svg.makeCircle(triangle.circumcenter, 5, stroke)
+    const edgeStroke = (parsed?.withAlpha(0.3).toRgbaString()) ?? theme.foreground
+    const circumStroke = (parsed?.withAlpha(0.14).toRgbaString()) ?? theme.foreground
+    const centerFill = (parsed?.withAlpha(0.55).toRgbaString()) ?? theme.foreground
+    svg.makePath(path.buildPolygon(), 'transparent', edgeStroke, 2)
+    svg.makeCircle(triangle.circumcenter, triangle.radius, 'none', circumStroke, 1)
+    svg.makeCircle(triangle.circumcenter, 4, centerFill)
   }
 
   // Step 4: overlay point markers for the sampled sites.
