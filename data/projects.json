@@ -43,6 +43,17 @@
     "hidden": false
   },
   {
+    "id": "voronoi",
+    "title": "Voronoi",
+    "description": "Brute-force Delaunay triangulation study ported to framework SVG",
+    "date": "2024-10",
+    "tags": ["svg", "legacy-migration", "voronoi", "delaunay"],
+    "libraries": ["svg"],
+    "entryFile": "/projects/voronoi/index.ts",
+    "noControls": true,
+    "hidden": false
+  },
+  {
     "id": "template",
     "title": "Template",
     "description": "Template",
