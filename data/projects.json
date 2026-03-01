@@ -54,6 +54,17 @@
     "hidden": false
   },
   {
+    "id": "a-vera-2",
+    "title": "À Vera",
+    "description": "Overlapping tile-line composition with switchable Vera 1 and Vera 2 variants (migrated from C4TA SVG)",
+    "date": "2021-11",
+    "tags": ["svg", "legacy-migration", "geometry", "c4ta"],
+    "libraries": ["svg"],
+    "entryFile": "/projects/c4ta/svg/a-vera-2/index.ts",
+    "prefersTheme": "light",
+    "hidden": false
+  },
+  {
     "id": "template",
     "title": "Template",
     "description": "Template",

@@ -1,5 +1,9 @@
 <template>
-  <div ref="containerRef" class="w-full h-full bg-black"></div>
+  <div
+    ref="containerRef"
+    class="w-full h-full"
+    :style="{ backgroundColor: viewerBackground }"
+  ></div>
 </template>
 
 <script setup lang="ts">
@@ -51,6 +55,8 @@ const DOWNLOAD_SVG_ACTION: ProjectActionDefinition = {
 const hasSvgLibrary = computed(() => {
   return (props.project.libraries || []).some((library) => library.trim().toLowerCase() === 'svg')
 })
+const themePreference = computed(() => props.project.prefersTheme ?? 'dark')
+const viewerBackground = computed(() => resolveTheme(undefined, themePreference.value).background)
 
 const createSvgDownloadFallback = () => {
   return () => {
@@ -131,7 +137,7 @@ const loadProject = async () => {
     emit('actionsLoaded', effectiveActions)
 
     // Setup context for the project
-    const theme = resolveTheme(module.theme)
+    const theme = resolveTheme(module.theme, themePreference.value)
     cleanup = await module.init(containerRef.value, {
       controls: toRaw(controlValues.value),
       utils,

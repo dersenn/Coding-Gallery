@@ -1,9 +1,9 @@
 <template>
-  <div class="h-full flex flex-col p-4 font-medium text-sm text-white">
+  <div class="control-panel h-full flex flex-col p-4 font-medium text-sm">
     <div class="mb-4 space-y-2">
       <button
         type="button"
-        class="w-full px-3 py-2 rounded-md bg-white/20 hover:bg-white/30 transition-colors font-semibold"
+        class="control-btn-strong w-full px-3 py-2 rounded-md transition-colors font-semibold"
         @click="emit('action', 'new-seed')"
       >
         New Seed
@@ -11,7 +11,7 @@
       <div class="flex gap-2">
         <button
           type="button"
-          class="flex-1 px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+          class="control-btn flex-1 px-3 py-2 rounded-md transition-colors"
           @click="emit('action', 'reset-controls')"
         >
           Defaults
@@ -20,7 +20,7 @@
           v-for="action in contextActions"
           :key="action.key"
           type="button"
-          class="flex-1 px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
+          class="control-btn flex-1 px-3 py-2 rounded-md transition-colors"
           @click="emit('action', action.key)"
         >
           {{ action.label }}
@@ -33,7 +33,7 @@
         v-for="section in normalizedSections"
         :key="section.id"
         class="rounded-md"
-        :class="section.label || section.collapsible ? 'bg-white/5 p-3' : ''"
+        :class="section.label || section.collapsible ? 'control-section-surface p-3' : ''"
       >
         <button
           v-if="section.collapsible"
@@ -42,11 +42,11 @@
           @click="toggleSection(section.id)"
         >
           <span class="text-xs uppercase tracking-wide">{{ section.label }}</span>
-          <span class="text-sm text-white/70">{{ isSectionOpen(section) ? '−' : '+' }}</span>
+          <span class="control-text-muted text-sm">{{ isSectionOpen(section) ? '−' : '+' }}</span>
         </button>
         <div
           v-else-if="section.label"
-          class="text-xs uppercase tracking-wide text-white/80"
+          class="control-text-muted text-xs uppercase tracking-wide"
         >
           {{ section.label }}
         </div>
@@ -98,13 +98,13 @@
               v-else-if="control.type === 'select'"
               :value="controlValues[control.key]"
               @change="updateSelectControlValue(control.key, ($event.target as HTMLSelectElement).value)"
-              class="w-full px-3 py-2 bg-black/30 rounded-md focus:outline-none focus:ring-2 focus:ring-foreground text-white font-medium"
+              class="control-input-surface w-full px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-foreground font-medium"
             >
               <option
                 v-for="option in control.options"
                 :key="option.value"
                 :value="option.value"
-                class="bg-gray-900"
+                class="control-option-bg"
               >
                 {{ option.label }}
               </option>
@@ -128,7 +128,7 @@
                 />
                 <span
                   v-if="getCheckboxOptionSwatch(control, option)"
-                  class="inline-block w-3 h-3 rounded border border-white/30"
+                  class="control-swatch-border inline-block w-3 h-3 rounded border"
                   :style="{ backgroundColor: getCheckboxOptionSwatch(control, option) }"
                 />
                 <span>{{ getCheckboxOptionLabel(control, option) }}</span>
@@ -149,11 +149,11 @@
                   type="color"
                   :value="value"
                   @input="updateColorListValue(control.key, index, ($event.target as HTMLInputElement).value)"
-                  class="flex-1 h-9 rounded cursor-pointer bg-black/30"
+                  class="control-input-surface flex-1 h-9 rounded cursor-pointer"
                 />
                 <button
                   type="button"
-                  class="px-2 py-1 rounded-md bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  class="control-btn px-2 py-1 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   :disabled="!canRemoveColor(control)"
                   @click="removeColorListValue(control, index)"
                 >
@@ -162,7 +162,7 @@
               </div>
               <button
                 type="button"
-                class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                class="control-btn px-3 py-2 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                 :disabled="!canAddColor(control)"
                 @click="addColorListValue(control)"
               >
@@ -177,7 +177,7 @@
               :value="controlValues[control.key]"
               @input="updateControl(control.key, ($event.target as HTMLInputElement).value, { history: 'replace' })"
               @change="commitControl(control.key)"
-              class="w-full h-10 rounded cursor-pointer bg-black/30 font-medium"
+              class="control-input-surface w-full h-10 rounded cursor-pointer font-medium"
             />
             </div>
           </template>
@@ -471,7 +471,6 @@ const getColorListValues = (key: string): string[] => {
 }
 
 const isControlVisible = (control: ControlDefinition): boolean => {
-  if (control.type !== 'color-list') return true
   if (!control.visibleWhenSelectKey) return true
 
   const selectValue = controlValues.value[control.visibleWhenSelectKey]
@@ -533,3 +532,47 @@ const updateSelectControlValue = (key: string, value: string) => {
   updateControl(key, value)
 }
 </script>
+
+<style scoped>
+.control-panel {
+  color: var(--project-text);
+}
+
+.control-btn {
+  background-color: var(--project-control-bg);
+}
+
+.control-btn:hover {
+  background-color: var(--project-control-bg-hover);
+}
+
+.control-btn-strong {
+  background-color: var(--project-control-bg-strong);
+}
+
+.control-btn-strong:hover {
+  background-color: var(--project-control-bg-strong-hover);
+}
+
+.control-section-surface {
+  background-color: var(--project-control-section-bg);
+}
+
+.control-text-muted {
+  color: var(--project-text-muted);
+}
+
+.control-input-surface {
+  background-color: var(--project-control-input-bg);
+  color: var(--project-text);
+}
+
+.control-option-bg {
+  background-color: var(--project-control-option-bg);
+  color: var(--project-text);
+}
+
+.control-swatch-border {
+  border-color: var(--project-border);
+}
+</style>

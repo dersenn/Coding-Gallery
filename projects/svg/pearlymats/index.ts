@@ -333,7 +333,8 @@ export async function init(
   }
 
   // Fixed settings
-  const colorPalettes = buildPaletteMap(theme.palette, NAMED_PALETTES)
+  // Keep runtime palette resolution aligned with control swatches/labels.
+  const colorPalettes = buildPaletteMap(defaultTheme.palette, NAMED_PALETTES)
   const backgroundColor = theme.background
   const annotationColor = (Color.parse(theme.annotation) ?? Color.fromHex('#666')!).toCss('rgba')
 

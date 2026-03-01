@@ -14,6 +14,8 @@ export interface ThemeOverride {
   palette?: string[]
 }
 
+export type ThemePreference = 'dark' | 'light'
+
 export const defaultTheme: ThemeTokens = {
   background: '#000000',
   foreground: '#00ff00',
@@ -22,14 +24,26 @@ export const defaultTheme: ThemeTokens = {
   palette: ['#f00', '#0f0', '#00f', '#ff0', '#0ff', '#f0f']
 }
 
-export const resolveTheme = (override?: ThemeOverride): ThemeTokens => {
-  if (!override) return defaultTheme
+export const lightTheme: ThemeTokens = {
+  background: '#f6f6f4',
+  foreground: '#111111',
+  annotation: '#6b7280',
+  outline: '#111111',
+  palette: ['#1d4ed8', '#9333ea', '#dc2626', '#ea580c', '#0f766e', '#4f46e5']
+}
+
+export const resolveTheme = (
+  override?: ThemeOverride,
+  preference: ThemePreference = 'dark'
+): ThemeTokens => {
+  const baseTheme = preference === 'light' ? lightTheme : defaultTheme
+  if (!override) return baseTheme
 
   return {
-    background: override.background ?? defaultTheme.background,
-    foreground: override.foreground ?? defaultTheme.foreground,
-    annotation: override.annotation ?? defaultTheme.annotation,
-    outline: override.outline ?? defaultTheme.outline,
-    palette: override.palette?.length ? override.palette : defaultTheme.palette
+    background: override.background ?? baseTheme.background,
+    foreground: override.foreground ?? baseTheme.foreground,
+    annotation: override.annotation ?? baseTheme.annotation,
+    outline: override.outline ?? baseTheme.outline,
+    palette: override.palette?.length ? override.palette : baseTheme.palette
   }
 }

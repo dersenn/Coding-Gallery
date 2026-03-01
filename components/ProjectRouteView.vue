@@ -1,5 +1,8 @@
 <template>
-  <div class="fixed inset-0 bg-black overflow-hidden font-medium">
+  <div
+    class="fixed inset-0 overflow-hidden font-medium project-route"
+    :data-project-theme="projectTheme"
+  >
     <!-- Full-screen sketch (z-0) -->
     <ProjectViewer
       v-if="project"
@@ -15,7 +18,7 @@
     <div class="absolute top-0 left-0 z-10">
       <NuxtLink
         to="/"
-        class="project-overlay-type inline-flex items-center gap-2 p-4 rounded-lg transition text-white text-2xl font-medium hover:text-gray-200"
+        class="project-overlay-type inline-flex items-center gap-2 p-4 rounded-lg transition text-2xl font-medium opacity-90 hover:opacity-70"
       >
         ←
       </NuxtLink>
@@ -28,9 +31,9 @@
       :class="canShowControlsUI && isPanelExpanded ? 'bottom-0 w-80' : 'w-auto'"
     >
       <div
-        class="flex flex-col text-white transition-all duration-300 ease-out"
+        class="flex flex-col transition-all duration-300 ease-out"
         :class="canShowControlsUI && isPanelExpanded
-          ? `h-full ${showControls ? 'bg-black/50 backdrop-blur-md' : ''}`
+          ? `h-full ${showControls ? 'project-panel-surface backdrop-blur-md' : ''}`
           : ''"
       >
         <div
@@ -65,15 +68,15 @@
       v-if="project"
       class="absolute inset-x-0 bottom-0 z-10 flex justify-center pb-3 pointer-events-none"
     >
-      <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 py-1.5 rounded-full bg-black/35 backdrop-blur-sm text-[11px] text-white/30">
+      <div class="project-shortcut-pill flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 py-1.5 rounded-full backdrop-blur-sm text-[11px]">
         <template v-for="hint in shortcutHints" :key="hint.key">
           <span class="whitespace-nowrap">
-            <span class="font-mono text-white/45">[{{ hint.key }}]</span>
+            <span class="font-mono project-text-muted">[{{ hint.key }}]</span>
             {{ hint.label }}
           </span>
         </template>
         <span class="whitespace-nowrap">
-          <span class="text-white/45">seed: </span>
+          <span class="project-text-muted">seed: </span>
           <span class="font-mono">{{ currentSeed }}</span>
         </span>
       </div>
@@ -81,8 +84,8 @@
 
     <!-- Project not found message -->
     <div v-if="!project" class="absolute inset-0 flex items-center justify-center">
-      <UCard class="bg-black/50 backdrop-blur-md border border-white/10">
-        <p class="text-sm text-white">Project not found</p>
+      <UCard class="project-not-found-card backdrop-blur-md border">
+        <p class="text-sm">Project not found</p>
       </UCard>
     </div>
   </div>
@@ -145,6 +148,7 @@ const currentSeed = computed(() => {
   if (typeof runtimeSeed === 'string' && runtimeSeed.length > 0) return runtimeSeed
   return '—'
 })
+const projectTheme = computed<'dark' | 'light'>(() => project.value?.prefersTheme ?? 'dark')
 
 // Handle controls loaded from module
 const handleControlsLoaded = (controls: ProjectControlDefinition[]) => {
@@ -344,11 +348,32 @@ const handleControlsAfterLeave = () => {
 </script>
 
 <style scoped>
+.project-route {
+  background-color: var(--project-page-bg);
+  color: var(--project-text);
+}
+
 .project-overlay-type {
-  text-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.9),
-    0 2px 4px rgba(0, 0, 0, 0.65),
-    0 0 8px rgba(120, 120, 120, 0.25);
+  text-shadow: var(--project-overlay-shadow);
+}
+
+.project-panel-surface {
+  background-color: var(--project-panel-bg);
+}
+
+.project-shortcut-pill {
+  background-color: var(--project-chip-bg);
+  color: var(--project-text-faint);
+}
+
+.project-text-muted {
+  color: var(--project-text-muted);
+}
+
+.project-not-found-card {
+  background-color: var(--project-card-bg);
+  border-color: var(--project-border);
+  color: var(--project-text);
 }
 
 .slide-left-enter-active,

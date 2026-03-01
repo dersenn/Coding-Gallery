@@ -16,6 +16,9 @@ interface BaseControlDefinition {
   key: string
   group?: string
   order?: number
+  visibleWhenSelectKey?: string
+  visibleWhenSelectValue?: ControlPrimitiveValue
+  visibleWhenSelectValues?: ControlPrimitiveValue[]
 }
 
 export interface SliderControlDefinition extends BaseControlDefinition {
@@ -60,9 +63,6 @@ export interface ColorListControlDefinition extends BaseControlDefinition {
   default: string[]
   minItems?: number
   maxItems?: number
-  visibleWhenSelectKey?: string
-  visibleWhenSelectValue?: string | number
-  visibleWhenSelectValues?: Array<string | number>
 }
 
 export type ControlDefinition =
@@ -103,6 +103,7 @@ export interface Project {
   thumbnail?: string
   libraries: string[]
   entryFile: string  // Path to JS/TS module (e.g., '/projects/noise-field/index.ts')
+  prefersTheme?: 'dark' | 'light' // Optional per-project UI/sketch theme preference
   controls?: ProjectControlDefinition[]
   noControls?: boolean // Hide controls panel/toggle for sketches without controls
   github?: string
