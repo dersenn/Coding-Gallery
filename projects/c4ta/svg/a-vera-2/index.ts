@@ -67,8 +67,8 @@ export async function init(
   const virtualWidth = svg.w / res
   const virtualMin = Math.min(virtualWidth, VIRTUAL_HEIGHT)
 
-  const vera1Color = theme.palette[2] ?? '#0000ff'
-  const vera2Color = theme.palette[0] ?? '#ff0000'
+  const vera1Color = theme.palette[0] ?? '#0000ff'
+  const vera2Color = theme.palette[2] ?? '#ff0000'
 
   // Convert legacy center-origin virtual coordinates into SVG pixel coordinates.
   const toStagePoint = (x: number, y: number) =>
