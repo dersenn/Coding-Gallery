@@ -3,7 +3,7 @@
     <NuxtLink
       v-for="project in projects" 
       :key="project.id"
-      :to="`/project/${project.id}`"
+      :to="`/${project.id}`"
       class="group block"
     >
       <UCard class="bg-black/50 backdrop-blur-md font-medium"

@@ -57,7 +57,7 @@ This avoids view-level inconsistency and keeps behavior predictable across sketc
 
 ## Acceptance Criteria
 
-- Back from `/project/:id` steps through meaningful sketch states before leaving the sketch.
+- Back from `/:id` (or legacy `/project/:id`) steps through meaningful sketch states before leaving the sketch.
 - Dragging a slider does not create dozens of Back steps.
 - Final value after drag is reachable via Back/Forward.
 - Seed/reset/randomize remain individually navigable.

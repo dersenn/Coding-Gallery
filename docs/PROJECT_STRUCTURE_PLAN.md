@@ -29,6 +29,8 @@ projects/
 
 - Keep a flat array of projects.
 - Keep route identity in `id` (do not derive from folder path).
+- Primary project route is `/:id` (legacy `/project/:id` may remain supported).
+- Reserve system paths so project IDs do not collide (for example: `project`, and future static routes such as `about`).
 - Use `entryFile` as source of truth for module loading.
 - Use tags for grouping/filtering (medium + provenance):
   - `p5js`, `svg`, `c4ta`, `template`

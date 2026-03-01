@@ -29,7 +29,7 @@ Minimal template for creating new p5.js projects in the gallery.
    ```bash
    npm run dev
    ```
-   Navigate to `http://localhost:3000/project/my-sketch`
+   Navigate to `http://localhost:3000/my-sketch` (legacy `http://localhost:3000/project/my-sketch` also works)
 
 ## New Project Checklist
 

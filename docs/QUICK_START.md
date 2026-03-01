@@ -12,15 +12,15 @@ Use this for a fast first run. For full reference, see `../README.md`.
    ```bash
    npm run dev
    ```
-3. Open the gallery (`/`) and a project route (`/project/<id>`).
+3. Open the gallery (`/`) and a project route (`/<id>`, with legacy `/project/<id>` still supported).
 
 ## Create your first project
 
 1. Copy the p5 template:
    ```bash
-   cp -r projects/_Templates/_template projects/my-first-sketch
+   cp -r projects/_Templates/_template projects/p5/my-first-sketch
    ```
-2. Implement your sketch in `projects/my-first-sketch/index.ts` or `projects/my-first-sketch/index.js`.
+2. Implement your sketch in `projects/p5/my-first-sketch/index.ts` or `projects/p5/my-first-sketch/index.js`.
 3. Add metadata in `data/projects.json`:
    ```json
    {
@@ -30,11 +30,11 @@ Use this for a fast first run. For full reference, see `../README.md`.
      "date": "2026-02",
      "tags": ["p5js", "generative"],
      "libraries": ["p5"],
-     "entryFile": "/projects/my-first-sketch/index.ts"
+    "entryFile": "/projects/p5/my-first-sketch/index.ts"
    }
    ```
    `entryFile` supports either `/projects/.../index.ts` or `/projects/.../index.js`.
-4. Open: `/project/my-first-sketch`.
+4. Open: `/my-first-sketch` (legacy `/project/my-first-sketch` also works).
 
 ## Verify key runtime features
 

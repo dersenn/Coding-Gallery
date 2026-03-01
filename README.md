@@ -42,7 +42,8 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   └── projects.json          # Project metadata
 ├── pages/
 │   ├── index.vue              # Gallery home page
-│   └── project/[id].vue       # Full-screen project view
+│   ├── [id].vue               # Primary full-screen project route
+│   └── project/[id].vue       # Legacy-compatible project route
 ├── projects/
 │   ├── _Templates/            # Hidden project templates
 │   │   ├── _template/         # p5.js starter template
@@ -248,7 +249,7 @@ Then open:
 npm run dev
 ```
 
-Navigate to `http://localhost:3000/project/my-new-project`
+Navigate to `http://localhost:3000/my-new-project` (legacy `http://localhost:3000/project/my-new-project` also works)
 
 ## Global Utilities
 

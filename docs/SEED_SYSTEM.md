@@ -37,7 +37,7 @@ Noise is seed-synchronized via `context.utils.noise.*`.
 - URL has valid `?seed=...`.
 - No code overrides seed unexpectedly.
 - All random/noise values come from `utils.seed` / `utils.noise`.
-- Project-page shortcut handler is active (`pages/project/[id].vue`).
+- Project-page shortcut handler is active (`components/ProjectRouteView.vue`, used by both `pages/[id].vue` and `pages/project/[id].vue`).
 
 ## Related docs
 
