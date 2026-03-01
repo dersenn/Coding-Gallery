@@ -1,7 +1,7 @@
 # Pearlymats Migration Audit
 
 Date: 2026-02-25  
-Scope: active sketch `projects/pearlymats/index.ts`
+Scope: active sketch `projects/svg/pearlymats/index.ts`
 
 ## Findings
 

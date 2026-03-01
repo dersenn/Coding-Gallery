@@ -14,7 +14,7 @@
           class="flex-1 px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 transition-colors"
           @click="emit('action', 'reset-controls')"
         >
-          Reset
+          Defaults
         </button>
         <button
           v-for="action in contextActions"
@@ -26,9 +26,6 @@
           {{ action.label }}
         </button>
       </div>
-      <p class="text-xs text-white/70">
-        Shortcuts: <span class="font-mono">n</span> seed, <span class="font-mono">r</span> refresh, <span class="font-mono">d</span> defaults, <span class="font-mono">s</span> save
-      </p>
     </div>
 
     <div class="flex-1 min-h-0 overflow-y-auto space-y-4">

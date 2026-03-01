@@ -153,7 +153,7 @@ export const controls: ProjectControlDefinition[] = [
       },
       {
         type: 'checkbox-group',
-        label: 'Selectable Colors',
+        label: 'Palette Colors',
         key: 'selectedPaletteIndices',
         default: DEFAULT_SELECTED_PALETTE_INDICES,
         visibleCountFromSelectKey: 'palettePreset',
@@ -174,7 +174,7 @@ export const controls: ProjectControlDefinition[] = [
       },
       {
         type: 'color-list',
-        label: 'Custom Palette',
+        label: 'Custom Colors',
         key: 'customPalette',
         default: DEFAULT_CUSTOM_PALETTE,
         minItems: 1,

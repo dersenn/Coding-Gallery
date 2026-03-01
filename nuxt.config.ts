@@ -18,7 +18,7 @@ export default defineNuxtConfig({
   
   app: {
     head: {
-      title: 'Creative Coding Gallery',
+      title: "Things I've Coded…",
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' }

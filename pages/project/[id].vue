@@ -15,7 +15,7 @@
     <div class="absolute top-0 left-0 z-10">
       <NuxtLink 
         to="/" 
-        class="inline-flex items-center gap-2 p-4 bg-black/50 backdrop-blur-md rounded-lg hover:bg-black/70 transition text-white text-2xl font-medium"
+        class="project-overlay-type inline-flex items-center gap-2 p-4 rounded-lg transition text-white text-2xl font-medium hover:text-gray-200"
       >
         ←
       </NuxtLink>
@@ -36,7 +36,7 @@
         <div
           class="self-end flex items-center gap-3 p-4"
         >
-          <h1 class="text-2xl leading-tight">{{ project.title }}</h1>
+          <h1 class="project-overlay-type text-2xl leading-tight">{{ project.title }}</h1>
           <UButton
             v-if="canShowControlsUI"
             :icon="showControls ? 'i-heroicons-eye-slash' : 'i-heroicons-adjustments-horizontal'"
@@ -58,6 +58,24 @@
             />
           </div>
         </Transition>
+      </div>
+    </div>
+
+    <div
+      v-if="project"
+      class="absolute inset-x-0 bottom-0 z-10 flex justify-center pb-3 pointer-events-none"
+    >
+      <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 py-1.5 rounded-full bg-black/35 backdrop-blur-sm text-[11px] text-white/30">
+        <template v-for="hint in shortcutHints" :key="hint.key">
+          <span class="whitespace-nowrap">
+            <span class="font-mono text-white/45">[{{ hint.key }}]</span>
+            {{ hint.label }}
+          </span>
+        </template>
+        <span class="whitespace-nowrap">
+          <span class="text-white/45">seed: </span>
+          <span class="font-mono">{{ currentSeed }}</span>
+        </span>
       </div>
     </div>
 
@@ -86,6 +104,10 @@ const { utils } = useGenerativeUtils()
 const { controlValues, resetControls } = useControls()
 
 const project = computed(() => getProjectById(route.params.id as string))
+const basePageTitle = "Things I've Coded…"
+useHead(() => ({
+  title: project.value ? `${basePageTitle} ${project.value.title}` : basePageTitle
+}))
 const canShowControlsUI = computed(() => !!project.value && !project.value.noControls)
 const loadedControls = ref<ProjectControlDefinition[]>([])
 const loadedActions = ref<ProjectActionDefinition[]>([])
@@ -93,6 +115,32 @@ const isPanelExpanded = ref(false)
 const viewerInstanceKey = ref(0)
 const actionRequest = ref<{ key: string; nonce: number } | null>(null)
 const actionNonce = ref(0)
+const hasSvgDownloadAction = computed(() => {
+  return loadedActions.value.some((action) => action.key === 'download-svg')
+})
+const shortcutHints = computed(() => {
+  const hints: Array<{ key: string; label: string }> = [
+    { key: 'n', label: 'new seed' },
+    { key: 'r', label: 'reload' }
+  ]
+  if (canShowControlsUI.value) {
+    hints.push({ key: 'd', label: 'default settings' })
+  }
+  if (hasSvgDownloadAction.value) {
+    hints.push({ key: 's', label: 'save SVG' })
+  }
+  return hints
+})
+const currentSeed = computed(() => {
+  const querySeed = route.query.seed
+  if (typeof querySeed === 'string' && querySeed.length > 0) return querySeed
+  if (Array.isArray(querySeed) && typeof querySeed[0] === 'string' && querySeed[0].length > 0) {
+    return querySeed[0]
+  }
+  const runtimeSeed = utils.seed.current
+  if (typeof runtimeSeed === 'string' && runtimeSeed.length > 0) return runtimeSeed
+  return '—'
+})
 
 // Handle controls loaded from module
 const handleControlsLoaded = (controls: ProjectControlDefinition[]) => {
@@ -100,7 +148,11 @@ const handleControlsLoaded = (controls: ProjectControlDefinition[]) => {
 }
 
 const handleActionsLoaded = (actions: ProjectActionDefinition[]) => {
-  loadedActions.value = actions || []
+  loadedActions.value = (actions || []).map((action) => (
+    action.key === 'download-svg'
+      ? { ...action, label: 'Save SVG' }
+      : action
+  ))
 }
 
 const seedAlphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
@@ -228,8 +280,7 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
   }
 
   if (event.key.toLowerCase() === 's') {
-    const hasDownloadAction = loadedActions.value.some((action) => action.key === 'download-svg')
-    if (!hasDownloadAction) return
+    if (!hasSvgDownloadAction.value) return
     event.preventDefault()
     void handleControlAction('download-svg')
   }
@@ -289,6 +340,13 @@ const handleControlsAfterLeave = () => {
 </script>
 
 <style scoped>
+.project-overlay-type {
+  text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.9),
+    0 2px 4px rgba(0, 0, 0, 0.65),
+    0 0 8px rgba(120, 120, 120, 0.25);
+}
+
 .slide-left-enter-active,
 .slide-left-leave-active {
   transition: all 0.3s ease;

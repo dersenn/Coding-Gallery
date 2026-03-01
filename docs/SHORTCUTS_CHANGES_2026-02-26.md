@@ -8,8 +8,8 @@ Current keyboard mapping on project pages:
 
 - `n` -> new seed (in-place update)
 - `r` -> reload sketch view in-place (viewer remount)
-- `d` -> reset controls to defaults
-- `s` -> save sketch output when a `download-svg` action is available
+- `d` -> reset controls to default settings
+- `s` -> save SVG when a `download-svg` action is available
 
 ## Browser shortcut behavior
 
@@ -39,5 +39,7 @@ Current keyboard mapping on project pages:
 
 ## UI polish
 
-- Added a compact shortcuts legend to the control panel:
-  - `n` seed, `r` refresh, `d` defaults, `s` save
+- Moved shortcut guidance into a discreet bottom overlay that stays visible on project pages.
+- Overlay copy uses explicit naming:
+  - `n` new seed, `r` reload, `d` default settings, `s` save SVG (SVG projects only)
+- Current seed is displayed in that same overlay.

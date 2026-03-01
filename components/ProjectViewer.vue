@@ -45,7 +45,7 @@ const projectModules = import.meta.glob('~/projects/**/index.{ts,js}') as Record
 const DOWNLOAD_SVG_ACTION_KEY = 'download-svg'
 const DOWNLOAD_SVG_ACTION: ProjectActionDefinition = {
   key: DOWNLOAD_SVG_ACTION_KEY,
-  label: 'Download SVG'
+  label: 'Save SVG'
 }
 
 const hasSvgLibrary = computed(() => {

@@ -1,7 +1,7 @@
 # C4TA Clickclass 2 Migration Audit
 
 Date: 2026-02-27  
-Scope: `projects/c4ta-clickclass-2/index.ts`
+Scope: `projects/c4ta/p5/clickclass-2/index.ts`
 
 ## Findings
 

@@ -48,7 +48,9 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   │   ├── _template/         # p5.js starter template
 │   │   ├── _svg-template/     # SVG static template
 │   │   └── _svg-animated-template/ # SVG animated template
-│   └── pearlymats/            # Current visible sketch
+│   ├── p5/                    # p5.js sketches
+│   ├── svg/                   # SVG sketches
+│   └── c4ta/                  # Migrated C4TA sketches (subdivided by medium)
 ├── types/
 │   └── project.ts             # TypeScript interfaces
 ├── plugins/
@@ -75,15 +77,15 @@ Choose a template based on your sketch type:
 
 ```bash
 # For p5.js
-cp -r projects/_Templates/_template projects/my-new-project
+cp -r projects/_Templates/_template projects/p5/my-new-project
 
 # For SVG
-cp -r projects/_Templates/_svg-template projects/my-svg-project
+cp -r projects/_Templates/_svg-template projects/svg/my-svg-project
 ```
 
 ### 2. Implement Your Sketch
 
-Edit `projects/my-new-project/index.ts` (or `index.js` for rapid iteration):
+Edit `projects/p5/my-new-project/index.ts` (or `index.js` for rapid iteration):
 
 ```typescript
 import type { ProjectContext, CleanupFunction } from '~/types/project'
@@ -217,7 +219,7 @@ Add your project to `data/projects.json`:
   "date": "2024-12",
   "tags": ["p5js", "generative"],
   "libraries": ["p5"],
-  "entryFile": "/projects/my-new-project/index.ts"
+  "entryFile": "/projects/p5/my-new-project/index.ts"
 }
 ```
 
@@ -296,9 +298,10 @@ console.log('Seed:', utils.seed.current)
 **Keyboard Shortcuts:**
 - Press **'n'** to generate a new random seed in-place
 - Press **'r'** to reload the sketch view in-place
-- Press **'d'** to reset controls to defaults
+- Press **'d'** to reset controls to default settings
 - Press **'s'** to save SVG output (SVG projects only; requires a `download-svg` action)
 - Seeds are automatically saved in the URL for sharing
+- A discreet bottom overlay on project pages shows these shortcuts and the current seed
 
 ### Math Helpers
 

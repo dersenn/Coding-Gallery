@@ -10,16 +10,19 @@ Scale the `projects/` directory without breaking runtime loading or adding maint
 
 ```text
 projects/
-  live/
-    <project-name>/index.ts
-  wip/
-    <project-name>/index.ts
-  archive/
-    <project-name>/index.ts
   _Templates/
     _template/index.ts
     _svg-template/index.ts
     _svg-animated-template/index.ts
+  p5/
+    <project-name>/index.ts
+  svg/
+    <project-name>/index.ts
+  c4ta/
+    p5/
+      <project-name>/index.ts
+    svg/
+      <project-name>/index.ts
 ```
 
 ### Metadata sketch (`data/projects.json`)
@@ -27,9 +30,9 @@ projects/
 - Keep a flat array of projects.
 - Keep route identity in `id` (do not derive from folder path).
 - Use `entryFile` as source of truth for module loading.
-- Use tags for grouping/filtering:
-  - `live`, `wip`, `archive`, `template`
-- Keep `hidden: true` for templates (and optionally for WIP).
+- Use tags for grouping/filtering (medium + provenance):
+  - `p5js`, `svg`, `c4ta`, `template`
+- Keep `hidden: true` for templates.
 
 Example entry:
 
@@ -37,8 +40,8 @@ Example entry:
 {
   "id": "pearlymats",
   "title": "Pearly Mats",
-  "entryFile": "/projects/live/pearlymats/index.ts",
-  "tags": ["svg", "generative", "live"],
+  "entryFile": "/projects/svg/pearlymats/index.ts",
+  "tags": ["svg", "generative"],
   "hidden": false
 }
 ```
@@ -54,16 +57,16 @@ Example entry:
 
 ### Phase 1: Convention adoption
 
-1. Create `live/`, `wip/`, and `archive/` folders under `projects/`.
-2. Move existing real projects into `projects/live/`.
+1. Create medium folders under `projects/`: `p5/`, `svg/`, and `c4ta/` with `c4ta/p5` + `c4ta/svg` subdivisions.
+2. Move existing real projects into the medium folders.
 3. Keep templates under `projects/_Templates/`.
 4. Update corresponding `entryFile` paths in `data/projects.json`.
 
 ### Phase 2: Gallery filtering UX (optional but recommended)
 
-1. Add category tags (`live`, `wip`, `archive`, `template`) to all entries.
+1. Add/normalize medium tags (`p5js`, `svg`, `c4ta`, `template`) for all entries.
 2. Keep gallery default to visible projects (`!hidden`).
-3. Add optional filter controls (e.g. chips/tabs) driven by tags.
+3. Add optional filter controls (e.g. chips/tabs) driven by tags and/or libraries.
 
 ### Phase 3: Validation guardrail (recommended)
 
@@ -85,7 +88,7 @@ Add a script to validate metadata against files before runtime:
 - [ ] No duplicate `id`.
 - [ ] No duplicate `entryFile`.
 - [ ] `hidden` policy is consistent with `template` tag.
-- [ ] Optional: enforce allowed top-level buckets (`live`, `wip`, `archive`, `_Templates`).
+- [ ] Optional: enforce allowed top-level buckets (`p5`, `svg`, `c4ta`, `_Templates`).
 
 ## Risks and Mitigations
 
@@ -127,7 +130,7 @@ Provide a single command that verifies `data/projects.json` and filesystem entri
 
 Before comparison, normalize both sides to the same style:
 
-1. Convert to leading-slash web path style (e.g. `/projects/live/pearlymats/index.ts`).
+1. Convert to leading-slash web path style (e.g. `/projects/svg/pearlymats/index.ts`).
 2. Use forward slashes on all platforms.
 3. Preserve case sensitivity when comparing.
 
@@ -146,13 +149,13 @@ Before comparison, normalize both sides to the same style:
 5. **Invalid shape**
    - Missing required fields (`id`, `title`, `entryFile`) or empty strings.
 6. **Invalid top-level bucket** (optional strict mode)
-   - `entryFile` not under one of: `live`, `wip`, `archive`, `_Templates`.
+   - `entryFile` not under one of: `p5`, `svg`, `c4ta`, `_Templates`.
 
 #### Warnings (do not fail by default)
 
 1. `tags` includes `template` but `hidden` is not `true`.
 2. Project is under `_Templates` but `hidden` is not `true`.
-3. Project is under `wip` but `hidden` is `false` (if you prefer WIP to stay private).
+3. Project is under medium folder but has no matching medium tag (e.g. path under `svg/` without `svg` tag).
 
 ### Output format
 

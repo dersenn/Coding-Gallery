@@ -1,7 +1,7 @@
 # Voronoi Migration Audit
 
 Date: 2026-02-27  
-Scope: `projects/voronoi/index.ts`
+Scope: `projects/svg/voronoi/index.ts`
 
 ## Source references (legacy notes)
 - https://charlottedann.com/article/soft-blob-physics
