@@ -43,6 +43,16 @@
     "hidden": false
   },
   {
+    "id": "220128-3d-cubes",
+    "title": "3D Cubes",
+    "description": "WEBGL cube grid with noise-driven elevation and moving red/green point lights (migrated from C4TA p5)",
+    "date": "2022-01",
+    "tags": ["p5js", "legacy-migration", "webgl", "3d", "noise", "c4ta"],
+    "libraries": ["p5"],
+    "entryFile": "/projects/c4ta/p5/220128-3d-cubes/index.ts",
+    "hidden": false
+  },
+  {
     "id": "voronoi",
     "title": "Voronoi",
     "description": "Brute-force Delaunay triangulation study ported to framework SVG",
