@@ -5,7 +5,7 @@ import type {
   ProjectControlDefinition,
   Vec
 } from '~/types/project'
-import { Path, SVG, shortcuts } from '~/types/project'
+import { Color,Path, SVG, shortcuts } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 type CurveLayer = 'straight' | 'quadratic' | 'cubic'
@@ -76,9 +76,12 @@ export async function init(
     showSamplePoints: controls.showSamplePoints as boolean,
     showHandles: controls.showHandles as boolean
   }
-  const straightColor = theme.palette[0] ?? theme.foreground
-  const quadraticColor = theme.palette[1] ?? theme.foreground
-  const cubicColor = theme.palette[2] ?? theme.foreground
+  const straightBase = Color.parse(theme.palette[0] ?? theme.foreground)
+  const straightColor = straightBase?.toCss('rgba') ?? theme.foreground
+  const quadraticBase = Color.parse(theme.palette[1] ?? theme.foreground)
+  const quadraticColor = quadraticBase?.toCss('rgba') ?? theme.foreground
+  const cubicBase = Color.parse(theme.palette[2] ?? theme.foreground)
+  const cubicColor = cubicBase?.toCss('rgba') ?? theme.foreground
   const controlPointColor = theme.foreground
 
   const svg = new SVG({
@@ -156,18 +159,20 @@ export async function init(
 
   const drawQuadraticHandles = () => {
     const pts = buildPoints()
+    const quadraticHandleColor = quadraticBase?.withAlpha(0.5).toCss('rgba') ?? theme.foreground
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1]!
       const b = pts[i]!
       const cp = getQuadControlPoint(a, b, 0.5, 0.5)
-      svg.makeLine(a, cp, quadraticColor, 1)
-      svg.makeLine(cp, b, quadraticColor, 1)
-      svg.makeCircle(cp, 3, quadraticColor, 'transparent')
+      svg.makeLine(a, cp, quadraticHandleColor, 1)
+      svg.makeLine(cp, b, quadraticHandleColor, 1)
+      svg.makeCircle(cp, 3, quadraticHandleColor, 'transparent')
     }
   }
 
   const drawCubicHandles = () => {
     const pts = buildPoints()
+    const cubicHandleColor = cubicBase?.withAlpha(0.5).toCss('rgba') ?? theme.foreground
     const splineTension = 0.5
     const controlPoints: Array<[Vec, Vec]> = pts.map((_, i) => {
       const prev = pts[(i - 1 + pts.length) % pts.length]!
@@ -179,10 +184,10 @@ export async function init(
     for (let i = 1; i < pts.length; i++) {
       const current = pts[i]!
       const [cpIn, cpOut] = controlPoints[i]!
-      svg.makeLine(current, cpIn, cubicColor, 1)
-      svg.makeLine(current, cpOut, cubicColor, 1)
-      svg.makeCircle(cpIn, 3, cubicColor, 'transparent')
-      svg.makeCircle(cpOut, 3, cubicColor, 'transparent')
+      svg.makeLine(current, cpIn, cubicHandleColor, 1)
+      svg.makeLine(current, cpOut, cubicHandleColor, 1)
+      svg.makeCircle(cpIn, 3, cubicHandleColor, 'transparent')
+      svg.makeCircle(cpOut, 3, cubicHandleColor, 'transparent')
     }
   }
 
