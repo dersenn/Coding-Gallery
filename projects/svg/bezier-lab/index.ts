@@ -133,7 +133,7 @@ export async function init(
   const quadraticColor = quadraticBase?.toCss('rgba') ?? theme.foreground
   const cubicBase = Color.parse(theme.palette[2] ?? theme.foreground)
   const cubicColor = cubicBase?.toCss('rgba') ?? theme.foreground
-  const controlPointColor = theme.foreground
+  const controlPointColor = theme.palette[0]
 
   const svg = new SVG({
     parent: container,
@@ -264,9 +264,9 @@ export async function init(
     if (enabled.has('straight')) drawStraight()
     if (enabled.has('quadratic')) drawQuadratic()
     if (enabled.has('cubic')) drawCubic()
-    if (controlState.showSamplePoints) drawSamplePoints()
     if (controlState.showHandles && enabled.has('quadratic')) drawQuadraticHandles()
     if (controlState.showHandles && enabled.has('cubic')) drawCubicHandles()
+    if (controlState.showSamplePoints) drawSamplePoints()
   }
 
   draw()
