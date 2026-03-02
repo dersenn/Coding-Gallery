@@ -20,11 +20,8 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 ## Additional Docs
 
 - Docs index: `docs/INDEX.md`
-- Quick start: `docs/QUICK_START.md`
 - Seed system reference: `docs/SEED_SYSTEM.md`
 - SVG engine reference: `docs/SVG_IMPLEMENTATION.md`
-- Migration history: `docs/IMPLEMENTATION_SUMMARY.md`
-- Project structure planning: `docs/PROJECT_STRUCTURE_PLAN.md`
 
 ## Project Structure
 
@@ -243,6 +240,14 @@ Then open:
 /?showHidden=your-random-token
 ```
 
+While browsing with a valid token, hidden-mode visibility is preserved across navigation:
+
+```text
+Gallery: /?showHidden=<hidden-token>
+Project: /<project-id>?showHidden=<hidden-token>
+Back to gallery: /?showHidden=<hidden-token>
+```
+
 ### 7. Run and Test
 
 ```bash
@@ -300,7 +305,7 @@ console.log('Seed:', utils.seed.current)
 - Press **'n'** to generate a new random seed in-place
 - Press **'r'** to reload the sketch view in-place
 - Press **'d'** to reset controls to default settings
-- Press **'s'** to save SVG output (SVG projects only; requires a `download-svg` action)
+- Press **'s'** to save SVG output (SVG projects only; uses `download-svg` action when available, with a viewer fallback for SVG projects)
 - Seeds are automatically saved in the URL for sharing
 - A discreet bottom overlay on project pages shows these shortcuts and the current seed
 

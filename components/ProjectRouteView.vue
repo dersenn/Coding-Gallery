@@ -17,7 +17,7 @@
     <!-- Overlay navigation (top-left) -->
     <div class="absolute top-0 left-0 z-10">
       <NuxtLink
-        to="/"
+        :to="backToGalleryLink"
         class="project-overlay-type inline-flex items-center gap-2 p-4 rounded-lg transition text-2xl font-medium opacity-90 hover:opacity-70"
       >
         ←
@@ -147,6 +147,25 @@ const currentSeed = computed(() => {
   const runtimeSeed = utils.seed.current
   if (typeof runtimeSeed === 'string' && runtimeSeed.length > 0) return runtimeSeed
   return '—'
+})
+const backToGalleryLink = computed(() => {
+  const tokenFromQuery = route.query.showHidden
+  const showHiddenToken = typeof tokenFromQuery === 'string'
+    ? tokenFromQuery
+    : (Array.isArray(tokenFromQuery) && typeof tokenFromQuery[0] === 'string' ? tokenFromQuery[0] : '')
+
+  if (showHiddenToken.length > 0) {
+    return {
+      path: '/',
+      query: {
+        showHidden: showHiddenToken
+      }
+    }
+  }
+
+  return {
+    path: '/'
+  }
 })
 const projectTheme = computed<'dark' | 'light'>(() => project.value?.prefersTheme ?? 'dark')
 

@@ -43,5 +43,4 @@ Noise is seed-synchronized via `context.utils.noise.*`.
 
 - Main docs: `../README.md`
 - Docs index: `INDEX.md`
-- Quick start: `QUICK_START.md`
 - Template guide: `../projects/_Templates/_template/README.md`

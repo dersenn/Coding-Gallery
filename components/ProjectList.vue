@@ -3,7 +3,7 @@
     <NuxtLink
       v-for="project in projects" 
       :key="project.id"
-      :to="`/${project.id}`"
+      :to="getProjectLink(project.id)"
       class="group block"
     >
       <UCard class="bg-black/50 backdrop-blur-md font-medium"
@@ -37,6 +37,29 @@ const props = withDefaults(defineProps<{
   showHidden: false
 })
 
+const route = useRoute()
 const { getVisibleProjects } = useProjectLoader()
 const projects = computed(() => getVisibleProjects(props.showHidden))
+
+const showHiddenToken = computed(() => {
+  const tokenFromQuery = route.query.showHidden
+  if (typeof tokenFromQuery === 'string') return tokenFromQuery
+  if (Array.isArray(tokenFromQuery) && typeof tokenFromQuery[0] === 'string') return tokenFromQuery[0]
+  return ''
+})
+
+const getProjectLink = (projectId: string) => {
+  if (props.showHidden && showHiddenToken.value.length > 0) {
+    return {
+      path: `/${projectId}`,
+      query: {
+        showHidden: showHiddenToken.value
+      }
+    }
+  }
+
+  return {
+    path: `/${projectId}`
+  }
+}
 </script>

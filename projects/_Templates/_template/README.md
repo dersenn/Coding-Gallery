@@ -6,7 +6,7 @@ Minimal template for creating new p5.js projects in the gallery.
 
 1. **Copy this folder** and rename it:
    ```bash
-   cp -r projects/_Templates/_template projects/my-sketch
+   cp -r projects/_Templates/_template projects/p5/my-sketch
    ```
 
 2. **Edit `index.ts`** (or rename to `index.js`) - Add your controls and implement your sketch
@@ -20,7 +20,7 @@ Minimal template for creating new p5.js projects in the gallery.
      "date": "2026-02",
      "tags": ["p5js", "generative"],
      "libraries": ["p5"],
-     "entryFile": "/projects/my-sketch/index.ts"
+     "entryFile": "/projects/p5/my-sketch/index.ts"
    }
    ```
    `entryFile` can point to either `index.ts` or `index.js`.
