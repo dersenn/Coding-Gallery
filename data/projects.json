@@ -53,6 +53,17 @@
     "hidden": false
   },
   {
+    "id": "220131-3d-dandelion",
+    "title": "3D Dandelion",
+    "description": "Rotating WEBGL dandelion of sphere-distributed points with animated radial lerp (migrated from C4TA p5)",
+    "date": "2022-01",
+    "tags": ["p5js", "legacy-migration", "webgl", "3d", "sphere", "c4ta"],
+    "libraries": ["p5"],
+    "entryFile": "/projects/c4ta/p5/220131-3d-dandelion/index.ts",
+    "noControls": true,
+    "hidden": false
+  },
+  {
     "id": "voronoi",
     "title": "Voronoi",
     "description": "Brute-force Delaunay triangulation study ported to framework SVG",
