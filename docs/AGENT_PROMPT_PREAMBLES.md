@@ -21,8 +21,13 @@ Policy:
    - chosen path (`use existing` or `custom algorithm`),
    - classification (`keep` / `replace now` / `replace later`),
    - one-line rationale if custom logic is kept.
-5) Preserve original behavior intent first (especially for migrations).
-6) If uncertain about utility fit or behavior intent, stop and ask 1-2 clarifying questions before coding.
+5) For migrations, always add/update:
+   - an audit in `docs/audits/`,
+   - a legacy source manifest in `docs/legacy-manifests/` (source path, destination path, status, notes).
+6) For custom assets (fonts/textures/media), use repo-served runtime paths (for example `public/assets/...`), and record source path + destination path + runtime path in the audit/manifest.
+7) If a required custom asset is missing or licensing is unclear, stop and ask for the exact file/path before using a fallback.
+8) Preserve original behavior intent first (especially for migrations).
+9) If uncertain about utility fit or behavior intent, stop and ask 1-2 clarifying questions before coding.
 ```
 
 ## Short version (session starter)
@@ -30,6 +35,8 @@ Policy:
 ```text
 Framework-first sketch task: use existing framework utilities for primitives, but keep custom visual algorithms when utilities are not a semantic fit.
 Do not add wrappers for seed/dist/neighbor/grid/color/theme/export primitives unless they add sketch-specific semantics.
+For migrations, always include `docs/audits/*` + `docs/legacy-manifests/*`.
+For custom assets, use repo-served paths and document source + destination + runtime asset paths.
 If unsure, ask 1-2 clarifying questions before coding; if overlap exists, report utilities checked + `use existing`/`custom algorithm` + `keep/replace now/replace later`.
 ```
 

@@ -22,7 +22,7 @@
   },
   {
     "id": "clickclass-2",
-    "title": "Clickclass 2",
+    "title": "Clicky Polygon",
     "description": "Bouncing node polygon with click-to-add interaction (migrated from C4TA p5)",
     "date": "2021-11",
     "tags": ["p5js", "legacy-migration", "interactive", "geometry", "c4ta"],
@@ -33,7 +33,7 @@
   },
   {
     "id": "grid-division-pixels-3",
-    "title": "Grid Division Pixels 3",
+    "title": "Grid Division Pixels",
     "description": "Recursive grid pixel divisions with moving container, mapped to theme palette",
     "date": "2021-10",
     "tags": ["p5js", "legacy-migration", "grid", "recursive", "c4ta"],
@@ -44,7 +44,7 @@
   },
   {
     "id": "220128-3d-cubes",
-    "title": "3D Cubes",
+    "title": "Wall Of Cubes",
     "description": "WEBGL cube grid with noise-driven elevation and moving red/green point lights (migrated from C4TA p5)",
     "date": "2022-01",
     "tags": ["p5js", "legacy-migration", "webgl", "3d", "noise", "c4ta"],
@@ -54,12 +54,23 @@
   },
   {
     "id": "220131-3d-dandelion",
-    "title": "3D Dandelion",
+    "title": "Dandelion (or Virus)",
     "description": "Rotating WEBGL dandelion of sphere-distributed points with animated radial lerp (migrated from C4TA p5)",
     "date": "2022-01",
     "tags": ["p5js", "legacy-migration", "webgl", "3d", "sphere", "c4ta"],
     "libraries": ["p5"],
     "entryFile": "/projects/c4ta/p5/220131-3d-dandelion/index.ts",
+    "noControls": true,
+    "hidden": false
+  },
+  {
+    "id": "220203-type-in-space",
+    "title": "Type In Space",
+    "description": "WEBGL glyph point-chunks rendered at depth with orbiting camera (migrated from C4TA p5)",
+    "date": "2022-02",
+    "tags": ["p5js", "legacy-migration", "webgl", "3d", "typography", "c4ta"],
+    "libraries": ["p5"],
+    "entryFile": "/projects/c4ta/p5/220203-type-in-space/index.ts",
     "noControls": true,
     "hidden": false
   },

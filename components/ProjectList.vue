@@ -39,7 +39,9 @@ const props = withDefaults(defineProps<{
 
 const route = useRoute()
 const { getVisibleProjects } = useProjectLoader()
-const projects = computed(() => getVisibleProjects(props.showHidden))
+const projects = computed(() =>
+  [...getVisibleProjects(props.showHidden)].sort((a, b) => b.date.localeCompare(a.date))
+)
 
 const showHiddenToken = computed(() => {
   const tokenFromQuery = route.query.showHidden
