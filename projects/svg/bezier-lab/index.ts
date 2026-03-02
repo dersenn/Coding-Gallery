@@ -28,8 +28,8 @@ const Y_LEVELS = [0.1, 0.25, 0.5, 0.75, 0.9] as const
 export const controls: ProjectControlDefinition[] = [
   {
     type: 'group',
-    id: 'composition',
-    label: 'Composition',
+    id: 'curves',
+    label: 'Curves',
     collapsible: true,
     defaultOpen: true,
     controls: [
@@ -45,6 +45,42 @@ export const controls: ProjectControlDefinition[] = [
         ]
       },
       {
+        type: 'slider',
+        label: 'Quadratic Tension',
+        key: 'quadraticTension',
+        default: 0.5,
+        min: -1,
+        max: 1,
+        step: 0.05
+      },
+      {
+        type: 'slider',
+        label: 'Quadratic Offset',
+        key: 'quadraticOffset',
+        default: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.05
+      },
+      {
+        type: 'slider',
+        label: 'Cubic Tension',
+        key: 'cubicTension',
+        default: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.05
+      }
+    ]
+  },
+  {
+    type: 'group',
+    id: 'overlay',
+    label: 'Overlay',
+    collapsible: true,
+    defaultOpen: false,
+    controls: [
+      {
         type: 'toggle',
         label: 'Sample Points',
         key: 'showSamplePoints',
@@ -55,6 +91,17 @@ export const controls: ProjectControlDefinition[] = [
         label: 'Show Handles',
         key: 'showHandles',
         default: false
+      },
+      {
+        type: 'slider',
+        label: 'Handle Opacity',
+        key: 'handleOpacity',
+        default: 0.5,
+        min: 0.1,
+        max: 1,
+        step: 0.05,
+        visibleWhenSelectKey: 'showHandles',
+        visibleWhenSelectValue: true
       }
     ]
   }
@@ -74,7 +121,11 @@ export async function init(
   const controlState = {
     enabledCurves: controls.enabledCurves as CurveLayer[],
     showSamplePoints: controls.showSamplePoints as boolean,
-    showHandles: controls.showHandles as boolean
+    showHandles: controls.showHandles as boolean,
+    quadraticTension: controls.quadraticTension as number,
+    quadraticOffset: controls.quadraticOffset as number,
+    cubicTension: controls.cubicTension as number,
+    handleOpacity: controls.handleOpacity as number
   }
   const straightBase = Color.parse(theme.palette[0] ?? theme.foreground)
   const straightColor = straightBase?.toCss('rgba') ?? theme.foreground
@@ -98,7 +149,8 @@ export async function init(
     return Math.max(1, Math.min(9, tenth))
   }
 
-  // Build the canonical 5-point vertical scaffold used in legacy v2/v3 tests.
+  // These are normalized Y positions (0..1) for the anchor/sample points.
+  // Example: 0.25 means "25% down the stage height".
   const buildPoints = (): Vec[] =>
     Y_LEVELS.map((level, i) => v(svg.w * (stableTenth(i) / 10), svg.h * level))
 
@@ -141,13 +193,18 @@ export async function init(
   const drawQuadratic = () => {
     const pts = buildPoints()
     const path = new Path(pts, true)
-    svg.makePath(path.buildQuadBez(0.5, 0.5, false), 'transparent', quadraticColor, 3)
+    svg.makePath(
+      path.buildQuadBez(controlState.quadraticTension, controlState.quadraticOffset, false),
+      'transparent',
+      quadraticColor,
+      3
+    )
   }
 
   const drawCubic = () => {
     const pts = buildPoints()
     const path = new Path(pts, true)
-    svg.makePath(path.buildSpline(0.5, false), 'transparent', cubicColor, 2)
+    svg.makePath(path.buildSpline(controlState.cubicTension, false), 'transparent', cubicColor, 2)
   }
 
   const drawSamplePoints = () => {
@@ -159,11 +216,17 @@ export async function init(
 
   const drawQuadraticHandles = () => {
     const pts = buildPoints()
-    const quadraticHandleColor = quadraticBase?.withAlpha(0.5).toCss('rgba') ?? theme.foreground
+    const quadraticHandleColor =
+      quadraticBase?.withAlpha(controlState.handleOpacity).toCss('rgba') ?? theme.foreground
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1]!
       const b = pts[i]!
-      const cp = getQuadControlPoint(a, b, 0.5, 0.5)
+      const cp = getQuadControlPoint(
+        a,
+        b,
+        controlState.quadraticTension,
+        controlState.quadraticOffset
+      )
       svg.makeLine(a, cp, quadraticHandleColor, 1)
       svg.makeLine(cp, b, quadraticHandleColor, 1)
       svg.makeCircle(cp, 3, quadraticHandleColor, 'transparent')
@@ -172,8 +235,9 @@ export async function init(
 
   const drawCubicHandles = () => {
     const pts = buildPoints()
-    const cubicHandleColor = cubicBase?.withAlpha(0.5).toCss('rgba') ?? theme.foreground
-    const splineTension = 0.5
+    const cubicHandleColor =
+      cubicBase?.withAlpha(controlState.handleOpacity).toCss('rgba') ?? theme.foreground
+    const splineTension = controlState.cubicTension
     const controlPoints: Array<[Vec, Vec]> = pts.map((_, i) => {
       const prev = pts[(i - 1 + pts.length) % pts.length]!
       const curr = pts[i]!
