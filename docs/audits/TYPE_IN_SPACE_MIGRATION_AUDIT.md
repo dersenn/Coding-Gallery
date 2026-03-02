@@ -1,7 +1,7 @@
-# C4TA 220203 Type In Space Migration Audit
+# Type In Space Migration Audit
 
 Date: 2026-03-02  
-Scope: `projects/c4ta/p5/220203-type-in-space/index.ts`
+Scope: `projects/c4ta/p5/type-in-space/index.ts`
 
 ## Findings
 

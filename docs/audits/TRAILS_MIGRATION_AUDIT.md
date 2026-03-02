@@ -1,4 +1,4 @@
-# C4TA Trails Migration Audit
+# Trails Migration Audit
 
 Date: 2026-02-27  
 Scope: `projects/c4ta/p5/trails/index.ts`

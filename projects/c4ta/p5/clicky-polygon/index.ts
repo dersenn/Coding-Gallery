@@ -2,6 +2,19 @@ import type { CleanupFunction, ProjectContext, Vec } from '~/types/project'
 import p5 from 'p5'
 import { shortcuts } from '~/utils/shortcuts'
 
+/**
+ * Clickclass 2 / Clicky Polygon (C4TA p5 migration)
+ *
+ * Intent:
+ * - Preserve the legacy moving-node polygon that grows via mouse clicks.
+ *
+ * What is being tested/preserved:
+ * - Continuous node motion with edge reflection.
+ * - Immediate structural change when a clicked node is injected.
+ *
+ * Non-goals:
+ * - Not a constrained triangulation or mesh tool; polygon self-intersections are accepted behavior.
+ */
 class MovingNode {
   pos: Vec
   radius: number

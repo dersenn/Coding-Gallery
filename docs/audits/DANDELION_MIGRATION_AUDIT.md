@@ -1,7 +1,7 @@
-# C4TA 220131 3D Dandelion Migration Audit
+# Dandelion Migration Audit
 
 Date: 2026-03-02  
-Scope: `projects/c4ta/p5/220131-3d-dandelion/index.ts`
+Scope: `projects/c4ta/p5/dandelion/index.ts`
 
 ## Findings
 

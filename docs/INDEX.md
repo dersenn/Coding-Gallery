@@ -13,6 +13,7 @@ Use this folder for supporting docs while keeping the repository root focused on
 - Grid and Cell utilities: See main `../README.md` (Grid and Cell Utilities section)
 - Migration audits: `audits/` (use `SKETCHNAME_MIGRATION_AUDIT.md`, e.g. `PEARLYMATS_MIGRATION_AUDIT.md`)
 - Legacy source manifests: `legacy-manifests/`
+- Utility gap backlog: `UTILITY_GAP_BACKLOG.md` (centralized reusable utility candidates from migrations)
 - Open backlog: add `validate:projects` metadata/file drift checker (see checklist in main `../README.md` and project rules)
 
 ## Framework-first quick reference

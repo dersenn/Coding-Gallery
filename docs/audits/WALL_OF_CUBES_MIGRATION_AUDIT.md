@@ -1,7 +1,7 @@
-# C4TA 220128 3D Cubes Migration Audit
+# Wall Of Cubes Migration Audit
 
 Date: 2026-03-02  
-Scope: `projects/c4ta/p5/220128-3d-cubes/index.ts`
+Scope: `projects/c4ta/p5/wall-of-cubes/index.ts`
 
 ## Findings
 

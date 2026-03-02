@@ -3,6 +3,19 @@ import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 import { shortcuts } from '~/utils/shortcuts'
 
+/**
+ * Trails (C4TA p5 migration)
+ *
+ * Intent:
+ * - Preserve the original cursor-following particle with fading history circles.
+ *
+ * What is being tested/preserved:
+ * - A simple time-ordered memory buffer rendered as progressively larger ellipses.
+ * - Direct mapping from mouse position to trail head each frame.
+ *
+ * Non-goals:
+ * - No physics interpolation/smoothing; visual character depends on raw cursor sampling.
+ */
 class ParticleTrail {
   x: number
   y: number

@@ -1,7 +1,7 @@
-# C4TA Grid Division Pixels 3 Migration Audit
+# Grid Division Pixels Migration Audit
 
 Date: 2026-02-27  
-Scope: `projects/c4ta/p5/grid-division-pixels-3/index.ts`
+Scope: `projects/c4ta/p5/grid-division-pixels/index.ts`
 
 ## Findings
 

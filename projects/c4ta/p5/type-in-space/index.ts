@@ -1,6 +1,20 @@
 import type { CleanupFunction, ProjectContext } from '~/types/project'
 import p5 from 'p5'
 
+/**
+ * 220203 Type In Space (C4TA p5 migration)
+ *
+ * Intent:
+ * - Preserve the original "glyph in depth" composition for letter outlines in WEBGL.
+ *
+ * What is being tested/preserved:
+ * - Font outline sampling via `textToPoints`.
+ * - Chunked depth-layer rendering with RGB-separated stroke groups.
+ * - Camera orbit around centered glyph under orthographic projection.
+ *
+ * Non-goals:
+ * - Not a general typography editor; glyph, chunk count, and camera language remain fixed.
+ */
 type GlyphPoint = {
   x: number
   y: number

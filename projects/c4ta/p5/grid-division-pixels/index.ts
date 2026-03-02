@@ -3,6 +3,19 @@ import { Grid, Cell, shortcuts } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
+/**
+ * Grid Division Pixels 3 (C4TA p5 migration)
+ *
+ * Intent:
+ * - Preserve recursive 2x2 subdivision visuals plus moving-container accumulation.
+ *
+ * What is being tested/preserved:
+ * - Chance-based recursive branch stopping.
+ * - Temporal layering effect from repeatedly stamping a shifted recursive container.
+ *
+ * Non-goals:
+ * - Not a deterministic static tiling export by default; accumulation over time is core behavior.
+ */
 export const controls: ProjectControlDefinition[] = [
   {
     type: 'group',

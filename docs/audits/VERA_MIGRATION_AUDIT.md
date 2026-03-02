@@ -1,7 +1,7 @@
-# C4TA A Vera 2 Migration Audit
+# Vera Migration Audit
 
 Date: 2026-03-01  
-Scope: `projects/c4ta/svg/a-vera-2/index.ts`
+Scope: `projects/c4ta/svg/vera/index.ts`
 
 ## Findings
 

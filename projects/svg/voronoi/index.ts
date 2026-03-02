@@ -6,6 +6,18 @@ import type {
 import { Color, Path, SVG, shortcuts, type Vec } from '~/types/project'
 
 /**
+ * Voronoi (Delaunay study migration)
+ *
+ * Intent:
+ * - Preserve the legacy brute-force geometric study rather than optimize it away.
+ *
+ * What is being tested/preserved:
+ * - Generate Delaunay-valid triangles by circumcircle emptiness.
+ * - Visualize triangle edges, circumcircles, and circumcenters to inspect structure.
+ *
+ * Non-goals:
+ * - Not optimized for large point counts (keeps O(n^4)-ish brute-force behavior intentionally).
+ *
  * Source notes preserved from legacy sketch:
  * - https://charlottedann.com/article/soft-blob-physics
  * - https://codepen.io/ksenia-k/pen/RwXVMMY
@@ -37,13 +49,14 @@ export async function init(
   })
 
   const pointCount = 20
-  const border = 50;
+  const border = 50
 
   // Step 1: generate seed-driven points across the full stage.
   const points: Vec[] = Array.from({ length: pointCount }, () => {
     return v(rnd() * (svg.w - border * 2) + border, rnd() * (svg.h - border * 2) + border)
   })
 
+  // Enumerate all point triplets; filtering happens later via Delaunay checks.
   const allTriangles = (pts: Vec[]): Array<[Vec, Vec, Vec]> => {
     const triangles: Array<[Vec, Vec, Vec]> = []
     for (let i = 0; i < pts.length - 2; i++) {
@@ -85,6 +98,7 @@ export async function init(
     const circle = findCircumcircle(a, b, c)
     if (!circle) return null
 
+    // Delaunay condition: no other sample lies strictly inside circumcircle.
     for (const pt of pts) {
       if (pt === a || pt === b || pt === c) continue
       if (dist(pt.x, pt.y, circle.center.x, circle.center.y) < circle.radius - 1e-9) {
@@ -117,6 +131,7 @@ export async function init(
     const edgeStroke = (parsed?.withAlpha(0.3).toRgbaString()) ?? theme.foreground
     const circumStroke = (parsed?.withAlpha(0.14).toRgbaString()) ?? theme.foreground
     const centerFill = (parsed?.withAlpha(0.55).toRgbaString()) ?? theme.foreground
+    // Edges + circumcircle + center dot provide geometric debugging at a glance.
     svg.makePath(path.buildPolygon(), 'transparent', edgeStroke, 2)
     svg.makeCircle(triangle.circumcenter, triangle.radius, 'none', circumStroke, 1)
     svg.makeCircle(triangle.circumcenter, 4, centerFill)

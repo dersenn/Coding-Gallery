@@ -1,4 +1,4 @@
-# c4ta-trails
+# trails
 
 - Source type: external-folder
 - Technique: p5
@@ -6,4 +6,4 @@
 - Source snapshot: migrated on 2026-02-27
 - Migration destination: `projects/c4ta/p5/trails/index.ts`
 - Status: migrated
-- Notes: Legacy sketch split across `sketch.js`, `class.js`, and helper files; behavior ported into one framework module.
+- Notes: Legacy sketch split across `sketch.js`, `class.js`, and helper files; behavior ported into one framework module. Manifest filename normalized from `c4ta-trails.md` -> `trails.md`.

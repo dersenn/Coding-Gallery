@@ -3,6 +3,19 @@ import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 import { shortcuts } from '~/utils/shortcuts'
 
+/**
+ * 220128 3D Cubes / Wall Of Cubes (C4TA p5 migration)
+ *
+ * Intent:
+ * - Preserve the dense cube field with animated noise elevation and dual moving lights.
+ *
+ * What is being tested/preserved:
+ * - Seeded noise-driven z displacement across a centered WEBGL grid.
+ * - Color-separated point-light sweep (green/red) as the main depth cue.
+ *
+ * Non-goals:
+ * - Not a physically based lighting study; stylized light choreography is intentional.
+ */
 export const controls: ProjectControlDefinition[] = [
   {
     type: 'group',

@@ -2,6 +2,19 @@ import type { CleanupFunction, ProjectContext, Vec } from '~/types/project'
 import p5 from 'p5'
 import { shortcuts } from '~/utils/shortcuts'
 
+/**
+ * 220131 3D Dandelion (C4TA p5 migration)
+ *
+ * Intent:
+ * - Preserve the rotating radial "dandelion" made from sphere-distributed endpoints.
+ *
+ * What is being tested/preserved:
+ * - Legacy 4D-based random sphere-point sampling.
+ * - Animated lerp from center to endpoint to create breathing radial segments.
+ *
+ * Non-goals:
+ * - Not a mathematically uniform spherical distribution guarantee; legacy visual feel is prioritized.
+ */
 type SpherePoint = {
   pos: Vec
   size: number

@@ -9,6 +9,21 @@ import { syncControlState } from '~/composables/useControls'
 
 type VeraLayer = 'vera1' | 'vera2'
 
+/**
+ * A Vera 2 (C4TA SVG migration)
+ *
+ * Intent:
+ * - Preserve the original overlapping-tile line compositions and center-origin framing.
+ *
+ * What is being tested/preserved:
+ * - Variant contrast:
+ *   - Vera 1: constrained line-choice motifs per tile.
+ *   - Vera 2: diagonal motifs with jittered vertical progression.
+ * - Deterministic toggling: enabling/disabling layers should not reshuffle line choices.
+ *
+ * Non-goals:
+ * - Not a generic overlap-grid utility yet; formulas remain local to preserve behavior.
+ */
 const VIRTUAL_HEIGHT = 100
 const TILE_OVERLAP_FACTOR = 3
 const BASE_STROKE = 0.2
@@ -58,7 +73,7 @@ export async function init(
   const size = Math.min(container.clientWidth, container.clientHeight)
   const svg = new SVG({
     parent: container,
-    id: 'a-vera-2',
+    id: 'vera',
     width: size,
     height: size
   })
@@ -67,6 +82,7 @@ export async function init(
   const virtualWidth = svg.w / res
   const virtualMin = Math.min(virtualWidth, VIRTUAL_HEIGHT)
 
+  // Keep legacy color intent, but source from active theme when available.
   const vera1Color = theme.palette[0] ?? '#0000ff'
   const vera2Color = theme.palette[2] ?? '#ff0000'
 
@@ -110,6 +126,7 @@ export async function init(
     y: number,
     length: number
   ): number => {
+    // Convert stable [0..1] value into bounded integer index for variant arrays.
     const scaled = Math.floor(stableUnit(layerOffset, channelOffset, x, y) * length)
     return Math.min(scaled, Math.max(0, length - 1))
   }
@@ -122,6 +139,7 @@ export async function init(
     const xOverlap = tileW / TILE_OVERLAP_FACTOR
     const yOverlap = tileH / TILE_OVERLAP_FACTOR
 
+    // Overlap grid starts one overlap unit in, matching original composition framing.
     const startX = xPos + xOverlap
     const startY = yPos + yOverlap
 
@@ -129,6 +147,7 @@ export async function init(
       const xOff = startX + x * (tileW - xOverlap)
       for (let y = 0; y < rows; y++) {
         const yOff = startY + y * (tileH - yOverlap)
+        // Four motif candidates from legacy Vera 1.
         const positions = [
           [xOff, yOff, xOff + tileW, yOff + tileH],
           [xOff, yOff + tileH, xOff + tileW, yOff],
@@ -154,6 +173,7 @@ export async function init(
     for (let x = 0; x < cols; x++) {
       const xOff = startX + x * (tileW - xOverlap)
       for (let y = 0; y < rows; y++) {
+        // Legacy quirk preserved: y progression uses a per-cell jitter multiplier.
         const yOffsetSteps = Math.max(1, Math.floor(h / rows))
         const yJitter = Math.floor(stableUnit(41.3, 5.7, x, y) * yOffsetSteps)
         const yOff = startY + y * yJitter
@@ -173,6 +193,7 @@ export async function init(
     svg.stage.innerHTML = ''
     svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
 
+    // Render order keeps Vera 1 on top when both are enabled, matching migration baseline.
     const enabledLayers = new Set(controlState.enabledLayers)
     if (enabledLayers.has('vera2')) {
       drawVera2(-virtualMin / 2, -virtualMin / 2, virtualMin, virtualMin, DEFAULT_DIVISIONS, DEFAULT_DIVISIONS)
@@ -190,7 +211,7 @@ export async function init(
   })
 
   registerAction('download-svg', () => {
-    svg.save(utils.seed.current, 'a-vera-2')
+    svg.save(utils.seed.current, 'vera')
   })
 
   return () => {
