@@ -12,6 +12,30 @@ tracks reusable sketch utilities.
 
 ---
 
+## Theme / colors
+
+### Revisit default theme palette (primary RGB vs curated)
+
+- ID: `theme-palette-primary-rgb`
+- Status: `candidate`
+- Priority: **low**
+- Area: `utils/theme.ts`
+
+**Problem**  
+The dark theme uses primary RGB colors (`#f00`, `#0f0`, `#00f`, `#ff0`, `#0ff`, `#f0f`) in its palette. The light theme uses a curated Tailwind-style palette instead. Projects with `prefersTheme: 'light'` never see the primary RGB palette. There is no way to explicitly choose “primary RGB” vs “curated” independent of light/dark preference.
+
+**Questions to resolve**
+- Should primary RGB remain the dark default, or should both themes offer a “primary” vs “curated” option?
+- Is the current split (dark = primary, light = curated) intentional or accidental?
+- Should palette choice be decoupled from theme preference (e.g. `palettePreset: 'primary-rgb' | 'curated'`)?
+
+**Files affected**
+- `utils/theme.ts` — `defaultTheme`, `lightTheme`, `ThemeTokens`
+- `data/projects.json` — `prefersTheme` per project
+- Project-level `theme` overrides in `index.ts`
+
+---
+
 ## Viewer shell
 
 ### Mobile-friendly shortcut actions
