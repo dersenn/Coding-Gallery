@@ -1,5 +1,6 @@
 import type { GenerativeUtils } from '~/utils/generative'
 import type { ThemeOverride, ThemeTokens } from '~/utils/theme'
+import type { CanvasMode, CanvasConfig } from '~/utils/canvas'
 
 export type ControlPrimitiveValue = number | boolean | string
 export type ControlArrayValue = Array<string | number>
@@ -116,6 +117,7 @@ export interface ProjectModule {
   controls?: ProjectControlDefinition[] // Optional: controls can be defined in the module
   actions?: ProjectActionDefinition[] // Optional: contextual actions exposed by the module
   theme?: ThemeOverride // Optional: project-level theme overrides
+  canvas?: CanvasMode | CanvasConfig // Optional: declarative canvas sizing intent ('full' | 'square' | '4:3' | …)
 }
 
 export interface ProjectContext {
@@ -136,3 +138,5 @@ export { shortcuts } from '~/utils/shortcuts'
 export { Grid, GridCell } from '~/utils/grid'
 export { Cell } from '~/utils/cell'
 export { Color } from '~/utils/color'
+export { resolveCanvas } from '~/utils/canvas'
+export type { CanvasMode, CanvasConfig, CanvasResult } from '~/utils/canvas'

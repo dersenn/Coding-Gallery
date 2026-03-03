@@ -1,4 +1,5 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
+import { resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -68,9 +69,21 @@ export async function init(
   const { controls, utils, theme, onControlChange } = context
   const controlState = { ...controls }
 
+  // resolveCanvas sets up container centering and returns the sized wrapper + dimensions.
+  // Switch the mode string to change the layout — no other code needs to change.
+  //
+  //   'full'        fills the viewport (default)
+  //   'square'      centered square
+  //   '4:3'         centered rect at a custom ratio (any 'W:H' string works)
+  //
+  // Add padding for a responsive inset:
+  //   resolveCanvas(container, { mode: 'square', padding: '2vmin' })
+  //   → result.padding is the resolved px value, useful for grid gaps / margins
+  const { el, width, height } = resolveCanvas(container, 'full')
+
   const sketch = new p5((p) => {
     p.setup = () => {
-      p.createCanvas(container.clientWidth, container.clientHeight)
+      p.createCanvas(width, height)
       p.background(theme.background)
     }
 
@@ -89,7 +102,7 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
     }
 
     // React to control changes
@@ -102,7 +115,7 @@ export async function init(
     // context.registerAction('do-something', () => {
     //   console.log('Action triggered')
     // })
-  }, container)
+  }, el)
 
   // Cleanup function - called when project is unmounted
   return () => {

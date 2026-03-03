@@ -4,7 +4,7 @@ import type {
   ProjectContext,
   ProjectControlDefinition
 } from '~/types/project'
-import { SVG, Cell, shortcuts } from '~/types/project'
+import { SVG, Cell, shortcuts, resolveCanvas } from '~/types/project'
 import { Vec } from '~/utils/generative'
 import { syncControlState } from '~/composables/useControls'
 import { createGenerativeUtils } from '~/utils/generative'
@@ -52,6 +52,8 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
+export const canvas = '3:2'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -63,20 +65,11 @@ export async function init(
     enabledLayers: controls.enabledLayers as VeraLayer[]
   }
 
-  container.style.display = 'flex'
-  container.style.alignItems = 'center'
-  container.style.justifyContent = 'center'
-
-  const size = Math.min(container.clientWidth, container.clientHeight)
-  const svg = new SVG({
-    parent: container,
-    id: 'vera',
-    width: size,
-    height: size
-  })
+  const { el, width, height } = resolveCanvas(container, canvas)
+  const svg = new SVG({ parent: el, id: 'vera', width, height })
 
   // Stroke scales proportionally with canvas size.
-  const strokeWidth = size * 0.002
+  const strokeWidth = width * 0.002
 
   const vera1Color = theme.palette[0] ?? '#0000ff'
   const vera2Color = theme.palette[2] ?? '#ff0000'

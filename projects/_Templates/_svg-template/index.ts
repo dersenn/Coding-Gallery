@@ -4,7 +4,7 @@ import type {
   ProjectControlDefinition,
   ProjectActionDefinition
 } from '~/types/project'
-import { SVG, Path, shortcuts } from '~/types/project' // Path used in commented example; keep for discoverability
+import { SVG, Path, shortcuts, resolveCanvas } from '~/types/project' // Path used in commented example; keep for discoverability
 import { syncControlState } from '~/composables/useControls'
 
 /**
@@ -64,6 +64,12 @@ export const actions: ProjectActionDefinition[] = [
   }
 ]
 
+// Declarative canvas sizing — mirrors the resolveCanvas() call in init().
+// Change this value to switch modes; keep it in sync with the call below.
+// export const canvas = 'square'
+// export const canvas = '4:3'
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -81,13 +87,18 @@ export async function init(
   } = shortcuts(utils)
   const controlState = { ...controls }
 
-  const svg = new SVG({
-    parent: container,
-    id: 'svg-sketch',
-    // Uncomment for a centered square canvas:
-    // width: Math.min(container.clientWidth, container.clientHeight),
-    // height: Math.min(container.clientWidth, container.clientHeight),
-  })
+  // resolveCanvas sets up container centering and returns the sized wrapper element.
+  // Switch the mode string to change the layout — no other code needs to change.
+  //
+  //   'full'        fills the viewport (default)
+  //   'square'      centered square
+  //   '4:3'         centered rect at a custom ratio (any 'W:H' string works)
+  //
+  // Add padding for a responsive inset (number → px, string → any CSS length):
+  //   resolveCanvas(container, { mode: 'square', padding: '2vmin' })
+  //   → result.padding is the resolved px value, useful for grid gaps / margins
+  const { el, width, height } = resolveCanvas(container, 'full')
+  const svg = new SVG({ parent: el, id: 'svg-sketch', width, height })
 
   // ---------------------------------------------------------------------------
   // draw() — called on init and on every control change.

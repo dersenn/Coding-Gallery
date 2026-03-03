@@ -1,4 +1,5 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
+import { resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -69,8 +70,9 @@ export async function init(
 ): Promise<CleanupFunction> {
   const { controls, utils, onControlChange } = context
 
-  // You can access the current seed with utils.seed.current
-  // console.log('Current seed:', utils.seed.current)
+  // resolveCanvas sets up container centering and returns the sized wrapper + dimensions.
+  // 'full' fills the viewport — change to 'square' or '4:3' etc. as needed.
+  const { el, width, height } = resolveCanvas(container, 'full')
 
   // Reactive state
   const controlState = {
@@ -83,7 +85,7 @@ export async function init(
 
   const sketch = new p5((p) => {
     p.setup = () => {
-      p.createCanvas(container.clientWidth, container.clientHeight)
+      p.createCanvas(width, height)
       p.colorMode(p.RGB)
       initParticles()
       
@@ -144,7 +146,7 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
       initParticles()
     }
 
@@ -170,7 +172,7 @@ export async function init(
         initParticles()
       }
     })
-  }, container)
+  }, el)
 
   // Cleanup function
   return () => {

@@ -4,7 +4,7 @@ import type {
   ProjectControlDefinition,
   ProjectActionDefinition
 } from '~/types/project'
-import { SVG, shortcuts } from '~/types/project'
+import { SVG, shortcuts, resolveCanvas } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 /**
@@ -42,6 +42,11 @@ export const actions: ProjectActionDefinition[] = [
   }
 ]
 
+// Declarative canvas sizing — mirrors the resolveCanvas() call in init().
+// export const canvas = 'square'
+// export const canvas = '4:3'
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -50,24 +55,18 @@ export async function init(
   const { v, rnd, map, rad, simplex2 } = shortcuts(utils)
   const controlState = { ...controls }
 
-  // Create SVG canvas
-  // Option 1: Full container size (default)
-  const svg = new SVG({
-    parent: container,
-    id: 'animated-sketch',
-  })
-  
-  // Option 2: Square canvas (uncomment for square-based sketches)
-  // const size = Math.min(container.clientWidth, container.clientHeight)
-  // container.style.display = 'flex'
-  // container.style.alignItems = 'center'
-  // container.style.justifyContent = 'center'
-  // const svg = new SVG({
-  //   parent: container,
-  //   id: 'animated-sketch',
-  //   width: size,
-  //   height: size
-  // })
+  // resolveCanvas sets up container centering and returns the sized wrapper element.
+  // Switch the mode string to change the layout — no other code needs to change.
+  //
+  //   'full'        fills the viewport (default)
+  //   'square'      centered square
+  //   '4:3'         centered rect at a custom ratio (any 'W:H' string works)
+  //
+  // Add padding for a responsive inset:
+  //   resolveCanvas(container, { mode: 'square', padding: '2vmin' })
+  //   → result.padding is the resolved px value, useful for grid gaps / margins
+  const { el, width, height } = resolveCanvas(container, 'full')
+  const svg = new SVG({ parent: el, id: 'animated-sketch', width, height })
 
   // Animation state
   let frameCount = 0
