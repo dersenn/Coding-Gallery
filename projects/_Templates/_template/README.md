@@ -174,6 +174,14 @@ utils.math.clamp(n, min, max)                // Constrain value
 utils.math.norm(val, min, max)               // Normalize to 0-1
 utils.math.dist(x1, y1, x2, y2)              // Distance
 utils.math.divLength(vecA, vecB, 10)         // Divide line into segments (Vec[])
+utils.math.divLength(vecA, vecB, 10, true)   // Include endpoints
+utils.math.divLength(vecA, vecB, 10, { mode: 'randomGaps' }) // Seeded random gaps
+utils.math.divLength(vecA, vecB, 10, { mode: 'gapAscending' }) // Small->large random gaps
+utils.math.divLength(vecA, vecB, 10, { mode: 'gapDescending' }) // Large->small random gaps
+utils.math.divLength(vecA, vecB, 10, { mode: 'randomSorted' })  // Sorted random t samples
+utils.math.divLength(vecA, vecB, 10, { mode: 'curve', curve: { kind: 'log', strength: 8 } })
+utils.math.divLength(vecA, vecB, 10, { mode: 'fibonacci' }) // Fibonacci-weighted spacing
+utils.math.divLength(vecA, vecB, 10, { mode: 'randomGaps', minSegmentRatio: 0.04 }) // Min gap floor
 utils.math.rad(degrees)                      // Degrees to radians
 utils.math.deg(radians)                      // Radians to degrees
 ```

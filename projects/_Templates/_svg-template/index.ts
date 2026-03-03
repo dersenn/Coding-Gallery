@@ -4,27 +4,27 @@ import type {
   ProjectControlDefinition,
   ProjectActionDefinition
 } from '~/types/project'
-import { SVG, Path, shortcuts } from '~/types/project'
+import { SVG, Path, shortcuts } from '~/types/project' // Path used in commented example; keep for discoverability
 import { syncControlState } from '~/composables/useControls'
 
 /**
  * SVG Project Template
- * 
- * This is a minimal SVG template using the ported engine from your original work.
- * Copy this folder and modify to create your own SVG-based generative art projects.
- * 
- * Available context:
- * - controls: Reactive control values (defined below)
- * - utils: Global utilities (noise, seed, math, vec, array)
- * - onControlChange: Register callback for control updates
- * 
- * Shorthand functions:
- * - v(x, y, z?): Create vector
- * - rnd(): Random 0-1
- * - rndInt(min, max): Random integer
- * - map(val, min1, max1, min2, max2): Map value to range
- * - lerp(a, b, t): Linear interpolation
- * - And many more! See utils/shortcuts.ts
+ *
+ * Copy this folder to start a new SVG sketch. Minimal scaffold with the
+ * standard draw/reset/controls pattern already wired.
+ *
+ * Context available in init():
+ * - utils   — seed, noise, math, vec, array, grid, cell, color
+ * - theme   — background, foreground, annotation, outline, palette
+ * - controls / onControlChange / registerAction
+ *
+ * Shorthand aliases via shortcuts(utils):
+ * - v, Vec, rnd, rndInt, rndRange, coin
+ * - map, lerp, clamp, norm, dist, rad, deg
+ * - vDist, vLerp, vMid, vDot, vAng
+ * - noise2, noise3, simplex2, simplex3
+ * - shuffle, divLength, Grid, Cell, clr
+ * - All destructured at init — remove unused ones when done.
  */
 
 // Export controls - define them here in your sketch
@@ -68,72 +68,63 @@ export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange, registerAction } = context
-  const { v, rnd, map, rad } = shortcuts(utils)
+  const { controls, utils, theme, onControlChange, registerAction } = context
+  const {
+    v, Vec,
+    rnd, rndInt, rndRange, coin,
+    map, lerp, clamp, norm, dist, rad, deg,
+    vDist, vLerp, vMid, vDot, vAng,
+    noise2, noise3, simplex2, simplex3,
+    shuffle, divLength,
+    Grid, Cell,
+    clr,
+  } = shortcuts(utils)
   const controlState = { ...controls }
 
-  // Create SVG canvas
-  // Option 1: Full container size (default)
   const svg = new SVG({
     parent: container,
     id: 'svg-sketch',
+    // Uncomment for a centered square canvas:
+    // width: Math.min(container.clientWidth, container.clientHeight),
+    // height: Math.min(container.clientWidth, container.clientHeight),
   })
-  
-  // Option 2: Square canvas (uncomment for square-based sketches)
-  // const size = Math.min(container.clientWidth, container.clientHeight)
-  // container.style.display = 'flex'
-  // container.style.alignItems = 'center'
-  // container.style.justifyContent = 'center'
-  // const svg = new SVG({
-  //   parent: container,
-  //   id: 'svg-sketch',
-  //   width: size,
-  //   height: size
-  // })
 
-  // Your sketch code here
-  // Example: Draw a simple composition
-  
-  // Center circle
-  svg.makeCircle(svg.c, 50, 'none', '#000', 2)
-  
-  // Random circles around center
-  for (let i = 0; i < 8; i++) {
-    const angle = rad(i * 45)
-    const radius = 100
-    const pos = v(
-      svg.c.x + Math.cos(angle) * radius,
-      svg.c.y + Math.sin(angle) * radius
-    )
-    svg.makeCircle(pos, 10, '#000', 'none')
+  // ---------------------------------------------------------------------------
+  // draw() — called on init and on every control change.
+  //
+  // utils.seed.reset() restores the PRNG to position 0 for the current seed
+  // before each draw, so slider/toggle changes never affect the random structure.
+  // Remove it only if accumulating state across redraws is intentional.
+  // ---------------------------------------------------------------------------
+  const draw = () => {
+    utils.seed.reset()
+    svg.stage.replaceChildren()
+
+    // Your sketch code here — example: scatter random circles.
+    const count = 40
+    for (let i = 0; i < count; i++) {
+      const pos = v(rnd() * svg.w, rnd() * svg.h)
+      const r = rnd() * 20 + 4
+      svg.makeCircle(pos, r, 'none', theme.foreground, 1)
+    }
+
+    // Example: a spline through seeded random points.
+    // const pts = Array.from({ length: 6 }, () => v(rnd() * svg.w, rnd() * svg.h))
+    // const pathStr = new Path(pts, false).buildSpline(0.4)
+    // svg.makePath(pathStr, 'none', theme.foreground, 1)
   }
-  
-  // Example: Create a path with bezier curves
-  const pts = [
-    v(100, 100),
-    v(200, 150),
-    v(300, 100),
-    v(350, 200),
-    v(250, 250),
-    v(150, 200),
-  ]
-  
-  const path = new Path(pts, true)
-  const pathStr = path.buildSpline(0.3)
-  svg.makePath(pathStr, 'rgba(255, 0, 0, 0.1)', '#ff0000', 2)
 
-  // React to control changes
+  draw()
+
   onControlChange((newControls) => {
     syncControlState(controlState, newControls)
-    // Update your sketch based on controlState values
-    // You might need to clear and redraw, or update elements directly
+    draw()
   })
 
   registerAction('download-svg', () => {
     svg.save(utils.seed.current, 'svg-sketch')
   })
 
-  // Cleanup function - called when project is unmounted
   return () => {
     svg.stage.remove()
   }

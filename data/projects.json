@@ -17,7 +17,16 @@
     "tags": ["svg", "legacy-migration", "bezier", "engine"],
     "libraries": ["svg"],
     "entryFile": "/projects/svg/ballooney/index.ts",
-    "noControls": true,
+    "hidden": false
+  },
+  {
+    "id": "lattice-drift",
+    "title": "Lattice Drift",
+    "description": "Warped lattice strand study migrated from mesh-01 with utility-driven subdivision controls",
+    "date": "2024-07",
+    "tags": ["svg", "legacy-migration", "grid", "subdivision", "spline"],
+    "libraries": ["svg", "simplex-noise"],
+    "entryFile": "/projects/svg/lattice-drift/index.ts",
     "hidden": false
   },
   {

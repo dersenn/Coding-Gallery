@@ -47,7 +47,7 @@ export function shortcuts(utils: GenerativeUtils) {
 
     // Array shortcuts
     shuffle: utils.array.shuffle, // shuffle(array) => array
-    divLength: utils.math.divLength, // divLength(start, end, divisions) => Vec[]
+    divLength: utils.math.divLength, // divLength(start, end, divisions, includeEndpointsOrOptions?) => Vec[]
 
     // Grid and Cell shortcuts
     Grid: utils.grid.create, // Grid(config) => Grid

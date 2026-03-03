@@ -197,7 +197,7 @@ export async function init(
       path.buildQuadBez(controlState.quadraticTension, controlState.quadraticOffset, false),
       'transparent',
       quadraticColor,
-      3
+      2
     )
   }
 

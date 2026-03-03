@@ -33,7 +33,7 @@
       <div
         class="flex flex-col transition-all duration-300 ease-out"
         :class="canShowControlsUI && isPanelExpanded
-          ? `h-full ${showControls ? 'project-panel-surface backdrop-blur-md' : ''}`
+          ? `h-full ${showControls ? 'project-panel-surface backdrop-blur-sm' : ''}`
           : ''"
       >
         <div

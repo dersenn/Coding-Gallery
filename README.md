@@ -334,6 +334,27 @@ const degrees = utils.math.deg(radians)
 
 // Divide line into segments (returns Vec[])
 const points = utils.math.divLength(startVec, endVec, 10)
+
+// Include endpoints
+const withEnds = utils.math.divLength(startVec, endVec, 10, true)
+
+// Advanced sampling modes (always returned in line sequence)
+const randomGaps = utils.math.divLength(startVec, endVec, 10, {
+  mode: 'randomGaps',
+  includeEndpoints: true
+})
+const gapDescending = utils.math.divLength(startVec, endVec, 10, { mode: 'gapDescending' })
+const curved = utils.math.divLength(startVec, endVec, 10, {
+  mode: 'curve',
+  curve: { kind: 'log', strength: 8 }
+})
+
+// Optional min segment floor (ratio and/or absolute length)
+const bounded = utils.math.divLength(startVec, endVec, 10, {
+  mode: 'randomGaps',
+  minSegmentRatio: 0.04,   // each segment >= 4% of total line
+  minSegmentLength: 12      // each segment >= 12px when possible
+})
 ```
 
 ### Vector Operations
@@ -369,8 +390,9 @@ const midpoint = utils.vec.mid(a, b)
 // Seeded shuffle
 const shuffled = utils.array.shuffle([1, 2, 3, 4, 5])
 
-// Divide line into segments
+// Divide line into segments (legacy + options-object form)
 const points = utils.math.divLength(startVec, endVec, 10) // 10 segments
+const fibPoints = utils.math.divLength(startVec, endVec, 12, { mode: 'fibonacci' })
 
 // Random boolean with probability
 const flip = utils.seed.coinToss(50) // 50% chance

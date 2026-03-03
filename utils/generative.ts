@@ -68,11 +68,38 @@ export class Vec {
   }
 }
 
+export type DivLengthMode =
+  | 'uniform'
+  | 'randomGaps'
+  | 'randomSorted'
+  | 'gapAscending'
+  | 'gapDescending'
+  | 'curve'
+  | 'fibonacci'
+
+export interface DivLengthCurveOptions {
+  kind: 'pow' | 'log' | 'exp'
+  strength?: number
+  invert?: boolean
+}
+
+export interface DivLengthOptions {
+  includeEndpoints?: boolean
+  mode?: DivLengthMode
+  rng?: () => number
+  curve?: DivLengthCurveOptions
+  minSegmentRatio?: number
+  minSegmentLength?: number
+}
+
+type DivLengthArg = boolean | DivLengthOptions
+
 // Generative art utilities available to all projects
 export interface GenerativeUtils {
   seed: {
     current: string
     set: (seed: string) => void
+    reset: () => void
     random: () => number
     randomRange: (min: number, max: number) => number
     randomInt: (min: number, max: number) => number
@@ -84,6 +111,9 @@ export interface GenerativeUtils {
     simplex4D: (x: number, y: number, z: number, w: number) => number
     perlin2D: (x: number, y: number) => number
     perlin3D: (x: number, y: number, z: number) => number
+    // Deterministic float in [0, 1) for an arbitrary key tuple.
+    // Seed-dependent and order-independent — safe for toggleable layers.
+    cell: (...keys: number[]) => number
   }
   math: {
     map: (value: number, start1: number, stop1: number, start2: number, stop2: number) => number
@@ -95,7 +125,10 @@ export interface GenerativeUtils {
     dist3D: (x1: number, y1: number, z1: number, x2: number, y2: number, z2: number) => number
     rad: (deg: number) => number
     deg: (rad: number) => number
-    divLength: (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean) => Vec[]
+    divLength: {
+      (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean): Vec[]
+      (a: Vec, b: Vec, nSeg: number, options?: DivLengthOptions): Vec[]
+    }
   }
   vec: {
     create: (x: number, y: number, z?: number) => Vec
@@ -108,7 +141,10 @@ export interface GenerativeUtils {
   array: {
     shuffle: <T>(array: T[]) => T[]
       // Legacy alias: prefer utils.math.divLength
-    divLength: (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean) => Vec[]
+    divLength: {
+      (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean): Vec[]
+      (a: Vec, b: Vec, nSeg: number, options?: DivLengthOptions): Vec[]
+    }
   }
   grid: {
     create: (config: Omit<GridConfig, 'utils'>) => Grid
@@ -222,24 +258,174 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
   noise3D = createNoise3D(() => currentHash!.random())
   noise4D = createNoise4D(() => currentHash!.random())
 
-  const divLength = (a: Vec, b: Vec, nSeg: number, incStartEnd: boolean = false): Vec[] => {
-    const oA: Vec[] = []
-    const t = 1 / nSeg
+  const clamp01 = (v: number) => Math.max(0, Math.min(v, 1))
 
-    if (incStartEnd) {
-      oA.push(a)
-    }
-
-    for (let i = 0; i < nSeg - 1; i++) {
-      oA.push(a.lerp(b, (i + 1) * t))
-    }
-
-    if (incStartEnd) {
-      oA.push(b)
-    }
-
-    return oA
+  const randomUnit = (rng: () => number) => {
+    const epsilon = 1e-9
+    return clamp01(rng()) * (1 - epsilon) + epsilon
   }
+
+  const normalizeWeights = (weights: number[]): number[] => {
+    const epsilon = 1e-9
+    const sanitized = weights.map((w) => Math.max(epsilon, w))
+    const sum = sanitized.reduce((acc, w) => acc + w, 0)
+    return sanitized.map((w) => w / sum)
+  }
+
+  const cumulativeInteriorTs = (weights: number[], nSeg: number): number[] => {
+    const normalized = normalizeWeights(weights)
+    const ts: number[] = []
+    let cum = 0
+    for (let i = 0; i < nSeg - 1; i++) {
+      cum += normalized[i]!
+      ts.push(cum)
+    }
+    return ts
+  }
+
+  const tsToGaps = (ts: number[]): number[] => {
+    if (!ts.length) {
+      return [1]
+    }
+    const gaps: number[] = []
+    let prev = 0
+    for (const t of ts) {
+      gaps.push(Math.max(0, t - prev))
+      prev = t
+    }
+    gaps.push(Math.max(0, 1 - prev))
+    return gaps
+  }
+
+  const gapsToTs = (gaps: number[]): number[] => {
+    const ts: number[] = []
+    let cum = 0
+    for (let i = 0; i < gaps.length - 1; i++) {
+      cum += gaps[i]!
+      ts.push(cum)
+    }
+    return ts
+  }
+
+  const applyMinGapFloor = (ts: number[], minGapRatio: number): number[] => {
+    if (minGapRatio <= 0) return ts
+
+    const gaps = tsToGaps(ts)
+    const nGaps = gaps.length
+    const cappedFloor = Math.min(Math.max(0, minGapRatio), 1 / nGaps)
+    const totalFloor = cappedFloor * nGaps
+    const free = Math.max(0, 1 - totalFloor)
+
+    // Re-normalize shape into the remaining free space while enforcing a hard gap floor.
+    const sum = gaps.reduce((acc, g) => acc + Math.max(0, g), 0) || 1
+    const floored = gaps.map((g) => cappedFloor + free * (Math.max(0, g) / sum))
+    return gapsToTs(floored)
+  }
+
+  const fibonacciWeights = (count: number): number[] => {
+    if (count <= 0) return []
+    if (count === 1) return [1]
+
+    const weights = [1, 1]
+    while (weights.length < count) {
+      const len = weights.length
+      weights.push(weights[len - 1]! + weights[len - 2]!)
+    }
+    return weights
+  }
+
+  const curveTransform = (u: number, curve?: DivLengthCurveOptions): number => {
+    const config = curve ?? { kind: 'pow' as const, strength: 2 }
+    const strength = Math.max(0.0001, config.strength ?? (config.kind === 'pow' ? 2 : config.kind === 'log' ? 9 : 4))
+
+    let out: number
+    if (config.kind === 'pow') {
+      out = Math.pow(u, strength)
+    } else if (config.kind === 'log') {
+      out = Math.log1p(strength * u) / Math.log1p(strength)
+    } else {
+      out = (Math.exp(strength * u) - 1) / (Math.exp(strength) - 1)
+    }
+
+    return config.invert ? 1 - out : out
+  }
+
+  const buildInteriorTs = (nSeg: number, options: DivLengthOptions, defaultRng: () => number): number[] => {
+    const interiorCount = nSeg - 1
+    if (interiorCount <= 0) return []
+
+    const mode = options.mode ?? 'uniform'
+    const rng = options.rng ?? defaultRng
+
+    if (mode === 'uniform') {
+      return Array.from({ length: interiorCount }, (_, i) => (i + 1) / nSeg)
+    }
+
+    if (mode === 'randomSorted') {
+      return Array.from({ length: interiorCount }, () => randomUnit(rng)).sort((a, b) => a - b)
+    }
+
+    if (mode === 'curve') {
+      return Array.from({ length: interiorCount }, (_, i) => {
+        const u = (i + 1) / nSeg
+        return clamp01(curveTransform(u, options.curve))
+      }).sort((a, b) => a - b)
+    }
+
+    if (mode === 'fibonacci') {
+      return cumulativeInteriorTs(fibonacciWeights(nSeg), nSeg)
+    }
+
+    const randomWeights = Array.from({ length: nSeg }, () => randomUnit(rng))
+    if (mode === 'gapAscending') {
+      randomWeights.sort((a, b) => a - b)
+    } else if (mode === 'gapDescending') {
+      randomWeights.sort((a, b) => b - a)
+    }
+
+    return cumulativeInteriorTs(randomWeights, nSeg)
+  }
+
+  const divLength = (a: Vec, b: Vec, nSeg: number, incStartEndOrOptions: DivLengthArg = false): Vec[] => {
+    const segCount = Math.max(0, Math.floor(nSeg))
+    if (segCount <= 0) return []
+
+    const options: DivLengthOptions =
+      typeof incStartEndOrOptions === 'boolean'
+        ? { includeEndpoints: incStartEndOrOptions }
+        : incStartEndOrOptions
+
+    const includeEndpoints = options.includeEndpoints ?? false
+    const out: Vec[] = []
+
+    if (includeEndpoints) {
+      out.push(a)
+    }
+
+    const segmentLength = a.sub(b).m
+    const ratioFromLength =
+      options.minSegmentLength !== undefined && segmentLength > 1e-9
+        ? options.minSegmentLength / segmentLength
+        : 0
+    const minGapRatio = Math.max(options.minSegmentRatio ?? 0, ratioFromLength)
+
+    const rawTs = buildInteriorTs(segCount, options, () => currentHash!.random())
+    const ts = applyMinGapFloor(rawTs, minGapRatio)
+    for (const t of ts) {
+      out.push(a.lerp(b, t))
+    }
+
+    if (includeEndpoints) {
+      out.push(b)
+    }
+
+    return out
+  }
+
+  // Non-axis-aligned scale factors for utils.noise.cell().
+  // Values are irrational w.r.t. each other and typical grid sizes,
+  // preventing periodic patterns and axis-aligned artifacts.
+  const CELL_SCALES = [0.173, 0.097, 0.211, 0.139, 0.251, 0.163, 0.229, 0.181]
 
   // Create utils object for Grid/Cell constructors
   const utils: GenerativeUtils = {
@@ -249,7 +435,13 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
       },
       set: (seed: string) => {
         currentHash = new Hash(seed)
-        // Reinitialize noise functions with new seed
+        noise2D = createNoise2D(() => currentHash!.random())
+        noise3D = createNoise3D(() => currentHash!.random())
+        noise4D = createNoise4D(() => currentHash!.random())
+      },
+      reset: () => {
+        const s = currentHash!.hash
+        currentHash = new Hash(s)
         noise2D = createNoise2D(() => currentHash!.random())
         noise3D = createNoise3D(() => currentHash!.random())
         noise4D = createNoise4D(() => currentHash!.random())
@@ -267,6 +459,15 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
       simplex4D: (x: number, y: number, z: number, w: number) => noise4D(x, y, z, w),
       perlin2D,
       perlin3D,
+      cell: (...keys: number[]): number => {
+        let u = 0
+        let v = 1.618 // golden ratio offset keeps the two noise axes independent
+        for (let i = 0; i < keys.length; i++) {
+          u += keys[i]! * CELL_SCALES[i % CELL_SCALES.length]!
+          v += keys[i]! * CELL_SCALES[(i + 4) % CELL_SCALES.length]!
+        }
+        return (noise2D(u, v) + 1) / 2
+      },
     },
     math: {
       map: (value: number, start1: number, stop1: number, start2: number, stop2: number) => {

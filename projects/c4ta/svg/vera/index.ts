@@ -4,29 +4,26 @@ import type {
   ProjectContext,
   ProjectControlDefinition
 } from '~/types/project'
-import { SVG, shortcuts } from '~/types/project'
+import { SVG, Cell, shortcuts } from '~/types/project'
+import { Vec } from '~/utils/generative'
 import { syncControlState } from '~/composables/useControls'
+import { createGenerativeUtils } from '~/utils/generative'
+import type { GenerativeUtils } from '~/utils/generative'
 
 type VeraLayer = 'vera1' | 'vera2'
 
 /**
- * A Vera 2 (C4TA SVG migration)
+ * Vera (C4TA — computational line studies)
  *
- * Intent:
- * - Preserve the original overlapping-tile line compositions and center-origin framing.
+ * A series of independently toggleable layers, each exploring a different
+ * rule system for line placement within an overlapping tile grid.
+ * Intended as a growing exercise in computational composition.
  *
- * What is being tested/preserved:
- * - Variant contrast:
- *   - Vera 1: constrained line-choice motifs per tile.
- *   - Vera 2: diagonal motifs with jittered vertical progression.
- * - Deterministic toggling: enabling/disabling layers should not reshuffle line choices.
- *
- * Non-goals:
- * - Not a generic overlap-grid utility yet; formulas remain local to preserve behavior.
+ * Layer inventory:
+ * - Vera 1: constrained motif selection (4 candidates per tile)
+ * - Vera 2: one diagonal per tile from a random left-edge point to a random right-edge point
  */
-const VIRTUAL_HEIGHT = 100
 const TILE_OVERLAP_FACTOR = 3
-const BASE_STROKE = 0.2
 const DEFAULT_DIVISIONS = 12
 
 export const controls: ProjectControlDefinition[] = [
@@ -60,7 +57,7 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange, registerAction } = context
-  const { v, simplex2 } = shortcuts(utils)
+  const { v } = shortcuts(utils)
 
   const controlState = {
     enabledLayers: controls.enabledLayers as VeraLayer[]
@@ -78,60 +75,19 @@ export async function init(
     height: size
   })
 
-  const res = size / VIRTUAL_HEIGHT
-  const virtualWidth = svg.w / res
-  const virtualMin = Math.min(virtualWidth, VIRTUAL_HEIGHT)
+  // Stroke scales proportionally with canvas size.
+  const strokeWidth = size * 0.002
 
-  // Keep legacy color intent, but source from active theme when available.
   const vera1Color = theme.palette[0] ?? '#0000ff'
   const vera2Color = theme.palette[2] ?? '#ff0000'
 
-  // Convert legacy center-origin virtual coordinates into SVG pixel coordinates.
-  const toStagePoint = (x: number, y: number) =>
-    v(svg.c.x + x * res, svg.c.y + y * res)
-
-  const drawVirtualLine = (
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    color: string
-  ) => {
-    svg.makeLine(
-      toStagePoint(x1, y1),
-      toStagePoint(x2, y2),
-      color,
-      BASE_STROKE * res
-    )
+  const drawLine = (x1: number, y1: number, x2: number, y2: number, color: string) => {
+    svg.makeLine(v(x1, y1), v(x2, y2), color, strokeWidth)
   }
 
-  // Deterministic value per layer/cell/channel so control toggles do not reshuffle existing lines.
-  const stableUnit = (
-    layerOffset: number,
-    channelOffset: number,
-    x: number,
-    y: number
-  ): number => {
-    const n = simplex2(
-      x * 0.173 + y * 0.097 + layerOffset,
-      y * 0.211 - x * 0.139 + channelOffset
-    )
-    return (n + 1) / 2
-  }
-
-  const stableIndex = (
-    layerOffset: number,
-    channelOffset: number,
-    x: number,
-    y: number,
-    length: number
-  ): number => {
-    // Convert stable [0..1] value into bounded integer index for variant arrays.
-    const scaled = Math.floor(stableUnit(layerOffset, channelOffset, x, y) * length)
-    return Math.min(scaled, Math.max(0, length - 1))
-  }
-
-  const drawVera1 = (xPos: number, yPos: number, w: number, h: number, divisions: number) => {
+  // ─── Layer: Vera 1 ───────────────────────────────────────────────────────────
+  // Constrained motif selection: one line per tile from 4 fixed candidates.
+  const drawVera1 = (xPos: number, yPos: number, w: number, h: number, divisions: number, layerUtils: GenerativeUtils) => {
     const cols = divisions
     const rows = cols
     const tileW = (w * TILE_OVERLAP_FACTOR) / (-cols + 3 + cols * TILE_OVERLAP_FACTOR)
@@ -142,26 +98,33 @@ export async function init(
     // Overlap grid starts one overlap unit in, matching original composition framing.
     const startX = xPos + xOverlap
     const startY = yPos + yOverlap
+    const rnd = () => layerUtils.seed.random()
 
     for (let x = 0; x < cols; x++) {
       const xOff = startX + x * (tileW - xOverlap)
       for (let y = 0; y < rows; y++) {
         const yOff = startY + y * (tileH - yOverlap)
-        // Four motif candidates from legacy Vera 1.
+        const tile = new Cell({ x: xOff, y: yOff, width: tileW, height: tileH, row: y, col: x })
+
+        // Four motif candidates — diagonal, anti-diagonal, vertical center, horizontal center.
+        const c = tile.center()
         const positions = [
-          [xOff, yOff, xOff + tileW, yOff + tileH],
-          [xOff, yOff + tileH, xOff + tileW, yOff],
-          [xOff + tileW / 2, yOff, xOff + tileW / 2, yOff + tileH],
-          [xOff, yOff + tileH / 2, xOff + tileW, yOff + tileH / 2]
+          [tile.tl(), tile.br()],
+          [tile.bl(), tile.tr()],
+          [{ x: c.x, y: tile.y }, { x: c.x, y: tile.y + tile.height }],
+          [{ x: tile.x, y: c.y }, { x: tile.x + tile.width, y: c.y }]
         ] as const
-        const index = stableIndex(12.7, 3.1, x, y, positions.length)
-        const line = positions[index]!
-        drawVirtualLine(line[0], line[1], line[2], line[3], vera1Color)
+        const index = Math.floor(rnd() * positions.length)
+        const [p1, p2] = positions[index]!
+        drawLine(p1.x, p1.y, p2.x, p2.y, vera1Color)
       }
     }
   }
 
-  const drawVera2 = (xPos: number, yPos: number, w: number, h: number, cols: number, rows: number) => {
+  // ─── Layer: Vera 2 ───────────────────────────────────────────────────────────
+  // One diagonal per tile: a random point on the left edge connected to a random
+  // point on the right edge, sampled independently via divLength.
+  const drawVera2 = (xPos: number, yPos: number, w: number, h: number, cols: number, rows: number, layerUtils: GenerativeUtils) => {
     const tileW = (w * TILE_OVERLAP_FACTOR) / (-cols + 3 + cols * TILE_OVERLAP_FACTOR)
     const tileH = (h * TILE_OVERLAP_FACTOR) / (-rows + 3 + rows * TILE_OVERLAP_FACTOR)
     const xOverlap = tileW / TILE_OVERLAP_FACTOR
@@ -169,37 +132,49 @@ export async function init(
 
     const startX = xPos + xOverlap
     const startY = yPos + yOverlap
+    const yOffsetSteps = Math.max(1, Math.floor(h / rows))
+    const rnd = () => layerUtils.seed.random()
 
     for (let x = 0; x < cols; x++) {
       const xOff = startX + x * (tileW - xOverlap)
       for (let y = 0; y < rows; y++) {
-        // Legacy quirk preserved: y progression uses a per-cell jitter multiplier.
-        const yOffsetSteps = Math.max(1, Math.floor(h / rows))
-        const yJitter = Math.floor(stableUnit(41.3, 5.7, x, y) * yOffsetSteps)
+        // Per-cell random jitter multiplier: tiles with larger row index drift further
+        // down on average, but small jitter values pack them near the top (condensation).
+        const yJitter = Math.floor(rnd() * yOffsetSteps)
         const yOff = startY + y * yJitter
-        const variableHeight = stableUnit(41.3, 11.2, x, y) * tileH
+        const tile = new Cell({ x: xOff, y: yOff, width: tileW, height: tileH, row: y, col: x })
+
+        // One endpoint is always at the tile's top edge (anchoring the straight top);
+        // the other is at a random height along the opposite edge via divLength.
+        // The diagonal direction (left-anchored or right-anchored) is chosen randomly.
+        const varPt = utils.math.divLength(tile.tl(), tile.bl(), 2, { mode: 'randomSorted', rng: rnd })[0]!
         const positions = [
-          [xOff, yOff, xOff + tileW, yOff + variableHeight],
-          [xOff, yOff + variableHeight, xOff + tileW, yOff]
+          [tile.tl(), new Vec(tile.tr().x, varPt.y)],  // top-left → (right, random y)
+          [new Vec(tile.tl().x, varPt.y), tile.tr()]   // (left, random y) → top-right
         ] as const
-        const index = stableIndex(41.3, 17.9, x, y, positions.length)
-        const line = positions[index]!
-        drawVirtualLine(line[0], line[1], line[2], line[3], vera2Color)
+        const [p1, p2] = positions[Math.floor(rnd() * 2)]!
+        drawLine(p1.x, p1.y, p2.x, p2.y, vera2Color)
       }
     }
   }
 
   const draw = () => {
-    svg.stage.innerHTML = ''
+    const seed = utils.seed.current
+    // Each layer gets its own PRNG stream from the same project seed.
+    // Toggling one layer cannot affect the other's random sequence.
+    const v1rnd = createGenerativeUtils(seed)
+    const v2rnd = createGenerativeUtils(seed)
+
+    svg.stage.replaceChildren()
     svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
 
     // Render order keeps Vera 1 on top when both are enabled, matching migration baseline.
     const enabledLayers = new Set(controlState.enabledLayers)
     if (enabledLayers.has('vera2')) {
-      drawVera2(-virtualMin / 2, -virtualMin / 2, virtualMin, virtualMin, DEFAULT_DIVISIONS, DEFAULT_DIVISIONS)
+      drawVera2(0, 0, svg.w, svg.h, DEFAULT_DIVISIONS, DEFAULT_DIVISIONS, v2rnd)
     }
     if (enabledLayers.has('vera1')) {
-      drawVera1(-virtualMin / 2, -virtualMin / 2, virtualMin, virtualMin, DEFAULT_DIVISIONS)
+      drawVera1(0, 0, svg.w, svg.h, DEFAULT_DIVISIONS, v1rnd)
     }
   }
 

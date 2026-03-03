@@ -1,4 +1,4 @@
-import type { Vec } from './generative'
+import { Vec } from './generative'
 import type { Grid } from './grid'
 
 export type NeighborDirection = 
@@ -25,16 +25,31 @@ export interface CellConfig {
 }
 
 /**
- * Cell - Base class for grid cells
- * 
- * Provides position, dimensions, grid coordinates, and neighbor access.
- * Can be extended by projects for custom cell behavior.
- * 
- * Usage:
+ * Cell — positioned drawing agent with its own local coordinate system.
+ *
+ * Works standalone (no grid required) or as a member of a Grid. Intended as a
+ * base class for sketch-specific extensions: `class VeraCell extends Cell { ... }`.
+ *
+ * Provides: position/size, corner/center Vec helpers, neighbor access (when
+ * grid-attached), and bounds checking.
+ *
  * ```typescript
- * const cell = new Cell({ x: 0, y: 0, width: 100, height: 100 })
- * const center = cell.center()
- * const neighbors = cell.getNeighbors4()
+ * // Standalone — no grid needed
+ * const tile = new Cell({ x: 50, y: 80, width: 100, height: 60 })
+ * drawLine(tile.tl(), tile.br())
+ *
+ * // Sketch-specific extension
+ * class ParticleCell extends Cell {
+ *   velocity: Vec
+ *   constructor(config: CellConfig & { velocity: Vec }) {
+ *     super(config)
+ *     this.velocity = config.velocity
+ *   }
+ * }
+ *
+ * // Grid-attached (neighbors, row/col, index available)
+ * const grid = utils.grid.create({ cols: 10, rows: 10, width: 800, height: 800 })
+ * grid.forEach(cell => cell.getNeighbors4())
  * ```
  */
 export class Cell {
@@ -66,14 +81,28 @@ export class Cell {
    * Get the center point of the cell as a Vec
    */
   center(): Vec {
-    if (!this.grid) {
-      throw new Error('Cell must be attached to a grid to use center() method')
-    }
-    return this.grid.utils.vec.create(
-      this.x + this.width / 2,
-      this.y + this.height / 2
-    )
+    return new Vec(this.x + this.width / 2, this.y + this.height / 2)
   }
+
+  /**
+   * Top-left corner
+   */
+  tl(): Vec { return new Vec(this.x, this.y) }
+
+  /**
+   * Top-right corner
+   */
+  tr(): Vec { return new Vec(this.x + this.width, this.y) }
+
+  /**
+   * Bottom-left corner
+   */
+  bl(): Vec { return new Vec(this.x, this.y + this.height) }
+
+  /**
+   * Bottom-right corner
+   */
+  br(): Vec { return new Vec(this.x + this.width, this.y + this.height) }
 
   /**
    * Check if a point is inside the cell
@@ -88,15 +117,12 @@ export class Cell {
   }
 
   /**
-   * Get the distance between this cell's center and another cell's center
+   * Distance from this cell's center to another cell's center or a Vec point
    */
-  distance(other: Cell): number {
-    if (!this.grid) {
-      throw new Error('Cell must be attached to a grid to use distance() method')
-    }
-    const center1 = this.center()
-    const center2 = other.center()
-    return this.grid.utils.vec.dist(center1, center2)
+  distance(other: Cell | Vec): number {
+    const c1 = this.center()
+    const c2 = other instanceof Cell ? other.center() : other
+    return Math.sqrt((c1.x - c2.x) ** 2 + (c1.y - c2.y) ** 2)
   }
 
   /**

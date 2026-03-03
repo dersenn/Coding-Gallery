@@ -33,7 +33,7 @@
         v-for="section in normalizedSections"
         :key="section.id"
         class="rounded-md"
-        :class="section.label || section.collapsible ? 'control-section-surface p-3' : ''"
+        :class="section.label || section.collapsible ? 'control-section-surface backdrop-blur-lg p-3' : ''"
       >
         <button
           v-if="section.collapsible"

@@ -9,7 +9,7 @@
   --project-text: #ffffff;
   --project-text-muted: rgba(255, 255, 255, 0.45);
   --project-text-faint: rgba(255, 255, 255, 0.3);
-  --project-panel-bg: rgba(0, 0, 0, 0.5);
+  --project-panel-bg: transparent;
   --project-chip-bg: rgba(0, 0, 0, 0.35);
   --project-card-bg: rgba(0, 0, 0, 0.5);
   --project-border: rgba(255, 255, 255, 0.1);
@@ -31,7 +31,7 @@
   --project-text: #121212;
   --project-text-muted: rgba(0, 0, 0, 0.7);
   --project-text-faint: rgba(0, 0, 0, 0.55);
-  --project-panel-bg: rgba(236, 236, 232, 0.5);
+  --project-panel-bg: transparent;
   --project-chip-bg: rgba(236, 236, 232, 0.42);
   --project-card-bg: rgba(241, 241, 238, 0.56);
   --project-border: rgba(0, 0, 0, 0.14);

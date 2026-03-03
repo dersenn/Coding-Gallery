@@ -10,6 +10,15 @@ Central list of reusable utility candidates discovered during sketch migrations.
 
 ## Candidates
 
+### Cell and grid architecture
+
+- ID: `gridcell-cell-split`
+  - Status: `in-design`
+  - Priority: **high**
+  - Need: Split `Cell` into a pure positioned agent (`Cell`) and a grid-aware subclass (`GridCell extends Cell`). Grid-specific methods (`isEdge`, `isCorner`, `getNeighbor`, `getNeighbors4/8`) move to `GridCell`. `Grid` creates `GridCell` instances internally; standalone sketch use stays with `Cell` or sketch-local subclasses.
+  - Seen in: design discussion — vera standalone tile cells carry unused grid methods; Grid cells lack proper typing for neighbor returns.
+  - Notes: See `docs/GRIDCELL_REFACTOR_PLAN.md` for full plan. Breaking change on `Grid` typing but no sketch logic changes required.
+
 ### Path building and bezier
 
 - ID: `svg-path-command-builder`
@@ -42,6 +51,22 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `docs/audits/BALLOONEY_MIGRATION_AUDIT.md`
   - Notes: keep deterministic by always using framework seeded random source.
 
+### Cell and grid
+
+- ID: `cell-standalone-methods`
+  - Status: `implemented`
+  - Need: `Cell.center()`, `Cell.distance()`, and corner methods (`tl/tr/bl/br`) should work without a grid reference. Original port erroneously required `this.grid` to construct Vec objects.
+  - Seen in: `projects/c4ta/svg/vera/index.ts` (standalone tile cells without a grid)
+  - Notes: Fixed by changing `import type { Vec }` to `import { Vec }` in `utils/cell.ts` and using `new Vec(x, y)` directly. Added `tl()`, `tr()`, `bl()`, `br()` corner methods. All existing grid-attached usage unaffected.
+
+### Seed and noise
+
+- ID: `coordinate-cell-hash`
+  - Status: `implemented`
+  - Need: deterministic float in `[0, 1)` keyed by an arbitrary tuple of discrete values (layer ID, channel ID, col, row, etc.), independent of draw order and PRNG stream position.
+  - Seen in: `projects/c4ta/svg/vera/index.ts` (as `stableUnit`/`stableIndex`), `projects/svg/lattice-drift/index.ts` (inline `simplex2` mixing in `rowColor`)
+  - Notes: implemented as `utils.noise.cell(...keys)` in `utils/generative.ts`. Uses seeded `noise2D` with non-axis-aligned irrational scale factors to map key tuples to uncorrelated values. Prefer over manual `simplex2` mixing whenever per-cell stable randomness is needed. Active user: `projects/svg/lattice-drift/index.ts` (row colors). Vera originally used this but was later refactored to per-layer PRNG instances — a clearer pattern for the multi-layer toggle case.
+
 ### Geometry and grid composition
 
 - ID: `overlap-grid-tiling`
@@ -55,6 +80,12 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Need: shared circumcircle + Delaunay filtering helpers for Voronoi/Delaunay studies.
   - Seen in: `docs/audits/VORONOI_MIGRATION_AUDIT.md`
   - Notes: keep brute-force and optimized versions separate if both appear.
+
+- ID: `line-division-sampling-modes`
+  - Status: `implemented`
+  - Need: extend line-division helper to support interior-point sampling modes beyond uniform spacing (for example deterministic random sorted samples along the segment).
+  - Seen in: `../svg-stuff/assets/js/engine.js` (legacy `divLength(..., t='RND')`), `../svg-stuff/mesh-01/sketch.js`
+  - Notes: implemented as options-object extension on `utils.math.divLength` with modes: `uniform`, `randomGaps`, `randomSorted`, `gapAscending`, `gapDescending`, `curve`, `fibonacci`; output remains ordered along the source segment.
 
 ### p5 migration helpers
 
