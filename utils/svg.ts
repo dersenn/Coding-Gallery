@@ -1,4 +1,4 @@
-import { Vec } from './generative'
+import { Vec, quadBezControlPoint, splineControlPoints } from './generative'
 import { buildSvgDownloadFilename, serializeSvgWithMetadata, type DownloadControlValues } from './download'
 
 /**
@@ -306,24 +306,8 @@ export class Path {
     return str
   }
 
-  /**
-   * Get control point for quadratic bezier curve
-   */
   private getControlPointQuad(a: Vec, b: Vec, t: number = 0.5, d: number = 0.5): Vec {
-    const m = b.sub(a)
-    const p = a.lerp(b, d)
-    const perp = new Vec(-m.norm().y, m.norm().x)
-    const amp = t * (this.dist(a, b) / 2)
-
-    const cp = new Vec(p.x + amp * perp.x, p.y + amp * perp.y)
-    return cp
-  }
-
-  private dist(a: Vec, b: Vec): number {
-    const xx = a.x - b.x
-    const yy = a.y - b.y
-    const zz = a.z - b.z
-    return Math.sqrt(xx ** 2 + yy ** 2 + zz ** 2)
+    return quadBezControlPoint(a, b, t, d)
   }
 
   /**
@@ -360,25 +344,13 @@ export class Path {
     return str
   }
 
-  /**
-   * Get control points for cubic spline
-   */
   private getControlPointsSpline(p0: Vec, p1: Vec, p2: Vec, t: number): [Vec, Vec] {
-    // Adapted from: http://scaledinnovation.com/analytics/splines/aboutSplines.html
-    // Builds Control Points for p1
-    const d01 = Math.sqrt(Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2))
-    const d12 = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
-    const fa = (t * d01) / (d01 + d12)
-    const fb = (t * d12) / (d01 + d12)
-    const cp1x = p1.x - fa * (p2.x - p0.x)
-    const cp1y = p1.y - fa * (p2.y - p0.y)
-    const cp2x = p1.x + fb * (p2.x - p0.x)
-    const cp2y = p1.y + fb * (p2.y - p0.y)
-    return [new Vec(cp1x, cp1y), new Vec(cp2x, cp2y)]
+    return splineControlPoints(p0, p1, p2, t)
   }
 
   /**
    * Build smooth cubic spline path
+   * Uses the Scaled Innovation algorithm; delegates control-point math to splineControlPoints().
    */
   buildSpline(t: number = 0.4, close: boolean = this.close): string {
     const pts = this.pts
@@ -440,4 +412,81 @@ export class Path {
     }
     return str
   }
+}
+
+/**
+ * PathBuilder — command-driven SVG path assembler.
+ *
+ * Use this when you need to compose a path from mixed or conditional SVG commands
+ * (M/L/Q/C/S/A/Z) rather than applying a single algorithm to a point array.
+ *
+ * Each method appends one SVG command and returns `this` for chaining.
+ * Call `.build()` at the end to get the assembled `d` string.
+ *
+ * Example — a wedge mixing straight edges and an arc:
+ *   const d = new PathBuilder()
+ *     .moveToVec(center)
+ *     .lineToVec(arcStart)
+ *     .arcTo(r, r, 0, 0, 1, arcEnd.x, arcEnd.y)
+ *     .close()
+ *     .build()
+ *   svg.makePath(d, fill, stroke)
+ *
+ * Contrast with the `Path` class, which is algorithm-driven (point array → named curve type).
+ */
+export class PathBuilder {
+  private cmds: string[] = []
+
+  /** M — move to (x, y) without drawing */
+  moveTo(x: number, y: number): this { this.cmds.push(`M ${x} ${y}`); return this }
+  moveToVec(pt: Vec): this { return this.moveTo(pt.x, pt.y) }
+
+  /** L — straight line to (x, y) */
+  lineTo(x: number, y: number): this { this.cmds.push(`L ${x} ${y}`); return this }
+  lineToVec(pt: Vec): this { return this.lineTo(pt.x, pt.y) }
+
+  /** Q — quadratic bezier to (x, y) with one control point (cpx, cpy) */
+  quadTo(cpx: number, cpy: number, x: number, y: number): this {
+    this.cmds.push(`Q ${cpx} ${cpy} ${x} ${y}`)
+    return this
+  }
+  quadToVec(cp: Vec, pt: Vec): this { return this.quadTo(cp.x, cp.y, pt.x, pt.y) }
+
+  /** C — cubic bezier to (x, y) with two control points */
+  cubicTo(cp1x: number, cp1y: number, cp2x: number, cp2y: number, x: number, y: number): this {
+    this.cmds.push(`C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${x} ${y}`)
+    return this
+  }
+  cubicToVec(cp1: Vec, cp2: Vec, pt: Vec): this {
+    return this.cubicTo(cp1.x, cp1.y, cp2.x, cp2.y, pt.x, pt.y)
+  }
+
+  /**
+   * S — smooth cubic bezier to (x, y); the first control point is the reflection
+   * of the previous C/S command's second handle. Provide only the second handle (cpx, cpy).
+   */
+  smoothTo(cpx: number, cpy: number, x: number, y: number): this {
+    this.cmds.push(`S ${cpx} ${cpy} ${x} ${y}`)
+    return this
+  }
+  smoothToVec(cp: Vec, pt: Vec): this { return this.smoothTo(cp.x, cp.y, pt.x, pt.y) }
+
+  /**
+   * A — elliptical arc to (x, y).
+   * @param rx       x-radius
+   * @param ry       y-radius
+   * @param rotation x-axis rotation in degrees
+   * @param largeArc 0 = minor arc, 1 = major arc
+   * @param sweep    0 = CCW, 1 = CW
+   */
+  arcTo(rx: number, ry: number, rotation: number, largeArc: 0 | 1, sweep: 0 | 1, x: number, y: number): this {
+    this.cmds.push(`A ${rx} ${ry} ${rotation} ${largeArc} ${sweep} ${x} ${y}`)
+    return this
+  }
+
+  /** Z — close path back to the last M point */
+  close(): this { this.cmds.push('Z'); return this }
+
+  /** Assemble all queued commands into a single SVG path `d` string */
+  build(): string { return this.cmds.join(' ') }
 }

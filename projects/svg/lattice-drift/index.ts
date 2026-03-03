@@ -216,18 +216,25 @@ export async function init(
     const strands: Vec[][] = []
     for (let x = 0; x < cols; x++) {
       for (let s = 0; s < subStrands; s++) {
+        // Stable t-position for this (column, sub-strand) pair: the same fraction of the cell
+        // gap is used for every row, so the strand threads smoothly through the warped lattice
+        // instead of zigzagging due to independent per-row random draws.
+        // s=0 anchors to the left column boundary (t=0); s>0 uses noise.cell for a
+        // seed-stable position, clamped by minSegmentRatio so strands don't sit on top of edges.
+        let stableT: number
+        if (s === 0) {
+          stableT = 0
+        } else {
+          const lo = minSegmentRatio
+          const hi = 1 - minSegmentRatio
+          const rawT = utils.noise.cell(x, s)
+          stableT = lo < hi ? lo + rawT * (hi - lo) : 0.5
+        }
+
         const strandPts: Vec[] = []
         for (let y = 0; y <= rows; y++) {
           const row = pointsByRow[y]!
-          const segmentPts = divLengthByMode(
-            row[x]!,
-            row[x + 1]!,
-            subStrands,
-            true,
-            minSegmentRatio,
-            mode
-          )
-          strandPts.push(segmentPts[s]!)
+          strandPts.push(row[x]!.lerp(row[x + 1]!, stableT))
         }
         strands.push(strandPts)
       }

@@ -66,7 +66,92 @@ export class Vec {
     const zn = (this.z + ov.z) / 2
     return new Vec(xn, yn, zn)
   }
+
+  /** 2D left-perpendicular: rotates this vector 90° CCW. Useful for normals, offsets, arrow heads. */
+  perp(): Vec {
+    return new Vec(-this.y, this.x)
+  }
+
+  /** Rotates this vector by `angle` radians CCW around the origin. For the common 90° case prefer `perp()`. */
+  rot(angle: number): Vec {
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    return new Vec(this.x * cos - this.y * sin, this.x * sin + this.y * cos)
+  }
 }
+
+// ---------------------------------------------------------------------------
+// Bezier math — pure functions, Vec only, no seed/noise dependency
+// ---------------------------------------------------------------------------
+
+/**
+ * Control point for a quadratic bezier segment.
+ * Places a handle perpendicular to the midpoint of the segment a→b,
+ * offset by tension `t` (sign controls side) and pivot position `d` along the segment.
+ */
+export function quadBezControlPoint(a: Vec, b: Vec, t = 0.5, d = 0.5): Vec {
+  const delta = b.sub(a)
+  const pivot = a.lerp(b, d)
+  const perp = delta.norm().perp()
+  const amp = t * (delta.m / 2)
+  return new Vec(pivot.x + amp * perp.x, pivot.y + amp * perp.y)
+}
+
+/**
+ * Control-point pair for the cubic spline segment arriving at p1, given its neighbors p0 and p2.
+ * Returns [cpIn, cpOut] — the incoming and outgoing handles for p1.
+ * Algorithm: Scaled Innovation (http://scaledinnovation.com/analytics/splines/aboutSplines.html)
+ */
+export function splineControlPoints(p0: Vec, p1: Vec, p2: Vec, t: number): [Vec, Vec] {
+  const d01 = Math.sqrt((p1.x - p0.x) ** 2 + (p1.y - p0.y) ** 2)
+  const d12 = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2)
+  const denom = d01 + d12
+  if (denom <= 1e-9) return [new Vec(p1.x, p1.y), new Vec(p1.x, p1.y)]
+  const fa = (t * d01) / denom
+  const fb = (t * d12) / denom
+  return [
+    new Vec(p1.x - fa * (p2.x - p0.x), p1.y - fa * (p2.y - p0.y)),
+    new Vec(p1.x + fb * (p2.x - p0.x), p1.y + fb * (p2.y - p0.y)),
+  ]
+}
+
+/**
+ * Debug geometry for a quadratic bezier path — returns one handle record per segment.
+ * Each record carries the two anchor points and the control point between them,
+ * mirroring exactly what Path.buildQuadBez() passes to the SVG S command.
+ */
+export function quadBezHandles(
+  pts: Vec[],
+  t: number,
+  d: number
+): Array<{ a: Vec; cp: Vec; b: Vec }> {
+  const out: Array<{ a: Vec; cp: Vec; b: Vec }> = []
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1]!
+    const b = pts[i]!
+    out.push({ a, cp: quadBezControlPoint(a, b, t, d), b })
+  }
+  return out
+}
+
+/**
+ * Debug geometry for a cubic spline path — returns one handle record per anchor point,
+ * including the incoming (cpIn) and outgoing (cpOut) control point handles.
+ * Mirrors exactly what Path.buildSpline() uses for its C commands.
+ */
+export function splineHandles(
+  pts: Vec[],
+  t: number
+): Array<{ pt: Vec; cpIn: Vec; cpOut: Vec }> {
+  return pts.map((pt, i) => {
+    const prev = pts[(i - 1 + pts.length) % pts.length]!
+    const next = pts[(i + 1) % pts.length]!
+    const [cpIn, cpOut] = splineControlPoints(prev, pt, next, t)
+    return { pt, cpIn, cpOut }
+  })
+}
+
+// ---------------------------------------------------------------------------
 
 export type DivLengthMode =
   | 'uniform'

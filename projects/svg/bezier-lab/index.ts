@@ -5,7 +5,7 @@ import type {
   ProjectControlDefinition,
   Vec
 } from '~/types/project'
-import { Color,Path, SVG, shortcuts } from '~/types/project'
+import { Color, Path, SVG, shortcuts, quadBezHandles, splineHandles } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 type CurveLayer = 'straight' | 'quadratic' | 'cubic'
@@ -116,7 +116,7 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange, registerAction } = context
-  const { v, simplex2, vDist } = shortcuts(utils)
+  const { v, simplex2 } = shortcuts(utils)
 
   const controlState = {
     enabledCurves: controls.enabledCurves as CurveLayer[],
@@ -154,36 +154,6 @@ export async function init(
   const buildPoints = (): Vec[] =>
     Y_LEVELS.map((level, i) => v(svg.w * (stableTenth(i) / 10), svg.h * level))
 
-  // Mirror the existing Path quadratic control-point logic so debug overlays
-  // represent the same handles used to build the rendered curve segments.
-  const getQuadControlPoint = (a: Vec, b: Vec, t = 0.5, d = 0.5): Vec => {
-    const delta = b.sub(a)
-    const pivot = a.lerp(b, d)
-    const unit = delta.norm()
-    const perp = v(-unit.y, unit.x)
-    const amplitude = t * (vDist(a, b) / 2)
-    return v(
-      pivot.x + amplitude * perp.x,
-      pivot.y + amplitude * perp.y
-    )
-  }
-
-  // Same control-point construction used by Path.buildSpline().
-  const getSplineControlPoints = (p0: Vec, p1: Vec, p2: Vec, t: number): [Vec, Vec] => {
-    const d01 = vDist(p0, p1)
-    const d12 = vDist(p1, p2)
-    const denom = d01 + d12
-    if (denom <= 1e-9) {
-      return [v(p1.x, p1.y), v(p1.x, p1.y)]
-    }
-    const fa = (t * d01) / denom
-    const fb = (t * d12) / denom
-    return [
-      v(p1.x - fa * (p2.x - p0.x), p1.y - fa * (p2.y - p0.y)),
-      v(p1.x + fb * (p2.x - p0.x), p1.y + fb * (p2.y - p0.y))
-    ]
-  }
-
   const drawStraight = () => {
     const pts = buildPoints()
     const path = new Path(pts, true)
@@ -218,15 +188,7 @@ export async function init(
     const pts = buildPoints()
     const quadraticHandleColor =
       quadraticBase?.withAlpha(controlState.handleOpacity).toCss('rgba') ?? theme.foreground
-    for (let i = 1; i < pts.length; i++) {
-      const a = pts[i - 1]!
-      const b = pts[i]!
-      const cp = getQuadControlPoint(
-        a,
-        b,
-        controlState.quadraticTension,
-        controlState.quadraticOffset
-      )
+    for (const { a, cp, b } of quadBezHandles(pts, controlState.quadraticTension, controlState.quadraticOffset)) {
       svg.makeLine(a, cp, quadraticHandleColor, 1)
       svg.makeLine(cp, b, quadraticHandleColor, 1)
       svg.makeCircle(cp, 3, quadraticHandleColor, 'transparent')
@@ -237,19 +199,9 @@ export async function init(
     const pts = buildPoints()
     const cubicHandleColor =
       cubicBase?.withAlpha(controlState.handleOpacity).toCss('rgba') ?? theme.foreground
-    const splineTension = controlState.cubicTension
-    const controlPoints: Array<[Vec, Vec]> = pts.map((_, i) => {
-      const prev = pts[(i - 1 + pts.length) % pts.length]!
-      const curr = pts[i]!
-      const next = pts[(i + 1) % pts.length]!
-      return getSplineControlPoints(prev, curr, next, splineTension)
-    })
-
-    for (let i = 1; i < pts.length; i++) {
-      const current = pts[i]!
-      const [cpIn, cpOut] = controlPoints[i]!
-      svg.makeLine(current, cpIn, cubicHandleColor, 1)
-      svg.makeLine(current, cpOut, cubicHandleColor, 1)
+    for (const { pt, cpIn, cpOut } of splineHandles(pts, controlState.cubicTension)) {
+      svg.makeLine(pt, cpIn, cubicHandleColor, 1)
+      svg.makeLine(pt, cpOut, cubicHandleColor, 1)
       svg.makeCircle(cpIn, 3, cubicHandleColor, 'transparent')
       svg.makeCircle(cpOut, 3, cubicHandleColor, 'transparent')
     }

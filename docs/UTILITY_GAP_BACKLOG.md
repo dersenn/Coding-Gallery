@@ -22,22 +22,22 @@ Central list of reusable utility candidates discovered during sketch migrations.
 ### Path building and bezier
 
 - ID: `svg-path-command-builder`
-  - Status: `candidate`
+  - Status: `implemented`
   - Need: typed helper/DSL to compose mixed `M/L/Q/C/S/A/Z` commands without manual string assembly.
   - Seen in: `docs/audits/BALLOONEY_MIGRATION_AUDIT.md`, `docs/audits/BEZIER_LAB_MIGRATION_AUDIT.md`
-  - Notes: likely belongs in `utils/svg.ts` as additive helpers near `Path`.
+  - Notes: implemented as `PathBuilder` class in `utils/svg.ts`, re-exported from `types/project.ts`. Chainable API with `Vec` overloads for all SVG path commands.
 
 - ID: `bezier-math-toolkit`
-  - Status: `candidate`
+  - Status: `implemented`
   - Need: bezier utilities for point/tangent at `t`, arc-length estimation, segment split/subdivide.
   - Seen in: `docs/audits/BEZIER_LAB_MIGRATION_AUDIT.md`
-  - Notes: design as pure functions (independent of DOM/SVG class).
+  - Notes: implemented as `quadBezControlPoint` and `splineControlPoints` pure functions in `utils/generative.ts`, re-exported from `types/project.ts`. Also added `Vec.perp()` as the generic geometric primitive they expose. `Path` private methods now delegate to these. See `docs/audits/BEZIER_MATH_REFACTOR_AUDIT.md`.
 
 - ID: `path-debug-geometry`
-  - Status: `candidate`
+  - Status: `implemented`
   - Need: reusable extraction of path debug geometry (quadratic/cubic handle points + guide segments) from the same internals used by path builders.
   - Seen in: `docs/audits/BEZIER_LAB_MIGRATION_AUDIT.md`
-  - Notes: currently reimplemented in `projects/svg/bezier-lab/index.ts`; should be moved into shared helpers to avoid drift from `Path` internals.
+  - Notes: implemented as `quadBezHandles` and `splineHandles` array helpers in `utils/generative.ts`, re-exported from `types/project.ts`. `bezier-lab` overlay drawing now uses these; local duplicates removed.
 
 - ID: `path-resampling`
   - Status: `candidate`
