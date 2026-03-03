@@ -4,14 +4,50 @@ import type {
   ProjectContext,
   ProjectControlDefinition
 } from '~/types/project'
-import { SVG, Grid, shortcuts, resolveCanvas } from '~/types/project'
+import type { GridCellConfig } from '~/utils/grid'
+import type { ThemeTokens } from '~/utils/theme'
+import { SVG, Grid, GridCell, shortcuts, resolveCanvas } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
-import { buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
 
-type AnniLayer = 'sketch1' | 'sketch2'
+type AnniLayer = 'anni-1'
 
-const GRID_COLS = 8
-const GRID_ROWS = 8
+// ─── Layer 1: Anni1Grid / Anni1Cell ───────────────────────────────────────────
+// Per-layer Grid/Cell extension. Grid holds layer context (svg, color); Cell
+// draws via this.grid. init() runs after construction because createCell() fires
+// before subclass fields exist — same pattern as ShowcaseGrid in svg-example.
+
+class Anni1Grid extends Grid {
+  svg!: SVG
+  color!: string
+  /** Post-construction setup. Resolves color from theme.palette[0]. */
+  init(extras: { svg: SVG; theme: ThemeTokens }): this {
+    this.svg = extras.svg
+    this.color = extras.theme.palette[0] ?? extras.theme.foreground
+    return this
+  }
+  protected override createCell(config: GridCellConfig): GridCell {
+    return new Anni1Cell(config)
+  }
+}
+
+class Anni1Cell extends GridCell {
+  /** Draw this cell: rect outline tl→br using grid's svg and color. */
+  draw(): void {
+    const g = this.grid as Anni1Grid
+    g.svg.makeRectAB(this.tl(), this.br(), 'none', g.color, 1)
+  }
+}
+
+// ─── Project ───────────────────────────────────────────────────────────────────
+
+/**
+ * Anni
+ *
+ * Multi-layer grid sketch with rudimentary cell draw. Each layer is an
+ * individual SVG, toggleable via checkbox. Each layer has its own Grid/Cell
+ * extension (Anni1Grid + Anni1Cell). Currently one layer: rect outline per
+ * cell, theme.palette[0].
+ */
 
 export const controls: ProjectControlDefinition[] = [
   {
@@ -23,13 +59,10 @@ export const controls: ProjectControlDefinition[] = [
     controls: [
       {
         type: 'checkbox-group',
-        label: 'Sketches',
+        label: 'Layers',
         key: 'enabledLayers',
-        default: ['sketch1'],
-        options: [
-          { label: 'Sketch 1', value: 'sketch1' },
-          { label: 'Sketch 2', value: 'sketch2' }
-        ]
+        default: ['anni-1'],
+        options: [{ label: 'Anni 1', value: 'anni-1' }]
       }
     ]
   }
@@ -39,7 +72,7 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
-export const canvas = 'square'
+export const canvas = { mode: 'square' as const, padding: '2vmin' }
 
 export async function init(
   container: HTMLElement,
@@ -48,77 +81,39 @@ export async function init(
   const { controls, utils, theme, onControlChange, registerAction } = context
   const { v } = shortcuts(utils)
 
-  const controlState = {
-    enabledLayers: controls.enabledLayers as AnniLayer[]
-  }
+  const controlState = { enabledLayers: controls.enabledLayers as AnniLayer[] }
 
+  // ─── Canvas and layer setup ─────────────────────────────────────────────────
   const { el, width, height } = resolveCanvas(container, canvas)
+  el.style.position = 'relative'  // stacking context for absolute-positioned SVGs
 
-  const stack = document.createElement('div')
-  stack.style.position = 'relative'
-  stack.style.width = `${width}px`
-  stack.style.height = `${height}px`
-  el.appendChild(stack)
+  const svg1 = new SVG({ parent: el, id: 'anni-layer1', width, height })
+  svg1.stage.style.position = 'absolute'
+  svg1.stage.style.top = '0'
+  svg1.stage.style.left = '0'
 
-  const svg1 = new SVG({ parent: stack, id: 'anni-sketch1', width, height })
-  const svg2 = new SVG({ parent: stack, id: 'anni-sketch2', width, height })
-
-  ;[svg1.stage, svg2.stage].forEach((s) => {
-    s.style.position = 'absolute'
-    s.style.top = '0'
-    s.style.left = '0'
-  })
-
-  const color1 = theme.palette[0] ?? theme.foreground
-  const color2 = theme.palette[1] ?? theme.foreground
-
-  const drawCell1 = (cell: { center: () => { x: number; y: number } }, svg: SVG) => {
-    const c = cell.center()
-    svg.makeCircle(v(c.x, c.y), 4, 'none', color1, 1)
-  }
-
-  const drawCell2 = (cell: { center: () => { x: number; y: number }; x: number; y: number; width: number; height: number }, svg: SVG) => {
-    svg.makeRect(v(cell.x, cell.y), cell.width, cell.height, 'transparent', color2, 1)
-  }
-
-  const drawSketch1 = () => {
+  // ─── Layer 1 draw ───────────────────────────────────────────────────────────
+  const drawAnni1 = () => {
     svg1.stage.replaceChildren()
     svg1.makeRect(v(0, 0), width, height, theme.background, 'none', 0)
-    const grid = new Grid({
-      cols: GRID_COLS,
-      rows: GRID_ROWS,
+    const grid = new Anni1Grid({
+      cols: 8,
+      rows: 8,
       width,
       height,
       x: 0,
       y: 0,
       utils
-    })
-    grid.forEach((cell) => drawCell1(cell, svg1))
+    }).init({ svg: svg1, theme })
+    grid.forEach((cell) => (cell as Anni1Cell).draw())
   }
 
-  const drawSketch2 = () => {
-    svg2.stage.replaceChildren()
-    svg2.makeRect(v(0, 0), width, height, theme.background, 'none', 0)
-    const grid = new Grid({
-      cols: GRID_COLS,
-      rows: GRID_ROWS,
-      width,
-      height,
-      x: 0,
-      y: 0,
-      utils
-    })
-    grid.forEach((cell) => drawCell2(cell, svg2))
-  }
-
+  // ─── Draw entry point ───────────────────────────────────────────────────────
   const draw = () => {
     utils.seed.reset()
-    drawSketch1()
-    drawSketch2()
-
-    const enabledLayers = new Set(controlState.enabledLayers)
-    svg1.stage.style.display = enabledLayers.has('sketch1') ? 'block' : 'none'
-    svg2.stage.style.display = enabledLayers.has('sketch2') ? 'block' : 'none'
+    drawAnni1()
+    const enabled = new Set(controlState.enabledLayers)
+    svg1.stage.style.display = enabled.has('anni-1') ? 'block' : 'none'
   }
 
   draw()
@@ -129,47 +124,10 @@ export async function init(
   })
 
   registerAction('download-svg', () => {
-    const enabledLayers = new Set(controlState.enabledLayers)
-    const ns = 'http://www.w3.org/2000/svg'
-    const exportSvg = document.createElementNS(ns, 'svg') as SVGSVGElement
-    exportSvg.setAttribute('xmlns', ns)
-    exportSvg.setAttribute('width', width.toString())
-    exportSvg.setAttribute('height', height.toString())
-    exportSvg.setAttribute('viewBox', `0 0 ${width} ${height}`)
-
-    const bg = document.createElementNS(ns, 'rect')
-    bg.setAttribute('x', '0')
-    bg.setAttribute('y', '0')
-    bg.setAttribute('width', width.toString())
-    bg.setAttribute('height', height.toString())
-    bg.setAttribute('fill', theme.background)
-    exportSvg.appendChild(bg)
-
-    const cloneContent = (stage: SVGSVGElement) => {
-      const children = Array.from(stage.children)
-      for (let i = 1; i < children.length; i++) {
-        exportSvg.appendChild(children[i]!.cloneNode(true))
-      }
-    }
-    if (enabledLayers.has('sketch2')) cloneContent(svg2.stage)
-    if (enabledLayers.has('sketch1')) cloneContent(svg1.stage)
-
-    const str = serializeSvgWithMetadata(exportSvg, {
-      projectId: 'anni',
-      seed: utils.seed.current,
-      sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined
-    })
-    const blob = new Blob([str], { type: 'image/svg+xml' })
-    const link = document.createElement('a')
-    link.download = buildSvgDownloadFilename({ projectId: 'anni', seed: utils.seed.current })
-    link.href = URL.createObjectURL(blob)
-    link.click()
-    URL.revokeObjectURL(link.href)
+    svg1.save(utils.seed.current, 'anni')
   })
 
   return () => {
     svg1.stage.remove()
-    svg2.stage.remove()
-    stack.remove()
   }
 }

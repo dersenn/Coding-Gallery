@@ -129,7 +129,7 @@
   {
     "id": "anni",
     "title": "Anni",
-    "description": "Two toggleable SVG layers with rudimentary grid and cell draw; Sketch 1 palette[0], Sketch 2 palette[1]",
+    "description": "Multi-layer grid sketch with toggleable layers; one layer configured",
     "date": "2026-03",
     "tags": ["svg", "grid"],
     "libraries": ["svg"],
