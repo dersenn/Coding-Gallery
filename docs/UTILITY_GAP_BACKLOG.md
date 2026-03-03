@@ -66,6 +66,12 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `projects/c4ta/svg/vera/index.ts` (standalone tile cells without a grid)
   - Notes: Fixed by changing `import type { Vec }` to `import { Vec }` in `utils/cell.ts` and using `new Vec(x, y)` directly. Added `tl()`, `tr()`, `bl()`, `br()` corner methods. All existing grid-attached usage unaffected.
 
+- ID: `grid-indexing-ergonomics`
+  - Status: `candidate`
+  - Need: Optional 1-based row/col helpers for sketch ergonomics (human-friendly `1..n` checks) while keeping core `row`/`col` 0-based for array compatibility.
+  - Seen in: `projects/svg/anni/index.ts` (rule checks like `row === 3` can be mentally off-by-one from visual counting)
+  - Notes: Consider non-breaking helpers (for example getters like `row1` / `col1`) rather than changing base indexing semantics.
+
 ### Seed and noise
 
 - ID: `coordinate-cell-hash`
@@ -100,7 +106,13 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Status: `deferred`
   - Need: Multi-layer sketches (one SVG per layer, toggleable) require `el.style.position = 'relative'` and `svg.stage.style.position = 'absolute'; top: 0; left: 0` for overlay. Currently in-sketch in Anni.
   - Seen in: `projects/svg/anni/index.ts`
-  - Notes: Considered adding `stacking: true` and `createStackedSvg()` to `utils/canvas.ts`; reverted. Stacking is already implemented per-layer — the styles are the implementation. Revisit if a second multi-layer sketch shares this need.
+  - Notes: Considered adding `stacking: true` and `createStackedSvg()` to `utils/canvas.ts`; reverted. Stacking is already implemented per-layer — the styles are the implementation. Revisit if a second multi-layer sketch shares this need. Single-active-layer per-layer aspect switching is already handled by `resolveCanvas(...)` in `utils/canvas.ts` (Anni explicit use case).
+
+- ID: `layer-runtime-manager`
+  - Status: `candidate`
+  - Need: Small framework helper for layer lifecycle wiring (`mount/switch/draw/export`) so per-layer SVG composition is less sketch-specific boilerplate.
+  - Seen in: `projects/svg/anni/index.ts` (single-active-layer flow), expectation from layered sketches like Vera-style composition.
+  - Notes: Keep `resolveCanvas(...)` as the sizing primitive; helper should only orchestrate runtime lifecycle and selection semantics.
 
 ### p5 migration helpers
 
