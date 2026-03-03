@@ -168,7 +168,7 @@
   },
   {
     "id": "svg-example",
-    "title": "SVG Engine Showcase",
+    "title": "SVG Showcase",
     "description": "One cell per SVG primitive and path mode — a live reference for the engine",
     "date": "2026-02",
     "tags": ["svg", "generative", "grid", "reference"],
