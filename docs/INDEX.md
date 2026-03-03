@@ -14,6 +14,7 @@ Use this folder for supporting docs while keeping the repository root focused on
 - Migration audits: `audits/` (use `SKETCHNAME_MIGRATION_AUDIT.md`, e.g. `PEARLYMATS_MIGRATION_AUDIT.md`)
 - Legacy source manifests: `legacy-manifests/`
 - Utility gap backlog: `UTILITY_GAP_BACKLOG.md` (centralized reusable utility candidates from migrations)
+- Framework backlog: `FRAMEWORK_BACKLOG.md` (viewer shell, controls UI, and runtime improvements)
 - Open backlog: add `validate:projects` metadata/file drift checker (see checklist in main `../README.md` and project rules)
 
 ## Framework-first quick reference

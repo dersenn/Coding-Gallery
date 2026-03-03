@@ -3,7 +3,7 @@ import type {
   ProjectActionDefinition,
   ProjectContext
 } from '~/types/project'
-import { Color, Path, SVG, shortcuts, type Vec } from '~/types/project'
+import { Color, Path, SVG, shortcuts, resolveCanvas, type Vec } from '~/types/project'
 
 /**
  * Voronoi (Delaunay study migration)
@@ -36,6 +36,8 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -43,10 +45,8 @@ export async function init(
   const { utils, theme, registerAction } = context
   const { v, rnd, dist } = shortcuts(utils)
 
-  const svg = new SVG({
-    parent: container,
-    id: 'voronoi'
-  })
+  const { el, width, height } = resolveCanvas(container, 'full')
+  const svg = new SVG({ parent: el, id: 'voronoi', width, height })
 
   const pointCount = 20
   const border = 50

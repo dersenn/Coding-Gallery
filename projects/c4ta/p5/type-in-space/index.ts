@@ -1,4 +1,5 @@
 import type { CleanupFunction, ProjectContext } from '~/types/project'
+import { resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 
 /**
@@ -40,6 +41,8 @@ const GLYPH_CHUNKS = 3
 const GLYPH_SAMPLE_FACTOR = 0.3
 const CAMERA_DISTANCE_FACTOR = 0.1
 const ORTHO_FRUSTUM_SCALE = 0.02
+
+export const canvas = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -98,9 +101,11 @@ export async function init(
     glyph = { chunks }
   }
 
+  const { el, width, height } = resolveCanvas(container, 'full')
+
   const sketch = new p5((p) => {
     p.setup = () => {
-      p.createCanvas(container.clientWidth, container.clientHeight, p.WEBGL)
+      p.createCanvas(width, height, p.WEBGL)
       glyphFontSize = Math.max(1, p.width / 2)
       colors = [p.color(255, 0, 0), p.color(0, 255, 0), p.color(0, 0, 255)]
       cam = p.createCamera()
@@ -144,11 +149,11 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
       glyphFontSize = Math.max(1, p.width / 2)
       buildGlyph()
     }
-  }, container)
+  }, el)
 
   return () => {
     sketch.remove()

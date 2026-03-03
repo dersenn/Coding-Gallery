@@ -5,7 +5,7 @@ import type {
   ProjectControlDefinition,
   Vec
 } from '~/types/project'
-import { SVG, shortcuts } from '~/types/project'
+import { SVG, shortcuts, resolveCanvas } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 /**
@@ -24,6 +24,8 @@ import { syncControlState } from '~/composables/useControls'
 export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
+
+export const canvas = 'full'
 
 interface TileCorners {
   tl: Vec
@@ -85,10 +87,8 @@ export async function init(
   const { controls, onControlChange, utils, registerAction, theme } = context
   const { v } = shortcuts(utils)
 
-  const svg = new SVG({
-    parent: container,
-    id: 'ballooney'
-  })
+  const { el, width, height } = resolveCanvas(container, 'full')
+  const svg = new SVG({ parent: el, id: 'ballooney', width, height })
   const controlState = {
     edgeDivisionMode: (controls.edgeDivisionMode as EdgeDivisionMode) ?? 'uniform',
     minSegmentRatio: (controls.minSegmentRatio as number) ?? 0

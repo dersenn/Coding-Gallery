@@ -1,4 +1,5 @@
 import type { CleanupFunction, ProjectContext, Vec } from '~/types/project'
+import { resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -104,6 +105,8 @@ class RandomSpherePoints {
   }
 }
 
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -111,6 +114,7 @@ export async function init(
   const { utils } = context
   const { rndRange, map, v, vLerp } = shortcuts(utils)
 
+  const { el, width, height } = resolveCanvas(container, 'full')
   let sphereRadius = 0
   let rsp: RandomSpherePoints
   const center = v(0, 0, 0)
@@ -120,7 +124,7 @@ export async function init(
 
   const sketch = new p5((p) => {
     p.setup = () => {
-      p.createCanvas(container.clientWidth, container.clientHeight, p.WEBGL)
+      p.createCanvas(width, height, p.WEBGL)
       const minSide = Math.min(p.width, p.height)
       sphereRadius = minSide / 2.5
       rsp = new RandomSpherePoints(randomPoints, sphereRadius, center, rndRange, map, vLerp, v)
@@ -139,9 +143,9 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
     }
-  }, container)
+  }, el)
 
   return () => {
     sketch.remove()

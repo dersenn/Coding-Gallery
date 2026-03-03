@@ -1,4 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition, Vec } from '~/types/project'
+import { resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 import { shortcuts } from '~/utils/shortcuts'
@@ -91,6 +92,8 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -104,6 +107,8 @@ export async function init(
     noiseAmplitude: controls.noiseAmplitude as number,
     elevationScale: controls.elevationScale as number
   }
+
+  const { el, width, height } = resolveCanvas(container, 'full')
 
   let gridSize = Math.max(1, Math.floor(controlState.gridSize))
   let cellSize = 0
@@ -119,7 +124,7 @@ export async function init(
 
   const sketch = new p5((p) => {
     p.setup = () => {
-      p.createCanvas(container.clientWidth, container.clientHeight, p.WEBGL)
+      p.createCanvas(width, height, p.WEBGL)
       recomputeGeometry(p, gridSize)
     }
 
@@ -166,14 +171,14 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
       recomputeGeometry(p, gridSize)
     }
 
     onControlChange((newControls) => {
       syncControlState(controlState, newControls)
     })
-  }, container)
+  }, el)
 
   return () => {
     sketch.remove()

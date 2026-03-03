@@ -5,7 +5,7 @@ import type {
   ProjectControlDefinition,
   Vec
 } from '~/types/project'
-import { Path, SVG, shortcuts } from '~/types/project'
+import { Path, SVG, shortcuts, resolveCanvas } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 type EdgeDivisionMode =
@@ -126,6 +126,8 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -148,10 +150,8 @@ export async function init(
     pointColor: controls.pointColor as string
   }
 
-  const svg = new SVG({
-    parent: container,
-    id: 'lattice-drift'
-  })
+  const { el, width, height } = resolveCanvas(container, 'full')
+  const svg = new SVG({ parent: el, id: 'lattice-drift', width, height })
 
   const divLengthByMode = (
     a: Vec,

@@ -1,4 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition, Vec } from '~/types/project'
+import { resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 import { shortcuts } from '~/utils/shortcuts'
@@ -87,6 +88,8 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -99,11 +102,12 @@ export async function init(
     size: controls.size as number
   }
 
+  const { el, width, height } = resolveCanvas(container, 'full')
   let trail: ParticleTrail
 
   const sketch = new p5((p) => {
     p.setup = () => {
-      p.createCanvas(container.clientWidth, container.clientHeight)
+      p.createCanvas(width, height)
       trail = new ParticleTrail(p.mouseX, p.mouseY, controlState.size, controlState.memory, v)
     }
 
@@ -118,13 +122,13 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
     }
 
     onControlChange((newControls) => {
       syncControlState(controlState, newControls)
     })
-  }, container)
+  }, el)
 
   return () => {
     sketch.remove()

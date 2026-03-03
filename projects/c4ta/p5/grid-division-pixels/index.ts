@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition } from '~/types/project'
-import { Grid, Cell, shortcuts } from '~/types/project'
+import { Grid, Cell, shortcuts, resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -55,6 +55,8 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -77,6 +79,8 @@ export async function init(
     const index = rndInt(0, Math.max(0, activePalette.length - 1))
     return activePalette[index] ?? theme.foreground
   }
+
+  const { el, width, height } = resolveCanvas(container, 'full')
 
   const sketch = new p5((p) => {
     // Step 2: render a recursive 2x2 subdivision region as leaf Cells.
@@ -129,7 +133,7 @@ export async function init(
 
     p.setup = () => {
       // Step 4: initialize canvas and paint the base recursive grid once.
-      p.createCanvas(container.clientWidth, container.clientHeight)
+      p.createCanvas(width, height)
       p.frameRate(Math.max(1, Math.floor(controlState.fps)))
       drawRecursiveTiles(0, 0, p.width, p.height)
     }
@@ -140,7 +144,7 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
       p.background(theme.background)
       drawRecursiveTiles(0, 0, p.width, p.height)
     }
@@ -157,7 +161,7 @@ export async function init(
       p.background(theme.background)
       drawRecursiveTiles(0, 0, p.width, p.height)
     })
-  }, container)
+  }, el)
 
   return () => {
     sketch.remove()

@@ -1,4 +1,5 @@
 import type { CleanupFunction, ProjectContext, Vec } from '~/types/project'
+import { resolveCanvas } from '~/types/project'
 import p5 from 'p5'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -46,6 +47,8 @@ class MovingNode {
   }
 }
 
+export const canvas = 'full'
+
 export async function init(
   container: HTMLElement,
   context: ProjectContext
@@ -68,10 +71,12 @@ export async function init(
     nodes.push(new MovingNode(v(x, y), speed))
   }
 
+  const { el, width, height } = resolveCanvas(container, 'full')
+
   const sketch = new p5((p) => {
     p.setup = () => {
       // Step 1: seed initial moving node set.
-      p.createCanvas(container.clientWidth, container.clientHeight)
+      p.createCanvas(width, height)
 
       const initialCount = rndInt(3, 15)
       for (let i = 0; i < initialCount; i++) {
@@ -101,9 +106,9 @@ export async function init(
     }
 
     p.windowResized = () => {
-      p.resizeCanvas(container.clientWidth, container.clientHeight)
+      p.resizeCanvas(el.clientWidth, el.clientHeight)
     }
-  }, container)
+  }, el)
 
   return () => {
     sketch.remove()
