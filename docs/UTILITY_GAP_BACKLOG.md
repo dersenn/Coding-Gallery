@@ -94,6 +94,14 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `../svg-stuff/assets/js/engine.js` (legacy `divLength(..., t='RND')`), `../svg-stuff/mesh-01/sketch.js`
   - Notes: implemented as options-object extension on `utils.math.divLength` with modes: `uniform`, `randomGaps`, `randomSorted`, `gapAscending`, `gapDescending`, `curve`, `fibonacci`; output remains ordered along the source segment.
 
+### Canvas and layout
+
+- ID: `multi-layer-svg-stacking`
+  - Status: `deferred`
+  - Need: Multi-layer sketches (one SVG per layer, toggleable) require `el.style.position = 'relative'` and `svg.stage.style.position = 'absolute'; top: 0; left: 0` for overlay. Currently in-sketch in Anni.
+  - Seen in: `projects/svg/anni/index.ts`
+  - Notes: Considered adding `stacking: true` and `createStackedSvg()` to `utils/canvas.ts`; reverted. Stacking is already implemented per-layer — the styles are the implementation. Revisit if a second multi-layer sketch shares this need.
+
 ### p5 migration helpers
 
 - ID: `asset-path-preload-helper`
