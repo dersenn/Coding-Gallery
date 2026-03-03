@@ -13,11 +13,11 @@ Central list of reusable utility candidates discovered during sketch migrations.
 ### Cell and grid architecture
 
 - ID: `gridcell-cell-split`
-  - Status: `in-design`
+  - Status: `implemented`
   - Priority: **high**
   - Need: Split `Cell` into a pure positioned agent (`Cell`) and a grid-aware subclass (`GridCell extends Cell`). Grid-specific methods (`isEdge`, `isCorner`, `getNeighbor`, `getNeighbors4/8`) move to `GridCell`. `Grid` creates `GridCell` instances internally; standalone sketch use stays with `Cell` or sketch-local subclasses.
   - Seen in: design discussion — vera standalone tile cells carry unused grid methods; Grid cells lack proper typing for neighbor returns.
-  - Notes: See `docs/GRIDCELL_REFACTOR_PLAN.md` for full plan. Breaking change on `Grid` typing but no sketch logic changes required.
+  - Notes: `GridCell` co-located in `utils/grid.ts`, exported from `types/project.ts`. `Grid.cells`, `at()`, `forEach()`, `map()`, `filter()`, `randomCell()` all return `GridCell`. `pearlymats` updated: `PearlyCell extends GridCell`. `subdivide()` still returns plain `Cell[]` (subdivision cells are positional only). See `docs/GRIDCELL_REFACTOR_PLAN.md`.
 
 ### Path building and bezier
 

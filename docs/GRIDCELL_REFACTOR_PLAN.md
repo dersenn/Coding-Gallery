@@ -50,4 +50,4 @@ GridCell extends Cell
 
 ## Status
 
-`in-design` — implement when next touching Grid or adding a sketch that needs GridCell typing.
+`implemented` — `GridCell` lives in `utils/grid.ts`, exported from `types/project.ts`. `pearlymats` updated to `PearlyCell extends GridCell`.

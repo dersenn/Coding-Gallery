@@ -1,5 +1,15 @@
-import { Cell } from './cell'
+import { Cell, type CellConfig } from './cell'
 import type { GenerativeUtils } from './generative'
+
+export type NeighborDirection = 
+  | 'top' 
+  | 'topRight' 
+  | 'right' 
+  | 'bottomRight' 
+  | 'bottom' 
+  | 'bottomLeft' 
+  | 'left' 
+  | 'topLeft'
 
 export interface GridConfig {
   cols: number
@@ -18,6 +28,164 @@ export interface SubdivideConfig {
   subdivisionCols?: number
   subdivisionRows?: number
   condition?: (cell: Cell, level: number) => boolean
+}
+
+export interface GridCellConfig extends CellConfig {
+  grid: Grid
+}
+
+/**
+ * GridCell — a Cell created and owned by a Grid.
+ *
+ * Extends `Cell` with a required `grid` reference and grid-specific methods:
+ * edge/corner detection and neighbor lookup in all 8 directions.
+ *
+ * GridCell instances are created internally by `Grid`; sketches receive them
+ * via `grid.forEach`, `grid.at`, `grid.map`, etc. Sketch-specific subclasses
+ * should extend `GridCell` when grid neighbor access is needed:
+ *
+ * ```typescript
+ * class MyCell extends GridCell {
+ *   active = false
+ * }
+ * ```
+ */
+export class GridCell extends Cell {
+  grid: Grid
+
+  constructor(config: GridCellConfig) {
+    super(config)
+    this.grid = config.grid
+  }
+
+  /**
+   * Check if this cell is on the edge of the grid
+   */
+  isEdge(): boolean {
+    return (
+      this.row === 0 ||
+      this.row === this.grid.rows - 1 ||
+      this.col === 0 ||
+      this.col === this.grid.cols - 1
+    )
+  }
+
+  /**
+   * Check if this cell is a corner cell
+   */
+  isCorner(): boolean {
+    return (
+      (this.row === 0 && this.col === 0) ||
+      (this.row === 0 && this.col === this.grid.cols - 1) ||
+      (this.row === this.grid.rows - 1 && this.col === 0) ||
+      (this.row === this.grid.rows - 1 && this.col === this.grid.cols - 1)
+    )
+  }
+
+  /**
+   * Get a specific neighbor by direction
+   */
+  getNeighbor(direction: NeighborDirection): GridCell | null {
+    const { row, col } = this
+    const { rows, cols } = this.grid
+
+    let targetRow = row
+    let targetCol = col
+
+    switch (direction) {
+      case 'top':
+        targetRow = row - 1
+        break
+      case 'topRight':
+        targetRow = row - 1
+        targetCol = col + 1
+        break
+      case 'right':
+        targetCol = col + 1
+        break
+      case 'bottomRight':
+        targetRow = row + 1
+        targetCol = col + 1
+        break
+      case 'bottom':
+        targetRow = row + 1
+        break
+      case 'bottomLeft':
+        targetRow = row + 1
+        targetCol = col - 1
+        break
+      case 'left':
+        targetCol = col - 1
+        break
+      case 'topLeft':
+        targetRow = row - 1
+        targetCol = col - 1
+        break
+    }
+
+    if (targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols) {
+      return null
+    }
+
+    return this.grid.at(targetRow, targetCol)
+  }
+
+  /**
+   * Get all 4 cardinal neighbors (top, right, bottom, left)
+   */
+  getNeighbors4(): GridCell[] {
+    const neighbors: GridCell[] = []
+    const directions: NeighborDirection[] = ['top', 'right', 'bottom', 'left']
+
+    for (const direction of directions) {
+      const neighbor = this.getNeighbor(direction)
+      if (neighbor) neighbors.push(neighbor)
+    }
+
+    return neighbors
+  }
+
+  /**
+   * Get all 8 neighbors (including diagonals)
+   */
+  getNeighbors(): GridCell[] {
+    const neighbors: GridCell[] = []
+    const directions: NeighborDirection[] = [
+      'top',
+      'topRight',
+      'right',
+      'bottomRight',
+      'bottom',
+      'bottomLeft',
+      'left',
+      'topLeft'
+    ]
+
+    for (const direction of directions) {
+      const neighbor = this.getNeighbor(direction)
+      if (neighbor) neighbors.push(neighbor)
+    }
+
+    return neighbors
+  }
+
+  /**
+   * Euclidean distance in grid-coordinate space (col/row steps).
+   *
+   * Mirrors `Cell.distance()` but operates on col/row indices rather than
+   * pixel x/y positions. Accepts another GridCell or a plain `{ col, row }`
+   * point — useful when the target is a fractional grid coordinate (e.g. the
+   * center of an even-sized grid).
+   *
+   * ```typescript
+   * const distToCenter = cell.gridDistance({ col: (cols - 1) / 2, row: (rows - 1) / 2 })
+   * ```
+   */
+  gridDistance(other: GridCell | { col: number; row: number }): number {
+    const dc = this.col - other.col
+    const dr = this.row - other.row
+    return Math.sqrt(dc * dc + dr * dr)
+  }
 }
 
 /**
@@ -51,8 +219,8 @@ export class Grid {
   margin: number
   utils: GenerativeUtils
   
-  cells: Cell[] = []
-  private grid2D: Cell[][] = []
+  cells: GridCell[] = []
+  private grid2D: GridCell[][] = []
 
   constructor(config: GridConfig) {
     this.cols = config.cols
@@ -68,7 +236,7 @@ export class Grid {
   }
 
   /**
-   * Initialize the grid with uniform cells
+   * Initialize the grid with uniform GridCell instances
    */
   private initializeCells(): void {
     const gridWidth = this.width - this.margin * 2
@@ -80,14 +248,14 @@ export class Grid {
     this.grid2D = []
 
     for (let row = 0; row < this.rows; row++) {
-      const rowCells: Cell[] = []
+      const rowCells: GridCell[] = []
       
       for (let col = 0; col < this.cols; col++) {
         const x = this.x + this.margin + col * cellWidth
         const y = this.y + this.margin + row * cellHeight
         const index = row * this.cols + col
 
-        const cell = new Cell({
+        const cell = new GridCell({
           x,
           y,
           width: cellWidth,
@@ -110,7 +278,7 @@ export class Grid {
   /**
    * Get a cell by row and column (2D access)
    */
-  at(row: number, col: number): Cell | null {
+  at(row: number, col: number): GridCell | null {
     if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) {
       return null
     }
@@ -120,7 +288,7 @@ export class Grid {
   /**
    * Get a cell by 1D index
    */
-  cellAt(index: number): Cell | null {
+  cellAt(index: number): GridCell | null {
     if (index < 0 || index >= this.cells.length) {
       return null
     }
@@ -146,7 +314,7 @@ export class Grid {
   /**
    * Iterate over all cells
    */
-  forEach(callback: (cell: Cell, row: number, col: number) => void): void {
+  forEach(callback: (cell: GridCell, row: number, col: number) => void): void {
     for (let row = 0; row < this.rows; row++) {
       for (let col = 0; col < this.cols; col++) {
         const cell = this.grid2D[row]![col]!
@@ -158,7 +326,7 @@ export class Grid {
   /**
    * Map over all cells and return a new array
    */
-  map<T>(callback: (cell: Cell, row: number, col: number) => T): T[] {
+  map<T>(callback: (cell: GridCell, row: number, col: number) => T): T[] {
     const results: T[] = []
     this.forEach((cell, row, col) => {
       results.push(callback(cell, row, col))
@@ -169,15 +337,17 @@ export class Grid {
   /**
    * Filter cells based on a condition
    */
-  filter(callback: (cell: Cell) => boolean): Cell[] {
+  filter(callback: (cell: GridCell) => boolean): GridCell[] {
     return this.cells.filter(callback)
   }
 
   /**
    * Recursively subdivide the grid
    * 
-   * Returns a flat array of cells with varying sizes based on subdivision.
-   * Each cell has a `level` property indicating its subdivision depth.
+   * Returns a flat array of plain `Cell` instances with varying sizes based on
+   * subdivision. Each cell has a `level` property indicating its subdivision
+   * depth. Subdivision cells are positional only (row/col/index = -1); for
+   * grid-indexed neighbor access use the primary `Grid.cells` array instead.
    * 
    * @param config - Subdivision configuration
    * @param config.maxLevel - Maximum recursion depth
@@ -197,7 +367,6 @@ export class Grid {
 
     const resultCells: Cell[] = []
 
-    // Start subdivision from each root cell
     this.forEach((cell) => {
       this.subdivideRecursive(
         cell,
@@ -236,13 +405,11 @@ export class Grid {
         const y = parentCell.y + row * cellH
 
         if (currentLevel < maxLevel) {
-          // Determine whether to stop subdividing or continue
           const shouldStopSubdividing = condition
             ? condition(parentCell, currentLevel)
             : this.utils.seed.coinToss(chance)
 
           if (shouldStopSubdividing) {
-            // Create leaf cell
             resultCells.push(
               new Cell({
                 x,
@@ -253,12 +420,10 @@ export class Grid {
                 col: -1,
                 index: -1,
                 level: currentLevel + 1,
-                grid: this,
                 parent: parentCell
               })
             )
           } else {
-            // Subdivide further
             const childCell = new Cell({
               x,
               y,
@@ -268,7 +433,6 @@ export class Grid {
               col: -1,
               index: -1,
               level: currentLevel + 1,
-              grid: this,
               parent: parentCell
             })
 
@@ -284,7 +448,6 @@ export class Grid {
             )
           }
         } else {
-          // Max level reached, create leaf cell
           resultCells.push(
             new Cell({
               x,
@@ -295,7 +458,6 @@ export class Grid {
               col: -1,
               index: -1,
               level: currentLevel + 1,
-              grid: this,
               parent: parentCell
             })
           )
@@ -307,21 +469,21 @@ export class Grid {
   /**
    * Get all cells on the edge of the grid
    */
-  getEdgeCells(): Cell[] {
+  getEdgeCells(): GridCell[] {
     return this.filter(cell => cell.isEdge())
   }
 
   /**
    * Get all corner cells
    */
-  getCornerCells(): Cell[] {
+  getCornerCells(): GridCell[] {
     return this.filter(cell => cell.isCorner())
   }
 
   /**
    * Get a random cell from the grid
    */
-  randomCell(): Cell {
+  randomCell(): GridCell {
     const index = this.utils.seed.randomInt(0, this.cells.length - 1)
     return this.cells[index]!
   }

@@ -1,5 +1,5 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
-import { SVG, Grid, Cell, Color } from '~/types/project'
+import { SVG, Grid, GridCell, Color } from '~/types/project'
 import {
   buildColorOptionLabels,
   buildPaletteMap,
@@ -312,7 +312,7 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange } = context
-  const { v, dist, simplex2 } = shortcuts(utils)
+  const { v, simplex2 } = shortcuts(utils)
 
   const controlState = {
     gridSize: controls.gridSize as number,
@@ -367,14 +367,14 @@ export async function init(
     utils
   })
 
-  // Cell class - extends base Cell with noise-based color
-  class PearlyCell extends Cell {
+  // Cell class - extends GridCell with noise-based color
+  class PearlyCell extends GridCell {
     noiseValue: number
     color: string
     alpha: number
 
     constructor(
-      baseCell: Cell,
+      baseCell: GridCell,
       scale: number,
       stretchX: number,
       stretchY: number,
@@ -518,8 +518,8 @@ export async function init(
     })
 
     // Measure distance in cell-space (row/col steps), not pixel-space
-    const distanceToCenter = (candidate: Cell): number =>
-      dist(centerCol, centerRow, candidate.col, candidate.row)
+    const distanceToCenter = (candidate: GridCell): number =>
+      candidate.gridDistance({ col: centerCol, row: centerRow })
 
     // Evaluate cells from center outward so propagation decisions are stable
     const cellsByDistance = [...cells].sort((a, b) => {
