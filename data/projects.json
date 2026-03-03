@@ -168,11 +168,12 @@
   },
   {
     "id": "svg-example",
-    "title": "SVG Generative Grid",
-    "description": "Generative grid pattern using SVG with bezier curves and noise",
+    "title": "SVG Engine Showcase",
+    "description": "One cell per SVG primitive and path mode — a live reference for the engine",
     "date": "2026-02",
-    "tags": ["svg", "generative", "noise", "grid"],
-    "libraries": ["svg", "simplex-noise"],
+    "tags": ["svg", "generative", "grid", "reference"],
+    "libraries": ["svg"],
+    "prefersTheme": "light",
     "entryFile": "/projects/_Templates/_svg-example/index.ts",
     "hidden": true
   }

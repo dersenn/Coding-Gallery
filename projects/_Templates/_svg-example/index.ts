@@ -2,23 +2,299 @@ import type {
   ProjectContext,
   CleanupFunction,
   ProjectControlDefinition,
-  ProjectActionDefinition
+  ProjectActionDefinition,
+  Vec
 } from '~/types/project'
-import { SVG, Path, shortcuts } from '~/types/project'
+import type { GenerativeUtils } from '~/utils/generative'
+import type { ThemeTokens } from '~/utils/theme'
+import { SVG, Path, PathBuilder, Grid, shortcuts, resolveCanvas } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 /**
- * SVG Example: Generative Grid Pattern
- * 
- * Demonstrates:
- * - Basic shapes (circles, lines, rectangles)
- * - Path construction with bezier curves
- * - Vector operations
- * - Seeded randomness
- * - Control panel integration
+ * SVG Engine Showcase — Generative Grid
+ *
+ * Layout: 3×3 root grid, recursively subdivided via the Grid utility.
+ * Each leaf cell becomes a ShowcaseCell — a class whose constructor resolves
+ * its variant and dominant color via utils.noise.cell() (seeded, position-stable,
+ * no rnd() advancement), and whose draw() method renders one of 20 SVG primitives.
+ *
+ * Variants 18 and 19 are sub-grid variants: a flat palette grid and a recursive
+ * ShowcaseCell grid respectively, the latter capped at depth 1.
+ *
+ * Toggle labels to identify which engine method each cell uses.
  */
 
-// Export controls - defined in the sketch
+export const canvas = 'square'
+
+// ─── Variant registry ──────────────────────────────────────────────────────────
+
+const N_VARIANTS = 20
+
+const VARIANT_LABELS: string[] = [
+  'makeLine',        // 0
+  'makeCircle ○',    // 1
+  'makeCircle ●',    // 2
+  'makeCircles',     // 3
+  'makeEllipse H',   // 4
+  'makeEllipse V',   // 5
+  'makeRect □',      // 6
+  'makeRect ■',      // 7
+  'makeRectAB',      // 8
+  'Path polygon',    // 9
+  'Path polygon Z',  // 10
+  'Path quadBez',    // 11
+  'Path spline',     // 12
+  'Path spline Z',   // 13
+  'PB arc',          // 14
+  'PB cubic',        // 15
+  'PB smooth',       // 16
+  'PB M/L/A/Z',      // 17
+  'Grid flat',       // 18
+  'Grid recursive',  // 19
+]
+
+// ─── ShowcaseCell ──────────────────────────────────────────────────────────────
+
+class ShowcaseCell {
+  x: number; y: number; w: number; h: number
+  cx: number; cy: number
+  ix: number; iy: number; iw: number; ih: number
+  r: number
+  // Resolved at construction time via noise.cell — never calls rnd()
+  variant: number
+  clr: string
+  // Carried for recursive drawing
+  svgW: number; svgH: number
+  utils: GenerativeUtils
+  pal: string[]
+  ann: string
+  noiseScale: number
+
+  constructor(
+    x: number, y: number, w: number, h: number,
+    svgW: number, svgH: number,
+    utils: GenerativeUtils,
+    pal: string[], ann: string,
+    noiseScale: number
+  ) {
+    this.x = x; this.y = y; this.w = w; this.h = h
+    this.svgW = svgW; this.svgH = svgH
+    this.utils = utils; this.pal = pal; this.ann = ann; this.noiseScale = noiseScale
+
+    const pad = w * 0.12
+    this.ix = x + pad; this.iy = y + pad
+    this.iw = w - pad * 2; this.ih = h - pad * 2
+    this.cx = x + w / 2; this.cy = y + h / 2
+    this.r = Math.min(this.iw, this.ih) * 0.4
+
+    // Both fields use noise.cell — seeded but never advance the rnd() stream
+    this.variant = Math.min(N_VARIANTS - 1, Math.floor(
+      utils.noise.cell(x / svgW * noiseScale, y / svgH * noiseScale, 0) * N_VARIANTS
+    ))
+    const ci = Math.min(pal.length - 1, Math.floor(
+      utils.noise.cell(x / svgW, y / svgH, 1) * pal.length
+    ))
+    this.clr = pal[ci] ?? ann
+  }
+
+  draw(
+    svg: SVG,
+    theme: ThemeTokens,
+    sw: number,
+    v: (x: number, y: number) => Vec,
+    rnd: () => number,
+    depth: number = 0,
+    showLabel: boolean = false
+  ): void {
+    const { cx, cy, ix, iy, iw, ih, r, clr } = this
+    const ann = this.ann
+    const pal = this.pal
+
+    switch (this.variant) {
+      case 0: {
+        svg.makeLine(
+          v(ix + rnd() * iw * 0.25, iy + rnd() * ih),
+          v(ix + iw * (0.75 + rnd() * 0.25), iy + rnd() * ih),
+          clr, sw
+        )
+        break
+      }
+      case 1: {
+        svg.makeCircle(v(cx, cy), r * (0.45 + rnd() * 0.55), 'none', clr, sw)
+        break
+      }
+      case 2: {
+        svg.makeCircle(v(cx, cy), r * (0.45 + rnd() * 0.55), clr, 'none', 0)
+        break
+      }
+      case 3: {
+        const n = 6 + Math.floor(rnd() * 6)
+        const pts = Array.from({ length: n }, (_, i) => {
+          const angle = (i / n) * Math.PI * 2
+          return v(cx + Math.cos(angle) * r * 0.75, cy + Math.sin(angle) * r * 0.75)
+        })
+        svg.makeCircles(pts, r * 0.15, clr, 'none', 0)
+        break
+      }
+      case 4: {
+        svg.makeEllipse(v(cx, cy), r * (0.6 + rnd() * 0.4), r * (0.2 + rnd() * 0.2), 'none', clr, sw)
+        break
+      }
+      case 5: {
+        svg.makeEllipse(v(cx, cy), r * (0.2 + rnd() * 0.2), r * (0.6 + rnd() * 0.4), 'none', clr, sw)
+        break
+      }
+      case 6: {
+        const s = iw * (0.4 + rnd() * 0.4)
+        svg.makeRect(v(cx - s / 2, cy - s / 2), s, s, 'none', clr, sw)
+        break
+      }
+      case 7: {
+        const s = iw * (0.4 + rnd() * 0.4)
+        svg.makeRect(v(cx - s / 2, cy - s / 2), s, s, clr, 'none', 0)
+        break
+      }
+      case 8: {
+        const a = v(ix + rnd() * iw * 0.25, iy + rnd() * ih * 0.25)
+        const b = v(ix + iw * (0.65 + rnd() * 0.25), iy + ih * (0.65 + rnd() * 0.25))
+        svg.makeRectAB(a, b, 'none', clr, sw)
+        break
+      }
+      case 9: {
+        const pts = Array.from({ length: 5 }, (_, i) =>
+          v(ix + (i / 4) * iw, iy + ih * (0.2 + rnd() * 0.6))
+        )
+        svg.makePath(new Path(pts, false).buildPolygon(), 'none', clr, sw)
+        break
+      }
+      case 10: {
+        const n = 4 + Math.floor(rnd() * 4)
+        const pts = Array.from({ length: n }, (_, i) => {
+          const angle = (i / n) * Math.PI * 2 - Math.PI / 2
+          return v(
+            cx + Math.cos(angle) * r * (0.5 + rnd() * 0.5),
+            cy + Math.sin(angle) * r * (0.5 + rnd() * 0.5)
+          )
+        })
+        svg.makePath(new Path(pts, true).buildPolygon(), 'none', clr, sw)
+        break
+      }
+      case 11: {
+        const pts = Array.from({ length: 5 }, (_, i) =>
+          v(ix + (i / 4) * iw, iy + ih * (0.2 + rnd() * 0.6))
+        )
+        svg.makePath(new Path(pts, false).buildQuadBez(0.5, 0.4), 'none', clr, sw)
+        break
+      }
+      case 12: {
+        const pts = Array.from({ length: 5 }, (_, i) =>
+          v(ix + (i / 4) * iw, iy + ih * (0.2 + rnd() * 0.6))
+        )
+        svg.makePath(new Path(pts, false).buildSpline(0.4), 'none', clr, sw)
+        break
+      }
+      case 13: {
+        const n = 5 + Math.floor(rnd() * 4)
+        const pts = Array.from({ length: n }, (_, i) => {
+          const angle = (i / n) * Math.PI * 2
+          return v(cx + Math.cos(angle) * r * (0.4 + rnd() * 0.6), cy + Math.sin(angle) * r * (0.4 + rnd() * 0.6))
+        })
+        svg.makePath(new Path(pts, true).buildSpline(0.4), clr, 'none', 0)
+        break
+      }
+      case 14: {
+        const startAngle = rnd() * Math.PI * 2
+        const span = Math.PI * (0.5 + rnd() * 1.2)
+        const endAngle = startAngle + span
+        const d = new PathBuilder()
+          .moveTo(cx, cy)
+          .lineTo(cx + Math.cos(startAngle) * r, cy + Math.sin(startAngle) * r)
+          .arcTo(r, r, 0, span > Math.PI ? 1 : 0, 1, cx + Math.cos(endAngle) * r, cy + Math.sin(endAngle) * r)
+          .close().build()
+        svg.makePath(d, clr, 'none', 0)
+        break
+      }
+      case 15: {
+        const cp1 = v(ix + iw * 0.25, iy)
+        const cp2 = v(ix + iw * 0.75, iy + ih)
+        svg.makePath(
+          new PathBuilder().moveTo(ix, iy + ih / 2).cubicToVec(cp1, cp2, v(ix + iw, iy + ih / 2)).build(),
+          'none', clr, sw
+        )
+        break
+      }
+      case 16: {
+        const cp1 = v(ix + iw * 0.15, iy)
+        const mid = v(cx, cy)
+        const cp2 = v(cx + iw * 0.1, iy + ih)
+        svg.makePath(
+          new PathBuilder()
+            .moveTo(ix, iy + ih / 2)
+            .cubicToVec(cp1, v(cx - iw * 0.1, iy + ih * 0.2), mid)
+            .smoothToVec(cp2, v(ix + iw, iy + ih / 2))
+            .build(),
+          'none', clr, sw
+        )
+        break
+      }
+      case 17: {
+        const halfH = ih * 0.28
+        const lx = cx - iw * 0.22; const rx = cx + iw * 0.22
+        const ty = cy - halfH; const by = cy + halfH
+        svg.makePath(
+          new PathBuilder()
+            .moveTo(lx, ty).lineTo(rx, ty)
+            .arcTo(halfH, halfH, 0, 0, 1, rx, by)
+            .lineTo(lx, by)
+            .arcTo(halfH, halfH, 0, 0, 1, lx, ty)
+            .close().build(),
+          clr, 'none', 0
+        )
+        break
+      }
+      case 18: {
+        // Flat 4×4 palette grid — colors via noise.cell, no rnd() calls
+        const g = new Grid({ cols: 4, rows: 4, width: iw, height: ih, x: ix, y: iy, utils: this.utils })
+        g.forEach((subCell) => {
+          const subNoise = this.utils.noise.cell(subCell.x / this.svgW, subCell.y / this.svgH, 2)
+          const subClr = pal[Math.min(pal.length - 1, Math.floor(subNoise * pal.length))] ?? clr
+          svg.makeRect(v(subCell.x, subCell.y), subCell.width, subCell.height, subClr, 'none', 0)
+        })
+        break
+      }
+      case 19: {
+        // Recursive ShowcaseCell grid — same process, depth capped at 1
+        if (depth >= 1) {
+          // Fallback at max depth: filled rect in dominant color
+          svg.makeRect(v(ix, iy), iw, ih, clr, 'none', 0)
+          break
+        }
+        const g = new Grid({ cols: 3, rows: 3, width: iw, height: ih, x: ix, y: iy, utils: this.utils })
+        for (const subCell of g.cells) {
+          const sc = new ShowcaseCell(
+            subCell.x, subCell.y, subCell.width, subCell.height,
+            this.svgW, this.svgH,
+            this.utils, pal, ann, this.noiseScale
+          )
+          sc.draw(svg, theme, sw * 0.65, v, rnd, depth + 1, false)
+        }
+        break
+      }
+    }
+
+    if (showLabel) {
+      svg.makeText(
+        VARIANT_LABELS[this.variant] ?? '',
+        v(cx, cy),
+        ann,
+        { fontSize: Math.max(5, Math.floor(this.w * 0.09)), anchor: 'middle', baseline: 'middle' }
+      )
+    }
+  }
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────────────
+
 export const controls: ProjectControlDefinition[] = [
   {
     type: 'group',
@@ -29,20 +305,20 @@ export const controls: ProjectControlDefinition[] = [
     controls: [
       {
         type: 'slider',
-        label: 'Grid Size',
-        key: 'gridSize',
-        default: 8,
-        min: 3,
-        max: 20,
+        label: 'Subdivision Depth',
+        key: 'subdivisions',
+        default: 1,
+        min: 0,
+        max: 2,
         step: 1
       },
       {
         type: 'slider',
-        label: 'Complexity',
-        key: 'complexity',
-        default: 4,
+        label: 'Noise Scale',
+        key: 'noiseScale',
+        default: 8,
         min: 2,
-        max: 8,
+        max: 20,
         step: 1
       }
     ]
@@ -58,15 +334,15 @@ export const controls: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Stroke Width',
         key: 'strokeWidth',
-        default: 1.5,
+        default: 3,
         min: 0.5,
         max: 5,
         step: 0.5
       },
       {
         type: 'toggle',
-        label: 'Show Noise Field',
-        key: 'showNoise',
+        label: 'Show Labels',
+        key: 'showLabels',
         default: false
       }
     ]
@@ -74,149 +350,69 @@ export const controls: ProjectControlDefinition[] = [
 ]
 
 export const actions: ProjectActionDefinition[] = [
-  {
-    key: 'download-svg',
-    label: 'Download SVG'
-  }
+  { key: 'download-svg', label: 'Download SVG' }
 ]
+
+// ─── Sketch init ──────────────────────────────────────────────────────────────
 
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange, registerAction } = context
-  const { v, rnd, rndInt, map, rad, noise2 } = shortcuts(utils)
+  const { controls, utils, theme, onControlChange, registerAction } = context
+  const { v, rnd } = shortcuts(utils)
 
   const controlState = {
-    gridSize: controls.gridSize as number,
-    complexity: controls.complexity as number,
-    showNoise: controls.showNoise as boolean,
-    strokeWidth: controls.strokeWidth as number
+    subdivisions: controls.subdivisions as number,
+    noiseScale: controls.noiseScale as number,
+    strokeWidth: controls.strokeWidth as number,
+    showLabels: controls.showLabels as boolean
   }
 
-  // Create SVG canvas
-  const svg = new SVG({
-    parent: container,
-    id: 'svg-example',
-  })
+  const { el, width, height } = resolveCanvas(container, 'square')
+  const svg = new SVG({ parent: el, id: 'svg-example', width, height })
 
   function draw() {
-    // Clear previous content
-    svg.stage.innerHTML = ''
+    utils.seed.reset()
+    svg.stage.replaceChildren()
 
-    // Add white background
-    svg.makeRect(v(0, 0), svg.w, svg.h, '#ffffff', 'none')
+    svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
 
-    const cols = controlState.gridSize
-    const rows = controlState.gridSize
-    const cellW = svg.w / cols
-    const cellH = svg.h / rows
+    const subs = Math.floor(controlState.subdivisions)
 
-    // Draw grid cells
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        const x = i * cellW
-        const y = j * cellH
-        const center = v(x + cellW / 2, y + cellH / 2)
+    const mainGrid = new Grid({
+      cols: 3, rows: 3,
+      width: svg.w, height: svg.h,
+      x: 0, y: 0,
+      utils
+    })
 
-        // Use noise to determine pattern
-        const noiseVal = noise2(i * 0.2, j * 0.2)
-        const pattern = Math.floor(noiseVal * controlState.complexity)
+    const cells = subs > 0
+      ? mainGrid.subdivide({ maxLevel: subs, chance: 55, subdivisionCols: 3, subdivisionRows: 3 })
+      : mainGrid.cells
 
-        switch (pattern % 4) {
-          case 0:
-            // Circle
-            const r = map(noiseVal, 0, 1, 5, cellW / 3)
-            svg.makeCircle(center, r, 'none', '#000', controlState.strokeWidth)
-            break
-
-          case 1:
-            // Diagonal line
-            const corner1 = v(x, y)
-            const corner2 = v(x + cellW, y + cellH)
-            svg.makeLine(corner1, corner2, '#000', controlState.strokeWidth)
-            break
-
-          case 2:
-            // Random bezier curve
-            const pts = [
-              v(x + rnd() * cellW * 0.3, y + rnd() * cellH * 0.3),
-              v(x + cellW * (0.3 + rnd() * 0.4), y + cellH * (0.3 + rnd() * 0.4)),
-              v(x + cellW * (0.6 + rnd() * 0.4), y + cellH * (0.6 + rnd() * 0.4)),
-            ]
-            const path = new Path(pts, false)
-            const pathStr = path.buildSpline(0.4)
-            svg.makePath(pathStr, 'none', '#000', controlState.strokeWidth)
-            break
-
-          case 3:
-            // Small rect
-            const rectSize = map(noiseVal, 0, 1, cellW * 0.2, cellW * 0.6)
-            const rectPos = v(
-              center.x - rectSize / 2,
-              center.y - rectSize / 2
-            )
-            svg.makeRect(rectPos, rectSize, rectSize, 'none', '#000', controlState.strokeWidth)
-            break
-        }
-
-        // Optional: show noise field as background
-        if (controlState.showNoise) {
-          const opacity = map(noiseVal, 0, 1, 0, 0.3)
-          svg.makeRect(
-            v(x, y),
-            cellW,
-            cellH,
-            `rgba(0, 0, 255, ${opacity})`,
-            'none'
-          )
-        }
-      }
-    }
-
-    // Add border
-    svg.makeRect(v(0, 0), svg.w, svg.h, 'none', '#00ff00', controlState.strokeWidth * 2)
-
-    // Add some decorative circles at corners
-    const cornerRadius = 20
-    const corners = [
-      v(cornerRadius, cornerRadius),
-      v(svg.w - cornerRadius, cornerRadius),
-      v(cornerRadius, svg.h - cornerRadius),
-      v(svg.w - cornerRadius, svg.h - cornerRadius),
-    ]
-    svg.makeCircles(corners, cornerRadius / 2, '#000', 'none')
-
-    // Create a complex spline path across the canvas
-    const splinePts: any[] = []
-    const numSplinePts = 6
-    for (let i = 0; i < numSplinePts; i++) {
-      splinePts.push(
-        v(
-          map(i, 0, numSplinePts - 1, 50, svg.w - 50),
-          svg.h / 2 + Math.sin(i * 0.5) * 100 + rnd() * 50 - 25
-        )
+    for (const cell of cells) {
+      const sc = new ShowcaseCell(
+        cell.x, cell.y, cell.width, cell.height,
+        svg.w, svg.h,
+        utils, theme.palette, theme.annotation,
+        controlState.noiseScale
       )
+      sc.draw(svg, theme, controlState.strokeWidth, v, rnd, 0, controlState.showLabels)
     }
-    const spline = new Path(splinePts, false)
-    const splineStr = spline.buildSpline(0.3)
-    svg.makePath(splineStr, 'none', 'rgba(255, 0, 0, 0.6)', controlState.strokeWidth * 1.5)
   }
 
-  // Initial draw
   draw()
 
-  // React to control changes
   onControlChange((newControls) => {
     syncControlState(controlState, newControls)
     draw()
   })
 
   registerAction('download-svg', () => {
-    svg.save(utils.seed.current, 'svg-grid')
+    svg.save(utils.seed.current, 'svg-example')
   })
 
-  // Cleanup function
   return () => {
     svg.stage.remove()
   }

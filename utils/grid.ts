@@ -40,15 +40,27 @@ export interface GridCellConfig extends CellConfig {
  * Extends `Cell` with a required `grid` reference and grid-specific methods:
  * edge/corner detection and neighbor lookup in all 8 directions.
  *
- * GridCell instances are created internally by `Grid`; sketches receive them
- * via `grid.forEach`, `grid.at`, `grid.map`, etc. Sketch-specific subclasses
- * should extend `GridCell` when grid neighbor access is needed:
+ * GridCell instances are created by `Grid` via its protected `createCell()`
+ * factory method. To use a custom subclass, subclass `Grid` and override
+ * `createCell()` — do NOT instantiate the subclass directly and expect `Grid`
+ * to use it:
  *
  * ```typescript
  * class MyCell extends GridCell {
- *   active = false
+ *   draw(svg: SVG) { /* ... *‌/ }
  * }
+ *
+ * class MyGrid extends Grid {
+ *   protected createCell(config: GridCellConfig): GridCell {
+ *     return new MyCell(config)
+ *   }
+ * }
+ *
+ * const grid = new MyGrid({ cols: 3, rows: 3, ... })
+ * grid.cells.forEach(cell => (cell as MyCell).draw(svg))
  * ```
+ *
+ * For standalone sketch use without a grid, extend `Cell` directly instead.
  */
 export class GridCell extends Cell {
   grid: Grid
@@ -236,7 +248,47 @@ export class Grid {
   }
 
   /**
-   * Initialize the grid with uniform GridCell instances
+   * Factory method for primary grid cells.
+   *
+   * Override in a `Grid` subclass to produce custom `GridCell` instances.
+   * This method is called once per cell during construction — the returned
+   * instance is what appears in `grid.cells`, `grid.at()`, `grid.forEach()`, etc.
+   *
+   * ```typescript
+   * class MyGrid extends Grid {
+   *   protected createCell(config: GridCellConfig): GridCell {
+   *     return new MyCell(config)
+   *   }
+   * }
+   * ```
+   */
+  protected createCell(config: GridCellConfig): GridCell {
+    return new GridCell(config)
+  }
+
+  /**
+   * Factory method for subdivision leaf cells.
+   *
+   * Override alongside `createCell` when you also need custom types from
+   * `grid.subdivide()`. Leaf cells have `row/col/index = -1` since they are
+   * positional only and not part of the primary grid topology.
+   *
+   * ```typescript
+   * class MyGrid extends Grid {
+   *   protected createLeafCell(config: CellConfig): Cell {
+   *     return new MyLeafCell(config)
+   *   }
+   * }
+   * ```
+   */
+  protected createLeafCell(config: CellConfig): Cell {
+    return new Cell(config)
+  }
+
+  /**
+   * Initialize the grid cells via the `createCell` factory.
+   * Called once from the constructor — override `createCell` to inject
+   * custom cell types rather than overriding this method.
    */
   private initializeCells(): void {
     const gridWidth = this.width - this.margin * 2
@@ -255,7 +307,7 @@ export class Grid {
         const y = this.y + this.margin + row * cellHeight
         const index = row * this.cols + col
 
-        const cell = new GridCell({
+        const cell = this.createCell({
           x,
           y,
           width: cellWidth,
@@ -384,7 +436,8 @@ export class Grid {
   }
 
   /**
-   * Recursive helper for subdivision
+   * Recursive helper for subdivision — uses `createLeafCell` factory for all
+   * leaf and intermediate cell instances.
    */
   private subdivideRecursive(
     parentCell: Cell,
@@ -411,7 +464,7 @@ export class Grid {
 
           if (shouldStopSubdividing) {
             resultCells.push(
-              new Cell({
+              this.createLeafCell({
                 x,
                 y,
                 width: cellW,
@@ -424,7 +477,7 @@ export class Grid {
               })
             )
           } else {
-            const childCell = new Cell({
+            const childCell = this.createLeafCell({
               x,
               y,
               width: cellW,
@@ -449,7 +502,7 @@ export class Grid {
           }
         } else {
           resultCells.push(
-            new Cell({
+            this.createLeafCell({
               x,
               y,
               width: cellW,

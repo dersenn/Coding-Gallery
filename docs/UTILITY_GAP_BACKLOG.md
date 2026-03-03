@@ -12,6 +12,13 @@ Central list of reusable utility candidates discovered during sketch migrations.
 
 ### Cell and grid architecture
 
+- ID: `grid-cell-factory`
+  - Status: `implemented`
+  - Priority: **essential**
+  - Need: `Grid` hardcoded `new GridCell()` in a `private` method with no extension hook, making `GridCell` subclassing a dead end — the subclass was never used by `Grid` even when explicitly defined.
+  - Seen in: design discussion — `_svg-example` showcase, general intent to use `class MyCell extends GridCell` per sketch.
+  - Notes: fixed by adding `protected createCell(config: GridCellConfig): GridCell` and `protected createLeafCell(config: CellConfig): Cell` factory methods to `Grid`. `initializeCells()` now calls `this.createCell(...)`, `subdivideRecursive()` now calls `this.createLeafCell(...)`. Default implementations return `new GridCell()` / `new Cell()` — fully backward-compatible. Subclass `Grid` and override either factory to inject custom types. See `docs/GRID_CELL_EXTENSION.md`.
+
 - ID: `gridcell-cell-split`
   - Status: `implemented`
   - Priority: **high**

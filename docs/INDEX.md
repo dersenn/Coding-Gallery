@@ -11,6 +11,7 @@ Use this folder for supporting docs while keeping the repository root focused on
 - Seed system details: `SEED_SYSTEM.md`
 - SVG engine details: `SVG_IMPLEMENTATION.md`
 - Grid and Cell utilities: See main `../README.md` (Grid and Cell Utilities section)
+- Extending GridCell per sketch (factory pattern): `GRID_CELL_EXTENSION.md`
 - Migration audits: `audits/` (use `SKETCHNAME_MIGRATION_AUDIT.md`, e.g. `PEARLYMATS_MIGRATION_AUDIT.md`)
 - Legacy source manifests: `legacy-manifests/`
 - Utility gap backlog: `UTILITY_GAP_BACKLOG.md` (centralized reusable utility candidates from migrations)
