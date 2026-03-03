@@ -52,7 +52,7 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
-export const canvas = '3:2'
+export const canvas = 'square'
 
 export async function init(
   container: HTMLElement,
