@@ -114,6 +114,12 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `projects/svg/anni/index.ts` (single-active-layer flow), expectation from layered sketches like Vera-style composition.
   - Notes: Implemented as `createSingleActiveSvgLayerManager(...)` in `utils/layerRuntime.ts`, re-exported from `types/project.ts`. Registry/setup extraction is implemented as `createSingleActiveSvgLayerSetup(...)` so a single registry object now drives controls, defaults, and runtime definitions. The utility keeps `resolveCanvas(...)` as the sizing primitive and only orchestrates single-active lifecycle semantics.
 
+- ID: `frame-padding-css-units`
+  - Status: `candidate`
+  - Need: Single-SVG inner-frame layout currently supports a lightweight subset of padding units (`number`, `px`, `%`, `vmin`, plain numeric string). Add a shared resolver for broader CSS length support (`rem`, `em`, `vw`, `vh`, and potentially `calc(...)`) when simulating per-layer artboards.
+  - Seen in: `projects/svg/anni/index.ts` (`resolveInsetPx(...)` in single-SVG frame mode)
+  - Notes: Keep deterministic frame math and avoid layout thrash; prefer centralizing this in a utility rather than sketch-local parsing once reused.
+
 ### p5 migration helpers
 
 - ID: `asset-path-preload-helper`

@@ -52,6 +52,85 @@ export interface CanvasResult {
   el: HTMLElement
 }
 
+/** Inner frame rectangle resolved inside a fixed outer canvas. */
+export interface InnerFrameResult {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+const resolveInsetPx = (
+  padding: CanvasConfig['padding'],
+  width: number,
+  height: number
+): number => {
+  if (padding === undefined) return 0
+  if (typeof padding === 'number') return Math.max(0, padding)
+
+  const value = padding.trim().toLowerCase()
+  const parsed = Number.parseFloat(value)
+  if (!Number.isFinite(parsed)) return 0
+
+  if (value.endsWith('vmin')) {
+    return Math.max(0, (parsed / 100) * Math.min(width, height))
+  }
+  if (value.endsWith('%')) {
+    return Math.max(0, (parsed / 100) * Math.min(width, height))
+  }
+  if (value.endsWith('px')) {
+    return Math.max(0, parsed)
+  }
+  return Math.max(0, parsed)
+}
+
+const parseAspectMode = (mode: Exclude<CanvasMode, 'full' | 'square'>): number => {
+  const [wStr, hStr] = mode.split(':')
+  const w = Number.parseFloat(wStr ?? '')
+  const h = Number.parseFloat(hStr ?? '')
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return 1
+  return w / h
+}
+
+/**
+ * Resolves an inner frame from canvas mode/padding inside a fixed outer size.
+ * Useful for single-SVG sketches that simulate per-layer artboards.
+ */
+export function resolveInnerFrame(
+  outerWidth: number,
+  outerHeight: number,
+  config?: CanvasMode | CanvasConfig
+): InnerFrameResult {
+  const cfg: CanvasConfig = typeof config === 'string' ? { mode: config } : (config ?? {})
+  const mode = cfg.mode ?? 'full'
+  const inset = resolveInsetPx(cfg.padding, outerWidth, outerHeight)
+  const availableWidth = Math.max(1, outerWidth - inset * 2)
+  const availableHeight = Math.max(1, outerHeight - inset * 2)
+
+  let width = availableWidth
+  let height = availableHeight
+
+  if (mode === 'square') {
+    width = height = Math.min(availableWidth, availableHeight)
+  } else if (mode !== 'full') {
+    const ratio = parseAspectMode(mode)
+    if (availableWidth / availableHeight > ratio) {
+      height = availableHeight
+      width = height * ratio
+    } else {
+      width = availableWidth
+      height = width / ratio
+    }
+  }
+
+  return {
+    x: (outerWidth - width) / 2,
+    y: (outerHeight - height) / 2,
+    width,
+    height
+  }
+}
+
 /**
  * Resolves canvas dimensions and prepares the container for the given sizing mode.
  *

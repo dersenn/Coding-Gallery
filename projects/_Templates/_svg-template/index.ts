@@ -22,6 +22,9 @@ import { syncControlState } from '~/composables/useControls'
  * - v, rnd, map, lerp
  *
  * Expand with extra aliases only when needed in this sketch.
+ * Pattern:
+ * - single-layer sketch: bind once in init(), let draw() close over aliases
+ * - layered sketch: bind once per layer runtime/factory, let each layer draw() close over aliases
  */
 
 // Export controls - define them here in your sketch
