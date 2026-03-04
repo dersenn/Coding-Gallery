@@ -60,6 +60,11 @@ export interface InnerFrameResult {
   height: number
 }
 
+export interface FrameTransform {
+  toGlobal: (x: number, y: number) => { x: number; y: number }
+  toLocal: (x: number, y: number) => { x: number; y: number }
+}
+
 const resolveInsetPx = (
   padding: CanvasConfig['padding'],
   width: number,
@@ -128,6 +133,14 @@ export function resolveInnerFrame(
     y: (outerHeight - height) / 2,
     width,
     height
+  }
+}
+
+/** Creates local<->global coordinate mappers for an inner frame rectangle. */
+export function createFrameTransform(frame: InnerFrameResult): FrameTransform {
+  return {
+    toGlobal: (x, y) => ({ x: frame.x + x, y: frame.y + y }),
+    toLocal: (x, y) => ({ x: x - frame.x, y: y - frame.y })
   }
 }
 

@@ -140,7 +140,8 @@ export { Cell } from '~/utils/cell'
 export { Color } from '~/utils/color'
 export { resolveCanvas } from '~/utils/canvas'
 export { resolveInnerFrame } from '~/utils/canvas'
-export type { CanvasMode, CanvasConfig, CanvasResult, InnerFrameResult } from '~/utils/canvas'
+export { createFrameTransform } from '~/utils/canvas'
+export type { CanvasMode, CanvasConfig, CanvasResult, InnerFrameResult, FrameTransform } from '~/utils/canvas'
 export {
   createSingleActiveSvgLayerManager,
   createSingleActiveSvgLayerSetup

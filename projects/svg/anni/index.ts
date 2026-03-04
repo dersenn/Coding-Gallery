@@ -15,7 +15,8 @@ import {
   GridCell,
   shortcuts,
   resolveCanvas,
-  resolveInnerFrame
+  resolveInnerFrame,
+  createFrameTransform
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
@@ -49,6 +50,9 @@ const LAYERS: Record<AnniLayer, LayerDefinition> = {
 
 const LAYER_ENTRIES = Object.entries(LAYERS) as Array<[AnniLayer, LayerDefinition]>
 const DEFAULT_LAYER = LAYER_ENTRIES[0]![0]
+
+
+
 
 // ─── Layer 1 model + draw pipeline ─────────────────────────────────────────────
 // Keep this split (Grid subclass + Cell subclass): it stays lightweight now and
@@ -86,27 +90,34 @@ class Anni1Cell extends GridCell {
 
 function drawAnni1(context: LayerDrawContext): void {
   const { svg, frame, theme, utils, rnd, v } = context
-  svg.makeRect(v(frame.x, frame.y), frame.width, frame.height, theme.background, 'none', 0)
+  const tf = createFrameTransform(frame)
+  const origin = tf.toGlobal(0, 0)
+  svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, theme.background, 'none', 0)
 
   const grid = new Anni1Grid({
     cols: 8,
     rows: 8,
     width: frame.width,
     height: frame.height,
-    x: frame.x,
-    y: frame.y,
+    x: origin.x,
+    y: origin.y,
     utils
   }).init({ svg, theme, rnd })
   grid.forEach((cell) => (cell as Anni1Cell).draw())
 }
 
+
+
+
 // ─── Layer 2 model + draw pipeline ─────────────────────────────────────────────
 
 function drawAnni2(context: LayerDrawContext): void {
   const { svg, frame, theme, utils, v } = context
+  const tf = createFrameTransform(frame)
   const accent = theme.palette[2] ?? theme.palette[0] ?? theme.foreground
   const lightAccent = theme.palette[3] ?? theme.foreground
-  svg.makeRect(v(frame.x, frame.y), frame.width, frame.height, theme.background, 'none', 0)
+  const origin = tf.toGlobal(0, 0)
+  svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, theme.background, 'none', 0)
 
   const cols = 6
   const rows = 9
@@ -114,16 +125,19 @@ function drawAnni2(context: LayerDrawContext): void {
   const cellH = frame.height / rows
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const x = frame.x + col * cellW
-      const y = frame.y + row * cellH
-      const cx = x + cellW / 2
-      const cy = y + cellH / 2
+      const x = col * cellW
+      const y = row * cellH
+      const center = tf.toGlobal(x + cellW / 2, y + cellH / 2)
       const radius = Math.min(cellW, cellH) * (0.2 + 0.5 * utils.noise.cell(col, row, 2))
       const stroke = (row + col) % 2 === 0 ? accent : lightAccent
-      svg.makeCircle(v(cx, cy), radius, 'none', stroke, 1)
+      svg.makeCircle(v(center.x, center.y), radius, 'none', stroke, 1)
     }
   }
 }
+
+
+
+
 
 // ─── Controls ───────────────────────────────────────────────────────────────────
 
