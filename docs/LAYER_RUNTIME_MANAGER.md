@@ -60,3 +60,10 @@ const LAYER_SETUP = createSingleActiveSvgLayerSetup(LAYER_REGISTRY)
 - `PascalCase` for types/classes/interfaces.
 - `camelCase` for functions and local variables.
 - `UPPER_SNAKE_CASE` for source-of-truth registries/derived setup constants.
+
+## Shortcuts convention in layered sketches
+
+- Bind a common core from `shortcuts(utils)` once per layer runtime setup/factory:
+  - `v`, `rnd`, `map`, `lerp`
+- Keep draw helpers focused on render logic and pass/use pre-bound aliases.
+- Add extra shortcut aliases only when the layer actually uses them.

@@ -27,6 +27,8 @@ interface LayerRuntimeExtras {
   utils: ProjectContext['utils']
 }
 
+type VecFactory = ReturnType<typeof shortcuts>['v']
+
 // Single source of truth for layered composition setup:
 // - control labels/options
 // - per-layer canvas sizing/aspect/padding
@@ -81,9 +83,9 @@ function drawAnni1(
   width: number,
   height: number,
   theme: ThemeTokens,
-  utils: ProjectContext['utils']
+  utils: ProjectContext['utils'],
+  v: VecFactory
 ): void {
-  const { v } = shortcuts(utils)
   svg.stage.replaceChildren()
   svg.makeRect(v(0, 0), width, height, theme.background, 'none', 0)
   const grid = new Anni1Grid({
@@ -100,10 +102,12 @@ function drawAnni1(
 
 function createAnni1Layer(args: SingleActiveSvgLayerCreateArgs<AnniLayer> & LayerRuntimeExtras) {
   const { parent, width, height, theme, utils } = args
+  // Bind once per layer runtime; add more aliases here when needed.
+  const { v } = shortcuts(utils)
   const svg = new SVG({ parent, id: 'anni-layer1', width, height })
 
   const draw = () => {
-    drawAnni1(svg, width, height, theme, utils)
+    drawAnni1(svg, width, height, theme, utils, v)
   }
 
   return {
@@ -123,9 +127,9 @@ function drawAnni2(
   width: number,
   height: number,
   theme: ThemeTokens,
-  utils: ProjectContext['utils']
+  utils: ProjectContext['utils'],
+  v: VecFactory
 ): void {
-  const { v } = shortcuts(utils)
   const accent = theme.palette[2] ?? theme.palette[0] ?? theme.foreground
   const lightAccent = theme.palette[3] ?? theme.foreground
   svg.stage.replaceChildren()
@@ -150,10 +154,12 @@ function drawAnni2(
 
 function createAnni2Layer(args: SingleActiveSvgLayerCreateArgs<AnniLayer> & LayerRuntimeExtras) {
   const { parent, width, height, theme, utils } = args
+  // Bind once per layer runtime; add more aliases here when needed.
+  const { v } = shortcuts(utils)
   const svg = new SVG({ parent, id: 'anni-layer2', width, height })
 
   const draw = () => {
-    drawAnni2(svg, width, height, theme, utils)
+    drawAnni2(svg, width, height, theme, utils, v)
   }
 
   return {

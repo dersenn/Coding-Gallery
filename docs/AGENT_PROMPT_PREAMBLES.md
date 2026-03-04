@@ -52,6 +52,14 @@ If unsure, ask 1-2 clarifying questions before coding; if overlap exists, report
 Use this naming convention for sketch files unless project rules require otherwise:
 
 - `PascalCase` for classes/types/interfaces (for example `Anni1Grid`, `LayerRuntimeExtras`).
-- `camelCase` for functions, variables, and local state (for example `layerManager`, `controlState`, `drawAnni2Grid`).
+- `camelCase` for functions, variables, and local state (for example `layerManager`, `controlState`, `drawAnni2`).
 - `UPPER_SNAKE_CASE` for module-level source-of-truth constants/registries (for example `LAYER_REGISTRY`, `LAYER_SETUP`).
 - kebab-case string IDs for stable layer/project identifiers (for example `'anni-1'`, `'vera-2'`).
+
+## Shortcuts convention
+
+Use a project-level core destructure from `shortcuts(utils)` by default:
+
+- Core aliases to keep always available: `v`, `rnd`, `map`, `lerp`.
+- Expand with extra aliases only when a sketch uses them.
+- In layered sketches, bind shortcuts once in layer runtime setup/factory scope (not inside per-draw helpers) when possible.

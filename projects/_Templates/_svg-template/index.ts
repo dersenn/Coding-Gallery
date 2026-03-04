@@ -18,13 +18,10 @@ import { syncControlState } from '~/composables/useControls'
  * - theme   — background, foreground, annotation, outline, palette
  * - controls / onControlChange / registerAction
  *
- * Shorthand aliases via shortcuts(utils):
- * - v, Vec, rnd, rndInt, rndRange, coin
- * - map, lerp, clamp, norm, dist, rad, deg
- * - vDist, vLerp, vMid, vDot, vAng
- * - noise2, noise3, simplex2, simplex3
- * - shuffle, divLength, Grid, Cell, clr
- * - All destructured at init — remove unused ones when done.
+ * Common core aliases via shortcuts(utils):
+ * - v, rnd, map, lerp
+ *
+ * Expand with extra aliases only when needed in this sketch.
  */
 
 // Export controls - define them here in your sketch
@@ -75,16 +72,16 @@ export async function init(
   context: ProjectContext
 ): Promise<CleanupFunction> {
   const { controls, utils, theme, onControlChange, registerAction } = context
-  const {
-    v, Vec,
-    rnd, rndInt, rndRange, coin,
-    map, lerp, clamp, norm, dist, rad, deg,
-    vDist, vLerp, vMid, vDot, vAng,
-    noise2, noise3, simplex2, simplex3,
-    shuffle, divLength,
-    Grid, Cell,
-    clr,
-  } = shortcuts(utils)
+  // Common core shortcuts (always present per sketch).
+  const { v, rnd, map, lerp } = shortcuts(utils)
+  // Optional expansions (uncomment as needed):
+  // const {
+  //   Vec, rndInt, rndRange, coin,
+  //   clamp, norm, dist, rad, deg,
+  //   vDist, vLerp, vMid, vDot, vAng,
+  //   noise2, noise3, simplex2, simplex3,
+  //   shuffle, divLength, Grid, Cell, clr
+  // } = shortcuts(utils)
   const controlState = { ...controls }
 
   // resolveCanvas sets up container centering and returns the sized wrapper element.
