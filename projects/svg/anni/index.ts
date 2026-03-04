@@ -44,7 +44,7 @@ interface LayerDefinition {
 
 // Single source of truth for layer selection and simulated per-layer framing.
 const LAYERS: Record<AnniLayer, LayerDefinition> = {
-  'anni-1': { label: 'Anni 1', canvas: { mode: 'square' }, draw: drawAnni1 },
+  'anni-1': { label: 'Anni 1', canvas: { mode: '2:3' }, draw: drawAnni1 },
   'anni-2': { label: 'Anni 2', canvas: { mode: '2:3', padding: '6vmin' }, draw: drawAnni2 }
 }
 
@@ -95,8 +95,8 @@ function drawAnni1(context: LayerDrawContext): void {
   svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, theme.background, 'none', 0)
 
   const grid = new Anni1Grid({
-    cols: 8,
-    rows: 8,
+    cols: 12,
+    rows: 6,
     width: frame.width,
     height: frame.height,
     x: origin.x,
@@ -114,10 +114,10 @@ function drawAnni1(context: LayerDrawContext): void {
 function drawAnni2(context: LayerDrawContext): void {
   const { svg, frame, theme, utils, v } = context
   const tf = createFrameTransform(frame)
-  const accent = theme.palette[2] ?? theme.palette[0] ?? theme.foreground
+  const accent = theme.palette[1] ?? theme.palette[0] ?? theme.foreground
   const lightAccent = theme.palette[3] ?? theme.foreground
   const origin = tf.toGlobal(0, 0)
-  svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, theme.background, 'none', 0)
+  svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, theme.palette[0] ?? theme.foreground, 'none', 0)
 
   const cols = 6
   const rows = 9
@@ -130,7 +130,8 @@ function drawAnni2(context: LayerDrawContext): void {
       const center = tf.toGlobal(x + cellW / 2, y + cellH / 2)
       const radius = Math.min(cellW, cellH) * (0.2 + 0.5 * utils.noise.cell(col, row, 2))
       const stroke = (row + col) % 2 === 0 ? accent : lightAccent
-      svg.makeCircle(v(center.x, center.y), radius, 'none', stroke, 1)
+      const fill = (row + col) % 2 === 0 ? accent : lightAccent
+      svg.makeCircle(v(center.x, center.y), radius, fill, stroke, 0)
     }
   }
 }
