@@ -4,37 +4,21 @@ import type {
   ProjectContext,
   ProjectControlDefinition,
   CanvasConfig,
-  CanvasMode,
-  InnerFrameResult
+  CanvasMode
 } from '~/types/project'
-import type { GridCellConfig } from '~/utils/grid'
-import type { ThemeTokens } from '~/utils/theme'
 import {
   SVG,
-  Grid,
-  GridCell,
   shortcuts,
   resolveCanvas,
-  resolveInnerFrame,
-  createFrameTransform
+  resolveInnerFrame
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
+import { drawAnni1 } from './layers/anni1'
+import { drawAnni2 } from './layers/anni2'
+import type { LayerDrawContext } from './layers/types'
 
 type AnniLayer = 'anni-1' | 'anni-2'
 type LayerCanvas = CanvasMode | CanvasConfig
-
-// Runtime-only dependencies injected into each layer factory.
-interface LayerRuntimeExtras {
-  theme: ThemeTokens
-  utils: ProjectContext['utils']
-}
-
-interface LayerDrawContext extends LayerRuntimeExtras {
-  svg: SVG
-  frame: InnerFrameResult
-  v: ReturnType<typeof shortcuts>['v']
-  rnd: ReturnType<typeof shortcuts>['rnd']
-}
 
 interface LayerDefinition {
   label: string
@@ -44,97 +28,12 @@ interface LayerDefinition {
 
 // Single source of truth for layer selection and simulated per-layer framing.
 const LAYERS: Record<AnniLayer, LayerDefinition> = {
-  'anni-1': { label: 'Anni 1', canvas: { mode: '2:3' }, draw: drawAnni1 },
+  'anni-1': { label: 'Orange, Black and White', canvas: { mode: '2:3', padding: '3vmin' }, draw: drawAnni1 },
   'anni-2': { label: 'Anni 2', canvas: { mode: '2:3', padding: '6vmin' }, draw: drawAnni2 }
 }
 
 const LAYER_ENTRIES = Object.entries(LAYERS) as Array<[AnniLayer, LayerDefinition]>
 const DEFAULT_LAYER = LAYER_ENTRIES[0]![0]
-
-
-
-
-// ─── Layer 1 model + draw pipeline ─────────────────────────────────────────────
-// Keep this split (Grid subclass + Cell subclass): it stays lightweight now and
-// gives a clean seam for future per-layer divergence without utility wrappers.
-
-class Anni1Grid extends Grid {
-  svg!: SVG
-  color!: string
-  accentColor!: string
-  rnd!: () => number
-  /** Post-construction setup. Resolves colors and seeded rnd shortcut. */
-  init(extras: { svg: SVG; theme: ThemeTokens; rnd: () => number }): this {
-    this.svg = extras.svg
-    this.color = extras.theme.palette[1] ?? extras.theme.foreground
-    this.accentColor = extras.theme.palette[2] ?? extras.theme.foreground
-    this.rnd = extras.rnd
-    return this
-  }
-  protected override createCell(config: GridCellConfig): GridCell {
-    return new Anni1Cell(config)
-  }
-}
-
-class Anni1Cell extends GridCell {
-  /** Draw this cell using seeded random color choice from grid runtime. */
-  draw(): void {
-    const g = this.grid as Anni1Grid
-    const stroke = g.rnd() < 0.25 ? g.accentColor : g.color
-    g.svg.makeRectAB(this.tl(), this.br(), 'none', stroke, 1)
-    if (this.row === 3) {
-      g.svg.makeCircle(this.center(), this.width * 0.2, 'none', stroke, 1)
-    }
-  }
-}
-
-function drawAnni1(context: LayerDrawContext): void {
-  const { svg, frame, theme, utils, rnd, v } = context
-  const tf = createFrameTransform(frame)
-  const origin = tf.toGlobal(0, 0)
-  svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, theme.background, 'none', 0)
-
-  const grid = new Anni1Grid({
-    cols: 12,
-    rows: 6,
-    width: frame.width,
-    height: frame.height,
-    x: origin.x,
-    y: origin.y,
-    utils
-  }).init({ svg, theme, rnd })
-  grid.forEach((cell) => (cell as Anni1Cell).draw())
-}
-
-
-
-
-// ─── Layer 2 model + draw pipeline ─────────────────────────────────────────────
-
-function drawAnni2(context: LayerDrawContext): void {
-  const { svg, frame, theme, utils, v } = context
-  const tf = createFrameTransform(frame)
-  const accent = theme.palette[1] ?? theme.palette[0] ?? theme.foreground
-  const lightAccent = theme.palette[3] ?? theme.foreground
-  const origin = tf.toGlobal(0, 0)
-  svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, theme.palette[0] ?? theme.foreground, 'none', 0)
-
-  const cols = 6
-  const rows = 9
-  const cellW = frame.width / cols
-  const cellH = frame.height / rows
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const x = col * cellW
-      const y = row * cellH
-      const center = tf.toGlobal(x + cellW / 2, y + cellH / 2)
-      const radius = Math.min(cellW, cellH) * (0.2 + 0.5 * utils.noise.cell(col, row, 2))
-      const stroke = (row + col) % 2 === 0 ? accent : lightAccent
-      const fill = (row + col) % 2 === 0 ? accent : lightAccent
-      svg.makeCircle(v(center.x, center.y), radius, fill, stroke, 0)
-    }
-  }
-}
 
 
 
