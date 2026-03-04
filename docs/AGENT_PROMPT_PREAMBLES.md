@@ -46,3 +46,12 @@ If unsure, ask 1-2 clarifying questions before coding; if overlap exists, report
 - Paste the short version at the start of a normal sketch session.
 - Paste the full version for migration or larger refactors.
 - Re-paste if agent behavior drifts mid-session.
+
+## Naming and capitalization note
+
+Use this naming convention for sketch files unless project rules require otherwise:
+
+- `PascalCase` for classes/types/interfaces (for example `Anni1Grid`, `LayerRuntimeExtras`).
+- `camelCase` for functions, variables, and local state (for example `layerManager`, `controlState`, `drawAnni2Grid`).
+- `UPPER_SNAKE_CASE` for module-level source-of-truth constants/registries (for example `LAYER_REGISTRY`, `LAYER_SETUP`).
+- kebab-case string IDs for stable layer/project identifiers (for example `'anni-1'`, `'vera-2'`).

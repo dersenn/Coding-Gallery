@@ -23,6 +23,7 @@ type VeraLayer = 'vera1' | 'vera2'
  * - Vera 1: constrained motif selection (4 candidates per tile)
  * - Vera 2: one diagonal per tile from a random left-edge point to a random right-edge point
  */
+
 const TILE_OVERLAP_FACTOR = 3
 const DEFAULT_DIVISIONS = 12
 

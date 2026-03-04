@@ -104,15 +104,15 @@ Central list of reusable utility candidates discovered during sketch migrations.
 
 - ID: `multi-layer-svg-stacking`
   - Status: `deferred`
-  - Need: Multi-layer sketches (one SVG per layer, toggleable) require `el.style.position = 'relative'` and `svg.stage.style.position = 'absolute'; top: 0; left: 0` for overlay. Currently in-sketch in Anni.
+  - Need: Multi-layer sketches (one SVG per layer, toggleable) may need overlay positioning (`el.style.position = 'relative'` + absolute layer stages) when true stacked visibility is required.
   - Seen in: `projects/svg/anni/index.ts`
-  - Notes: Considered adding `stacking: true` and `createStackedSvg()` to `utils/canvas.ts`; reverted. Stacking is already implemented per-layer — the styles are the implementation. Revisit if a second multi-layer sketch shares this need. Single-active-layer per-layer aspect switching is already handled by `resolveCanvas(...)` in `utils/canvas.ts` (Anni explicit use case).
+  - Notes: `anni` now uses a single-active layer runtime helper (`utils/layerRuntime.ts`) instead of stacked DOM overlays. Keep this deferred until a sketch needs simultaneously mounted/toggleable layer stacks.
 
 - ID: `layer-runtime-manager`
-  - Status: `candidate`
+  - Status: `implemented`
   - Need: Small framework helper for layer lifecycle wiring (`mount/switch/draw/export`) so per-layer SVG composition is less sketch-specific boilerplate.
   - Seen in: `projects/svg/anni/index.ts` (single-active-layer flow), expectation from layered sketches like Vera-style composition.
-  - Notes: Keep `resolveCanvas(...)` as the sizing primitive; helper should only orchestrate runtime lifecycle and selection semantics.
+  - Notes: Implemented as `createSingleActiveSvgLayerManager(...)` in `utils/layerRuntime.ts`, re-exported from `types/project.ts`. Registry/setup extraction is implemented as `createSingleActiveSvgLayerSetup(...)` so a single registry object now drives controls, defaults, and runtime definitions. The utility keeps `resolveCanvas(...)` as the sizing primitive and only orchestrates single-active lifecycle semantics.
 
 ### p5 migration helpers
 

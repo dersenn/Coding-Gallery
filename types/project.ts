@@ -140,3 +140,19 @@ export { Cell } from '~/utils/cell'
 export { Color } from '~/utils/color'
 export { resolveCanvas } from '~/utils/canvas'
 export type { CanvasMode, CanvasConfig, CanvasResult } from '~/utils/canvas'
+export {
+  createSingleActiveSvgLayerManager,
+  createSingleActiveSvgLayerSetup
+} from '~/utils/layerRuntime'
+export type {
+  LayerCanvas,
+  SingleActiveSvgLayerRuntime,
+  SingleActiveSvgLayerCreateArgs,
+  SingleActiveSvgLayerDefinition,
+  CreateSingleActiveSvgLayerManagerArgs,
+  SingleActiveSvgLayerManager,
+  SingleActiveSvgLayerRegistryEntry,
+  SingleActiveSvgLayerRegistry,
+  SingleActiveSvgLayerSelectOption,
+  SingleActiveSvgLayerSetup
+} from '~/utils/layerRuntime'

@@ -3,38 +3,49 @@ import type {
   ProjectActionDefinition,
   ProjectContext,
   ProjectControlDefinition,
-  CanvasConfig
+  SingleActiveSvgLayerRegistry,
+  SingleActiveSvgLayerCreateArgs
 } from '~/types/project'
 import type { GridCellConfig } from '~/utils/grid'
 import type { ThemeTokens } from '~/utils/theme'
-import { SVG, Grid, GridCell, shortcuts, resolveCanvas } from '~/types/project'
+import {
+  SVG,
+  Grid,
+  GridCell,
+  shortcuts,
+  resolveCanvas,
+  createSingleActiveSvgLayerManager,
+  createSingleActiveSvgLayerSetup
+} from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
-type AnniLayer = 'anni-1'
-type LayerCanvas = CanvasConfig | 'full' | 'square' | `${number}:${number}`
+type AnniLayer = 'anni-1' | 'anni-2'
 
-interface LayerDefinition {
-  id: AnniLayer
-  label: string
-  canvas: LayerCanvas
-  exportName: string
+// Runtime-only dependencies injected into each layer factory.
+interface LayerRuntimeExtras {
+  theme: ThemeTokens
+  utils: ProjectContext['utils']
 }
 
-interface LayerRuntime {
-  exportName: string
-  svg: SVG
-  draw: () => void
-  destroy: () => void
-}
-
-const LAYERS: LayerDefinition[] = [
-  {
-    id: 'anni-1',
+// Single source of truth for layered composition setup:
+// - control labels/options
+// - per-layer canvas sizing/aspect/padding
+// - per-layer runtime factory
+const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<AnniLayer, LayerRuntimeExtras> = {
+  'anni-1': {
     label: 'Anni 1',
     canvas: { mode: 'square' },
-    exportName: 'anni-layer1'
+    createRuntime: createAnni1Layer
+  },
+  'anni-2': {
+    label: 'Anni 2',
+    canvas: { mode: '2:3', padding: '6vmin' },
+    createRuntime: createAnni2Layer
   }
-]
+}
+
+// Derived helper outputs used by controls + runtime manager wiring.
+const LAYER_SETUP = createSingleActiveSvgLayerSetup(LAYER_REGISTRY)
 
 // ─── Layer 1 model + draw pipeline ─────────────────────────────────────────────
 // Keep this split (Grid subclass + Cell subclass): it stays lightweight now and
@@ -46,7 +57,7 @@ class Anni1Grid extends Grid {
   /** Post-construction setup. Resolves color from theme.palette[0]. */
   init(extras: { svg: SVG; theme: ThemeTokens }): this {
     this.svg = extras.svg
-    this.color = extras.theme.palette[0] ?? extras.theme.foreground
+    this.color = extras.theme.palette[1] ?? extras.theme.foreground
     return this
   }
   protected override createCell(config: GridCellConfig): GridCell {
@@ -65,7 +76,7 @@ class Anni1Cell extends GridCell {
   }
 }
 
-function drawAnni1Grid(
+function drawAnni1(
   svg: SVG,
   width: number,
   height: number,
@@ -87,18 +98,12 @@ function drawAnni1Grid(
   grid.forEach((cell) => (cell as Anni1Cell).draw())
 }
 
-function createAnni1Layer(args: {
-  parent: HTMLElement
-  width: number
-  height: number
-  theme: ThemeTokens
-  utils: ProjectContext['utils']
-}): LayerRuntime {
+function createAnni1Layer(args: SingleActiveSvgLayerCreateArgs<AnniLayer> & LayerRuntimeExtras) {
   const { parent, width, height, theme, utils } = args
   const svg = new SVG({ parent, id: 'anni-layer1', width, height })
 
   const draw = () => {
-    drawAnni1Grid(svg, width, height, theme, utils)
+    drawAnni1(svg, width, height, theme, utils)
   }
 
   return {
@@ -111,28 +116,57 @@ function createAnni1Layer(args: {
   }
 }
 
-function createLayerRuntime(
-  layer: LayerDefinition,
-  parent: HTMLElement,
+// ─── Layer 2 model + draw pipeline ─────────────────────────────────────────────
+
+function drawAnni2(
+  svg: SVG,
+  width: number,
+  height: number,
   theme: ThemeTokens,
   utils: ProjectContext['utils']
-): LayerRuntime {
-  const { el, width, height } = resolveCanvas(parent, layer.canvas)
-  if (layer.id === 'anni-1') {
-    return createAnni1Layer({ parent: el, width, height, theme, utils })
+): void {
+  const { v } = shortcuts(utils)
+  const accent = theme.palette[2] ?? theme.palette[0] ?? theme.foreground
+  const lightAccent = theme.palette[3] ?? theme.foreground
+  svg.stage.replaceChildren()
+  svg.makeRect(v(0, 0), width, height, theme.background, 'none', 0)
+
+  const cols = 6
+  const rows = 9
+  const cellW = width / cols
+  const cellH = height / rows
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const x = col * cellW
+      const y = row * cellH
+      const cx = x + cellW / 2
+      const cy = y + cellH / 2
+      const radius = Math.min(cellW, cellH) * (0.2 + 0.5 * utils.noise.cell(col, row, 2))
+      const stroke = (row + col) % 2 === 0 ? accent : lightAccent
+      svg.makeCircle(v(cx, cy), radius, 'none', stroke, 1)
+    }
   }
-  throw new Error(`Unknown layer id: ${layer.id}`)
 }
 
-// ─── Project ───────────────────────────────────────────────────────────────────
+function createAnni2Layer(args: SingleActiveSvgLayerCreateArgs<AnniLayer> & LayerRuntimeExtras) {
+  const { parent, width, height, theme, utils } = args
+  const svg = new SVG({ parent, id: 'anni-layer2', width, height })
 
-/**
- * Anni
- *
- * Per-layer SVG sketch scaffold with one active layer for now.
- * The architecture keeps explicit layer runtime wiring so future layers can
- * adopt their own canvas config/aspect ratio without touching core lifecycle.
- */
+  const draw = () => {
+    drawAnni2(svg, width, height, theme, utils)
+  }
+
+  return {
+    exportName: 'anni-layer2',
+    svg,
+    draw,
+    destroy: () => {
+      svg.stage.remove()
+    }
+  }
+}
+
+// ─── Controls ───────────────────────────────────────────────────────────────────
 
 export const controls: ProjectControlDefinition[] = [
   {
@@ -146,79 +180,78 @@ export const controls: ProjectControlDefinition[] = [
         type: 'select',
         label: 'Layer',
         key: 'activeLayer',
-        default: 'anni-1',
-        options: LAYERS.map((layer) => ({ label: layer.label, value: layer.id }))
+        default: LAYER_SETUP.defaultLayerId,
+        options: LAYER_SETUP.options
       }
     ]
   }
 ]
 
+// ─── Actions and base canvas ────────────────────────────────────────────────────
+
 export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
-export const canvas = { mode: 'square' as const, padding: '2vmin' }
+export const canvas = { mode: 'square' as const, padding: '3vmin' }
 
+/**
+ * Anni
+ *
+ * Single-active layered SVG sketch:
+ * - base canvas frame resolved once from project `canvas`
+ * - active layer chosen by control and mounted by layer manager
+ * - each layer resolves its own canvas (aspect/padding) independently
+ */
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
+  // Framework-provided runtime surface for control + action wiring.
   const { controls, utils, theme, onControlChange, registerAction } = context
 
+  // Local mutable state mirrors control values used by this sketch.
   const controlState = {
-    activeLayer: (controls.activeLayer as AnniLayer | undefined) ?? LAYERS[0]!.id
+    activeLayer: (controls.activeLayer as AnniLayer | undefined) ?? LAYER_SETUP.defaultLayerId
   }
 
   // 1) Resolve base frame once.
   const base = resolveCanvas(container, canvas)
   const baseEl = base.el
 
-  // 2) Single active layer host (selected via controls).
-  const layerHost = document.createElement('div')
-  // Derive explicit host size from resolveCanvas output (not percentage CSS),
-  // so per-layer resolveCanvas always measures a concrete box.
-  layerHost.style.width = `${base.width}px`
-  layerHost.style.height = `${base.height}px`
-  baseEl.appendChild(layerHost)
-  let activeRuntime: LayerRuntime | null = null
-  let mountedLayerId: AnniLayer | null = null
+  // Bind framework runtime extras to per-layer factories.
+  const layerDefinitions = LAYER_SETUP.createLayerDefinitions({ theme, utils })
+  const layerManager = createSingleActiveSvgLayerManager<AnniLayer>({
+    parent: baseEl,
+    width: base.width,
+    height: base.height,
+    initialLayerId: controlState.activeLayer,
+    layers: layerDefinitions
+  })
 
-  const mountActiveLayer = (layerId: AnniLayer) => {
-    if (activeRuntime && mountedLayerId === layerId) {
-      return
-    }
-    activeRuntime?.destroy()
-    layerHost.replaceChildren()
-
-    const layer = LAYERS.find((candidate) => candidate.id === layerId)
-    if (!layer) {
-      throw new Error(`Unknown selected layer: ${layerId}`)
-    }
-    activeRuntime = createLayerRuntime(layer, layerHost, theme, utils)
-    mountedLayerId = layerId
-  }
-
-  // ─── Draw entry point ───────────────────────────────────────────────────────
+  // Draw is deterministic per user interaction by resetting seed first.
   const draw = () => {
     utils.seed.reset()
-    mountActiveLayer(controlState.activeLayer)
-    activeRuntime?.draw()
+    layerManager.setActiveLayer(controlState.activeLayer)
+    layerManager.draw()
   }
 
   draw()
 
+  // Re-draw whenever control values change (including active layer selection).
   onControlChange((nextControls) => {
     syncControlState(controlState, nextControls)
     draw()
   })
 
+  // Action targets whichever layer is currently active.
   registerAction('download-svg', () => {
-    activeRuntime?.svg.save(utils.seed.current, activeRuntime.exportName)
+    layerManager.exportActiveSvg(utils.seed.current)
   })
 
+  // Ensure current layer runtime and wrapper nodes are fully cleaned up.
   return () => {
-    activeRuntime?.destroy()
-    layerHost.remove()
+    layerManager.destroy()
     if (baseEl !== container) {
       baseEl.remove()
     }
