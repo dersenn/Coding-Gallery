@@ -133,3 +133,17 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Need: helper for signed random velocity vectors with min/max magnitude bounds.
   - Seen in: `docs/audits/CLICKY_POLYGON_MIGRATION_AUDIT.md`
   - Notes: only extract when reused beyond node-network sketches.
+
+### Typing and iteration ergonomics
+
+- ID: `js-layer-minimal-jsdoc`
+  - Status: `candidate`
+  - Need: tiny shared JSDoc pattern/snippet for layer modules authored as `.js` so sketch iteration stays low-friction while preserving editor autocomplete on draw context.
+  - Seen in: `projects/svg/anni/layers/anni1.js`, `projects/svg/anni/layers/anni2.js`
+  - Notes: keep this intentionally lightweight (for example one `@param` on exported draw functions) and avoid full TypeScript-style annotations inside JS files.
+
+- ID: `layer-module-export-convention`
+  - Status: `candidate`
+  - Need: establish a templating convention for layer modules to export generic function names (for example `draw`) and alias them at import sites (`draw as drawLayerX`) so per-file naming carries identity while APIs stay uniform.
+  - Seen in: `projects/svg/anni/index.ts`, `projects/svg/anni/layers/anni1.js`, `projects/svg/anni/layers/anni2.js`
+  - Notes: keep compatibility with current layer registry pattern and apply first in templates/new sketches before retrofitting older files.

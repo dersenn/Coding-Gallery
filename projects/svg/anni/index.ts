@@ -35,10 +35,6 @@ const LAYERS: Record<AnniLayer, LayerDefinition> = {
 const LAYER_ENTRIES = Object.entries(LAYERS) as Array<[AnniLayer, LayerDefinition]>
 const DEFAULT_LAYER = LAYER_ENTRIES[0]![0]
 
-
-
-
-
 // ─── Controls ───────────────────────────────────────────────────────────────────
 
 export const controls: ProjectControlDefinition[] = [

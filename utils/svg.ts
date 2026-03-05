@@ -190,6 +190,26 @@ export class SVG {
     return rect
   }
 
+  makeRectC(
+    c: Vec,
+    w: number,
+    h: number,
+    fill: string = 'transparent',
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW
+  ): SVGRectElement {
+    const rect = document.createElementNS(this.ns, 'rect') as SVGRectElement
+    rect.setAttribute('x', (c.x - w / 2).toString())
+    rect.setAttribute('y', (c.y - h / 2).toString())
+    rect.setAttribute('width', w.toString())
+    rect.setAttribute('height', h.toString())
+    rect.setAttribute('fill', fill)
+    rect.setAttribute('stroke', stroke)
+    rect.setAttribute('stroke-width', strokeW.toString())
+    this.stage.append(rect)
+    return rect
+  }
+
   makeRectAB(
     a: Vec,
     b: Vec,
