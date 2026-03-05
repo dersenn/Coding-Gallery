@@ -50,7 +50,24 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Status: `candidate`
   - Need: uniform point spacing along quadratic/cubic path segments.
   - Seen in: `docs/audits/BEZIER_LAB_MIGRATION_AUDIT.md`
-  - Notes: useful for animation, stroke effects, and point-scatter overlays.
+  - Notes:
+    - Primary use: stable, arc-length-ish sampling for animation, stroke effects, and point-scatter overlays.
+    - Collision tie-in: resampled points can act as a polygonal proxy for irregular blobs (point-in-polygon + segment intersection) after cheap bounds checks.
+    - Proposed API (Vec-first): `sampleQuadBezEven(a, cp, b, spacing|count, options?)`, `sampleCubicBezEven(a, cp1, cp2, b, spacing|count, options?)`, and a path-level helper for mixed `M/L/Q/C/Z` command streams.
+    - Output contract: ordered `Vec[]` along path direction, optional endpoint inclusion, optional closed-loop handling, no duplicate seam point unless requested.
+    - Algorithm sketch: adaptive subdivision by flatness/length estimate, then cumulative-length remap to target spacing (avoid naive fixed-`t` stepping).
+    - Validation checks: max spacing error tolerance, deterministic ordering, and stable sample count across redraws for fixed inputs.
+
+- ID: `path-hit-testing`
+  - Status: `candidate`
+  - Need: reusable Vec/Vec collision predicates for irregular vector shapes represented as polyline/polygon point sets.
+  - Seen in: follow-up design discussion from `path-resampling` scope and blob collision use-cases.
+  - Notes:
+    - Position in stack: consume `Vec[]` from `path-resampling` (or any polyline source), then run generic narrow-phase geometry checks.
+    - Proposed API: `pointInPolygon(pt, poly, options?)`, `segmentsIntersect(a1, a2, b1, b2, options?)`, `polylineIntersectsPolyline(a, b, options?)`, `polygonIntersectsPolygon(a, b, options?)`.
+    - Optional helpers: `distancePointToSegment`, `distancePointToPolyline`, and epsilon-aware comparisons for near-collinear/endpoint-touch cases.
+    - Broad-phase guidance: pair with cheap AABB/bounding-circle rejection before narrow-phase tests to keep sketch loops fast.
+    - Determinism/behavior: define inclusive-vs-exclusive boundary semantics once (touching edge counts as hit or not) and keep it consistent across helpers.
 
 - ID: `progressive-edge-subdivision`
   - Status: `candidate`
