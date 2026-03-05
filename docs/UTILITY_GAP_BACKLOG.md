@@ -72,6 +72,12 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `projects/svg/anni/index.ts` (rule checks like `row === 3` can be mentally off-by-one from visual counting)
   - Notes: Consider non-breaking helpers (for example getters like `row1` / `col1`) rather than changing base indexing semantics.
 
+- ID: `grid-traversal-order`
+  - Status: `candidate`
+  - Need: Optional traversal mode for `Grid.forEach`/`map` (row-major default, optional column-major) to support direction-dependent progressive pattern logic without changing `row`/`col`, `index`, or `at(row,col)` semantics.
+  - Seen in: `projects/svg/anni/layers/anni1.js` (neighbor-influenced cell modes), anticipated for future left-to-right progressive pattern sketches.
+  - Notes: Keep this iteration-only and backward-compatible; avoid mode-dependent indexing conversions to prevent breaking existing cell/index logic.
+
 ### Seed and noise
 
 - ID: `coordinate-cell-hash`

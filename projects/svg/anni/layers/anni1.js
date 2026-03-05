@@ -4,7 +4,7 @@ export function drawAnni1(context) {
   const { svg, frame, theme, utils, rnd, v } = context
 
   const anniColors = [
-    '#fdf0d5', '#03071e', '#bb3e03'
+    '#fdf0d5', '#03071e', '#FF4400'
   ]
 
   const settings = {
@@ -94,12 +94,28 @@ class Anni1Cell extends GridCell {
     if (rowModes.length === 0) return
     const left = this.getNeighbor('left')
     const leftMode = left?.selectedMode
-    // Favor base composition modes (0/1) over texture overlays (2/3).
-    const candidates = leftMode === undefined
-      ? rowModes
-      : rowModes.filter((m) => m !== leftMode)
+    const top = this.getNeighbor('top')
+    const topMode = top?.selectedMode
+    // Vertical restriction: if top already uses a base cross mode, force this
+    // cell into texture/overlay modes to avoid stacked base marks.
+    const topBlocksBaseModes = topMode === 0 || topMode === 1
+
+    // Build the legal mode set from row-level defaults under neighborhood rules:
+    // - avoid repeating the immediate left mode
+    // - when top blocks base modes, remove 0/1 entirely
+    const candidates = rowModes.filter((m) => {
+      if (leftMode !== undefined && m === leftMode) return false
+      if (topBlocksBaseModes && (m === 0 || m === 1)) return false
+      return true
+    })
+
+    // Keep legacy weighting feel: prefer base compositions (0/1) over textures
+    // when they are legal. If candidates collapse, fallback still respects top
+    // blocking so 0/1 never sneak back in through fallback.
     const weightedModes = candidates.flatMap((m) => ((m === 0 || m === 1) ? [m, m, m] : [m]))
-    const modePool = weightedModes.length > 0 ? weightedModes : rowModes
+    const fallbackModes = rowModes.filter((m) => !(topBlocksBaseModes && (m === 0 || m === 1)))
+    const modePool = weightedModes.length > 0 ? weightedModes : fallbackModes
+    if (modePool.length === 0) return
     const mode = modePool[Math.floor(g.rnd() * modePool.length)]
     this.selectedMode = mode
     const primary30 =

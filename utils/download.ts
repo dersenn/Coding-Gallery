@@ -1,3 +1,5 @@
+import { Color } from './color'
+
 export type DownloadControlValues = Record<string, number | boolean | string | Array<string | number>>
 
 function sanitizeToken(value: string): string {
@@ -32,6 +34,58 @@ function normalizeControls(controls?: DownloadControlValues): DownloadControlVal
   return Object.fromEntries(sortedEntries)
 }
 
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function parseOpacity(token: string): number | null {
+  const isPercent = token.endsWith('%')
+  const raw = Number.parseFloat(token)
+  if (!Number.isFinite(raw)) return null
+  const value = isPercent ? raw / 100 : raw
+  return clamp(value, 0, 1)
+}
+
+function formatOpacity(value: number): string {
+  const clamped = clamp(value, 0, 1)
+  return clamped.toFixed(6).replace(/\.?0+$/, '')
+}
+
+function parseAlphaColorFunction(value: string): { hex: string, alpha: number } | null {
+  const input = value.trim()
+  if (!/^rgba?\(/i.test(input) && !/^hsla?\(/i.test(input)) return null
+  const parsedColor = Color.parse(input)
+  if (!parsedColor) return null
+  return {
+    hex: parsedColor.toHex(false).toUpperCase(),
+    alpha: parsedColor.a
+  }
+}
+
+function normalizeAlphaPresentationAttrs(root: Element): void {
+  const nodes: Element[] = [root, ...Array.from(root.querySelectorAll('*'))]
+  const colorAttrs = [
+    { color: 'fill', opacity: 'fill-opacity' },
+    { color: 'stroke', opacity: 'stroke-opacity' }
+  ] as const
+
+  for (const node of nodes) {
+    for (const attrs of colorAttrs) {
+      const colorValue = node.getAttribute(attrs.color)
+      if (!colorValue) continue
+
+      const parsedColor = parseAlphaColorFunction(colorValue)
+      if (!parsedColor) continue
+
+      const existingOpacity = parseOpacity(node.getAttribute(attrs.opacity) ?? '')
+      const combinedOpacity = parsedColor.alpha * (existingOpacity ?? 1)
+
+      node.setAttribute(attrs.color, parsedColor.hex)
+      node.setAttribute(attrs.opacity, formatOpacity(combinedOpacity))
+    }
+  }
+}
+
 export function buildSvgDownloadFilename(input: {
   projectId?: string
   seed?: string
@@ -56,6 +110,7 @@ export function serializeSvgWithMetadata(
   }
 ): string {
   const clonedSvg = svgElement.cloneNode(true) as SVGElement
+  normalizeAlphaPresentationAttrs(clonedSvg)
   const ns = clonedSvg.namespaceURI || 'http://www.w3.org/2000/svg'
   const metadataElement = document.createElementNS(ns, 'metadata')
   const now = new Date()
