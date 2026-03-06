@@ -29,9 +29,9 @@
     </div>
 
     <div class="flex-1 min-h-0 overflow-y-auto space-y-4">
+      <template v-for="section in normalizedSections" :key="section.id">
       <div
-        v-for="section in normalizedSections"
-        :key="section.id"
+        v-if="isSectionVisible(section)"
         class="rounded-md"
         :class="section.label || section.collapsible ? 'control-section-surface backdrop-blur-lg p-3' : ''"
       >
@@ -183,6 +183,7 @@
           </template>
         </div>
       </div>
+      </template>
     </div>
   </div>
 </template>
@@ -219,6 +220,9 @@ interface ControlSection {
   controls: ControlDefinition[]
   collapsible: boolean
   defaultOpen: boolean
+  visibleWhenSelectKey?: string
+  visibleWhenSelectValue?: ControlValue
+  visibleWhenSelectValues?: ControlValue[]
 }
 
 const readPersistedSections = (): Record<string, boolean> => {
@@ -279,7 +283,10 @@ const normalizedSections = computed<ControlSection[]>(() => {
         label: control.label,
         controls: control.controls,
         collapsible: control.collapsible ?? true,
-        defaultOpen: control.defaultOpen ?? true
+        defaultOpen: control.defaultOpen ?? true,
+        visibleWhenSelectKey: control.visibleWhenSelectKey,
+        visibleWhenSelectValue: control.visibleWhenSelectValue,
+        visibleWhenSelectValues: control.visibleWhenSelectValues
       })
       return
     }
@@ -470,23 +477,39 @@ const getColorListValues = (key: string): string[] => {
     .filter((entry) => /^#[0-9a-fA-F]{6}$/.test(entry))
 }
 
-const isControlVisible = (control: ControlDefinition): boolean => {
-  if (!control.visibleWhenSelectKey) return true
+const isSelectGatedVisible = (visibility: {
+  visibleWhenSelectKey?: string
+  visibleWhenSelectValue?: ControlValue
+  visibleWhenSelectValues?: ControlValue[]
+}): boolean => {
+  if (!visibility.visibleWhenSelectKey) return true
 
-  const selectValue = controlValues.value[control.visibleWhenSelectKey]
+  const selectValue = controlValues.value[visibility.visibleWhenSelectKey]
   if (selectValue === undefined) return false
 
-  if (control.visibleWhenSelectValues && control.visibleWhenSelectValues.length > 0) {
-    return control.visibleWhenSelectValues
+  if (visibility.visibleWhenSelectValues && visibility.visibleWhenSelectValues.length > 0) {
+    return visibility.visibleWhenSelectValues
       .some((value) => String(value) === String(selectValue))
   }
 
-  if (control.visibleWhenSelectValue !== undefined) {
-    return String(control.visibleWhenSelectValue) === String(selectValue)
+  if (visibility.visibleWhenSelectValue !== undefined) {
+    return String(visibility.visibleWhenSelectValue) === String(selectValue)
   }
 
   return true
 }
+
+const isControlVisible = (control: ControlDefinition): boolean => isSelectGatedVisible({
+  visibleWhenSelectKey: control.visibleWhenSelectKey,
+  visibleWhenSelectValue: control.visibleWhenSelectValue,
+  visibleWhenSelectValues: control.visibleWhenSelectValues
+})
+
+const isSectionVisible = (section: ControlSection): boolean => isSelectGatedVisible({
+  visibleWhenSelectKey: section.visibleWhenSelectKey,
+  visibleWhenSelectValue: section.visibleWhenSelectValue,
+  visibleWhenSelectValues: section.visibleWhenSelectValues
+})
 
 const canAddColor = (control: ColorListControlDefinition): boolean => {
   const values = getColorListValues(control.key)

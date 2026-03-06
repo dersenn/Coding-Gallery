@@ -12,14 +12,17 @@ export interface ControlOptionDefinition {
   swatch?: string
 }
 
-interface BaseControlDefinition {
+interface ConditionalVisibilityDefinition {
+  visibleWhenSelectKey?: string
+  visibleWhenSelectValue?: ControlPrimitiveValue
+  visibleWhenSelectValues?: ControlPrimitiveValue[]
+}
+
+interface BaseControlDefinition extends ConditionalVisibilityDefinition {
   label: string
   key: string
   group?: string
   order?: number
-  visibleWhenSelectKey?: string
-  visibleWhenSelectValue?: ControlPrimitiveValue
-  visibleWhenSelectValues?: ControlPrimitiveValue[]
 }
 
 export interface SliderControlDefinition extends BaseControlDefinition {
@@ -74,7 +77,7 @@ export type ControlDefinition =
   | CheckboxGroupControlDefinition
   | ColorListControlDefinition
 
-export interface ControlGroupDefinition {
+export interface ControlGroupDefinition extends ConditionalVisibilityDefinition {
   type: 'group'
   id: string
   label: string

@@ -91,17 +91,26 @@ export const controls: ProjectControlDefinition[] = [
         key: 'activeLayer',
         default: LAYER_SETUP.defaultLayerId,
         options: LAYER_SETUP.options
-      },
+      }
+    ]
+  },
+  {
+    type: 'group',
+    id: 'anni-1',
+    label: 'Anni 1',
+    collapsible: true,
+    defaultOpen: true,
+    visibleWhenSelectKey: 'activeLayer',
+    visibleWhenSelectValue: 'anni-1',
+    controls: [
       {
         type: 'slider',
-        label: 'Anni 1 Overlay Alpha',
+        label: 'Overlay Alpha',
         key: 'anni1_primaryOverlayAlpha',
         default: 0.39,
         min: 0,
         max: 1,
-        step: 0.01,
-        visibleWhenSelectKey: 'activeLayer',
-        visibleWhenSelectValue: 'anni-1'
+        step: 0.01
       }
     ]
   }
