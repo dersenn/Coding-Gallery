@@ -135,13 +135,25 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Status: `implemented`
   - Need: Small framework helper for layer lifecycle wiring (`mount/switch/draw/export`) so per-layer SVG composition is less sketch-specific boilerplate.
   - Seen in: `projects/svg/anni/index.ts` (single-active-layer flow), expectation from layered sketches like Vera-style composition.
-  - Notes: Implemented as `createSingleActiveSvgLayerManager(...)` in `utils/layerRuntime.ts`, re-exported from `types/project.ts`. Registry/setup extraction is implemented as `createSingleActiveSvgLayerSetup(...)` so a single registry object now drives controls, defaults, and runtime definitions. The utility keeps `resolveCanvas(...)` as the sizing primitive and only orchestrates single-active lifecycle semantics.
+  - Notes: Implemented in `utils/layerRuntime.ts` and re-exported from `types/project.ts` as: `singleActiveSvgLayerManager(...)` and `singleActiveSvgLayerSetup(...)`. Sketches keep a concise `{ label, canvas, draw }` registry while setup generates runtime definitions from injected runtime context (`createContext`, `resolveRuntimeName`). Naming guidance used by this flow: `canvas` = sizing config, `container` = DOM host, `svg` = render surface, `frame` = drawable geometry.
+
+- ID: `layer-runtime-type-naming-polish`
+  - Status: `candidate`
+  - Need: Optionally shorten verbose layer-runtime type names for local readability (for example `SingleActiveSvgLayerCreateArgs` -> `LayerCreateArgs`) while keeping runtime object vocabulary stable (`canvas`, `container`, `svg`, `frame`).
+  - Seen in: `utils/layerRuntime.ts`, `types/project.ts`, `projects/svg/anni/index.ts`
+  - Notes: prioritize zero-behavior-change aliasing/renames only; avoid API churn if utility is expected to expand beyond `anni`.
 
 - ID: `frame-padding-css-units`
   - Status: `candidate`
   - Need: Single-SVG inner-frame layout currently supports a lightweight subset of padding units (`number`, `px`, `%`, `vmin`, plain numeric string). Add a shared resolver for broader CSS length support (`rem`, `em`, `vw`, `vh`, and potentially `calc(...)`) when simulating per-layer artboards.
   - Seen in: `projects/svg/anni/index.ts` (`resolveInsetPx(...)` in single-SVG frame mode)
   - Notes: Keep deterministic frame math and avoid layout thrash; prefer centralizing this in a utility rather than sketch-local parsing once reused.
+
+- ID: `svg-runtime-bounds-query`
+  - Status: `candidate`
+  - Need: Lightweight runtime API on `SVG` to query live DOM bounds/position (for example `getBounds()`), instead of exposing ambiguous/stale static `x/y` fields.
+  - Seen in: design discussion during layered runtime/frame cleanup (`projects/svg/anni/*`, `projects/c4ta/svg/vera/*`).
+  - Notes: Prefer `stage.getBoundingClientRect()`-backed semantics in a method so values stay accurate under responsive/flex layout changes; keep coordinate-space naming explicit (viewport vs document).
 
 - ID: `control-group-conditional-visibility`
   - Status: `implemented`

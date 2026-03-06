@@ -147,18 +147,20 @@ export { resolveInnerFrame } from '~/utils/canvas'
 export { createFrameTransform } from '~/utils/canvas'
 export type { CanvasMode, CanvasConfig, CanvasResult, InnerFrameResult, FrameTransform } from '~/utils/canvas'
 export {
-  createSingleActiveSvgLayerManager,
-  createSingleActiveSvgLayerSetup
+  singleActiveSvgLayerManager,
+  singleActiveSvgLayerSetup
 } from '~/utils/layerRuntime'
 export type {
   LayerCanvas,
   SingleActiveSvgLayerRuntime,
   SingleActiveSvgLayerCreateArgs,
   SingleActiveSvgLayerDefinition,
-  CreateSingleActiveSvgLayerManagerArgs,
+  SingleActiveSvgLayerManagerArgs,
   SingleActiveSvgLayerManager,
   SingleActiveSvgLayerRegistryEntry,
   SingleActiveSvgLayerRegistry,
+  SingleActiveSvgLayerFrame,
+  SingleActiveSvgLayerSetupArgs,
   SingleActiveSvgLayerSelectOption,
   SingleActiveSvgLayerSetup
 } from '~/utils/layerRuntime'

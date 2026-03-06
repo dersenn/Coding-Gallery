@@ -4,10 +4,10 @@ Reusable pattern for layered SVG sketches where each layer can have its own canv
 
 ## Utilities
 
-- `createSingleActiveSvgLayerSetup(...)`
-  - Input: one layer registry object.
+- `singleActiveSvgLayerSetup(...)`
+  - Input: one layer registry object (`label`, `canvas`, `draw`) plus context/runtime adapters.
   - Output: derived select options, default layer ID, and manager-ready layer definitions.
-- `createSingleActiveSvgLayerManager(...)`
+- `singleActiveSvgLayerManager(...)`
   - Runtime lifecycle helper: mount/switch/draw/export/destroy for the active layer.
 
 Both are implemented in `utils/layerRuntime.ts` and re-exported from `types/project.ts`.
@@ -23,16 +23,16 @@ Both are implemented in `utils/layerRuntime.ts` and re-exported from `types/proj
 1. Define a registry with one entry per layer:
    - `label`
    - `canvas`
-   - `createRuntime`
+   - `draw`
 2. Build setup once:
-   - `const setup = createSingleActiveSvgLayerSetup(registry)`
+   - `const setup = singleActiveSvgLayerSetup({ registry, createContext, resolveRuntimeName })`
 3. Wire controls from setup:
    - `default: setup.defaultLayerId`
    - `options: setup.options`
 4. In `init()`:
    - resolve base canvas once
    - call `setup.createLayerDefinitions(runtimeExtras)`
-   - pass those definitions into `createSingleActiveSvgLayerManager(...)`
+   - pass those definitions into `singleActiveSvgLayerManager(...)`
 
 ## Minimal example
 
@@ -43,16 +43,28 @@ const LAYER_REGISTRY = {
   'layer-1': {
     label: 'Layer 1',
     canvas: { mode: 'square' },
-    createRuntime: createLayer1
+    draw: drawLayer1
   },
   'layer-2': {
     label: 'Layer 2',
     canvas: { mode: '2:3', padding: '6vmin' },
-    createRuntime: createLayer2
+    draw: drawLayer2
   }
 } as const
 
-const LAYER_SETUP = createSingleActiveSvgLayerSetup(LAYER_REGISTRY)
+const LAYER_SETUP = singleActiveSvgLayerSetup({
+  registry: LAYER_REGISTRY,
+  resolveRuntimeName: (id) => `sketch-${id}`,
+  createContext: ({ svg, frame, args }) => ({
+    svg,
+    frame,
+    theme: args.theme,
+    utils: args.utils,
+    controls: args.getControls(),
+    v: args.v,
+    rnd: args.rnd
+  })
+})
 ```
 
 ## Typed Index + JS Layers Pattern
@@ -87,9 +99,26 @@ This avoids separate control systems per layer and keeps control state determini
 
 ## Naming convention
 
+- Runtime term split:
+  - `canvas`: sizing intent/config (`CanvasMode | CanvasConfig`)
+  - `container`: DOM host element that `resolveCanvas(...)` and managers mount into
+  - `svg`: active render surface
+  - `frame`: drawable geometry passed to layer draw logic
+
 - `PascalCase` for types/classes/interfaces.
 - `camelCase` for functions and local variables.
 - `UPPER_SNAKE_CASE` for source-of-truth registries/derived setup constants.
+
+## Naming polish follow-up (optional)
+
+Current API names intentionally favor explicitness and discoverability. If the module stays sketch-local and usage remains small, a future pass may shorten selected type names while preserving behavior:
+
+- `SingleActiveSvgLayerCreateArgs` -> `LayerCreateArgs`
+- `SingleActiveSvgLayerDefinition` -> `LayerDefinition`
+- `SingleActiveSvgLayerRegistryEntry` -> `LayerRegistryEntry`
+- `SingleActiveSvgLayerSetupArgs` -> `LayerSetupArgs`
+
+Keep runtime object terms stable (`canvas`, `container`, `svg`, `frame`) even if type names are shortened.
 
 ## Shortcuts convention in layered sketches
 

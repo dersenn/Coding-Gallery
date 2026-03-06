@@ -1,6 +1,6 @@
 import { resolveCanvas } from '~/utils/canvas'
 import type { CanvasConfig, CanvasMode } from '~/utils/canvas'
-import type { SVG } from '~/utils/svg'
+import { SVG } from '~/utils/svg'
 
 export type LayerCanvas = CanvasConfig | CanvasMode
 
@@ -26,7 +26,7 @@ export interface SingleActiveSvgLayerDefinition<LayerId extends string> {
   ) => SingleActiveSvgLayerRuntime
 }
 
-export interface CreateSingleActiveSvgLayerManagerArgs<LayerId extends string> {
+export interface SingleActiveSvgLayerManagerArgs<LayerId extends string> {
   parent: HTMLElement
   width: number
   height: number
@@ -41,32 +41,50 @@ export interface SingleActiveSvgLayerManager<LayerId extends string> {
   destroy: () => void
 }
 
+export interface SingleActiveSvgLayerFrame {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
 export interface SingleActiveSvgLayerRegistryEntry<
   LayerId extends string,
-  RuntimeArgs extends object
+  DrawContext extends object
 > {
   label: string
   canvas: LayerCanvas
-  createRuntime: (
-    args: SingleActiveSvgLayerCreateArgs<LayerId> & RuntimeArgs
-  ) => SingleActiveSvgLayerRuntime
+  draw: (context: DrawContext) => void
 }
 
 export type SingleActiveSvgLayerRegistry<
   LayerId extends string,
-  RuntimeArgs extends object
-> = Record<LayerId, SingleActiveSvgLayerRegistryEntry<LayerId, RuntimeArgs>>
+  DrawContext extends object
+> = Record<LayerId, SingleActiveSvgLayerRegistryEntry<LayerId, DrawContext>>
 
 export interface SingleActiveSvgLayerSelectOption<LayerId extends string> {
   label: string
   value: LayerId
 }
 
+export interface SingleActiveSvgLayerSetupArgs<
+  LayerId extends string,
+  RuntimeArgs extends object,
+  DrawContext extends object
+> {
+  registry: SingleActiveSvgLayerRegistry<LayerId, DrawContext>
+  createContext: (params: {
+    svg: SVG
+    frame: SingleActiveSvgLayerFrame
+    args: SingleActiveSvgLayerCreateArgs<LayerId> & RuntimeArgs
+  }) => DrawContext
+  resolveRuntimeName?: (id: LayerId) => string
+}
+
 export interface SingleActiveSvgLayerSetup<
   LayerId extends string,
   RuntimeArgs extends object
 > {
-  entries: ReadonlyArray<[LayerId, SingleActiveSvgLayerRegistryEntry<LayerId, RuntimeArgs>]>
   defaultLayerId: LayerId
   options: SingleActiveSvgLayerSelectOption<LayerId>[]
   createLayerDefinitions: (
@@ -74,14 +92,16 @@ export interface SingleActiveSvgLayerSetup<
   ) => SingleActiveSvgLayerDefinition<LayerId>[]
 }
 
-export function createSingleActiveSvgLayerSetup<
+export function singleActiveSvgLayerSetup<
   LayerId extends string,
-  RuntimeArgs extends object
+  RuntimeArgs extends object,
+  DrawContext extends object
 >(
-  registry: SingleActiveSvgLayerRegistry<LayerId, RuntimeArgs>
+  config: SingleActiveSvgLayerSetupArgs<LayerId, RuntimeArgs, DrawContext>
 ): SingleActiveSvgLayerSetup<LayerId, RuntimeArgs> {
+  const { registry, createContext, resolveRuntimeName } = config
   const entries = Object.entries(registry) as Array<
-    [LayerId, SingleActiveSvgLayerRegistryEntry<LayerId, RuntimeArgs>]
+    [LayerId, SingleActiveSvgLayerRegistryEntry<LayerId, DrawContext>]
   >
   const firstEntry = entries[0]
   if (!firstEntry) {
@@ -89,7 +109,6 @@ export function createSingleActiveSvgLayerSetup<
   }
 
   return {
-    entries,
     defaultLayerId: firstEntry[0],
     options: entries.map(([id, entry]) => ({ label: entry.label, value: id })),
     createLayerDefinitions: (runtimeArgs) => {
@@ -97,24 +116,38 @@ export function createSingleActiveSvgLayerSetup<
         id,
         canvas: entry.canvas,
         createRuntime: (baseArgs) => {
-          return entry.createRuntime({ ...baseArgs, ...runtimeArgs })
+          const args = { ...baseArgs, ...runtimeArgs }
+          const runtimeName = resolveRuntimeName?.(id) ?? String(id)
+          const svg = new SVG({ parent: args.parent, id: runtimeName, width: args.width, height: args.height })
+          const frame: SingleActiveSvgLayerFrame = { x: 0, y: 0, width: args.width, height: args.height }
+          return {
+            exportName: runtimeName,
+            svg,
+            draw: () => {
+              svg.stage.replaceChildren()
+              entry.draw(createContext({ svg, frame, args }))
+            },
+            destroy: () => {
+              svg.stage.remove()
+            }
+          }
         }
       }))
     }
   }
 }
 
-export function createSingleActiveSvgLayerManager<LayerId extends string>(
-  args: CreateSingleActiveSvgLayerManagerArgs<LayerId>
+export function singleActiveSvgLayerManager<LayerId extends string>(
+  args: SingleActiveSvgLayerManagerArgs<LayerId>
 ): SingleActiveSvgLayerManager<LayerId> {
   const { parent, width, height, layers } = args
 
-  const layerHost = document.createElement('div')
-  // Keep host dimensions explicit so nested resolveCanvas calls have
+  const layerContainer = document.createElement('div')
+  // Keep container dimensions explicit so nested resolveCanvas calls have
   // concrete measurement bounds for per-layer aspect ratios.
-  layerHost.style.width = `${width}px`
-  layerHost.style.height = `${height}px`
-  parent.appendChild(layerHost)
+  layerContainer.style.width = `${width}px`
+  layerContainer.style.height = `${height}px`
+  parent.appendChild(layerContainer)
 
   const layerById = new Map<LayerId, SingleActiveSvgLayerDefinition<LayerId>>(
     layers.map((layer) => [layer.id, layer])
@@ -138,11 +171,11 @@ export function createSingleActiveSvgLayerManager<LayerId extends string>(
     }
 
     activeRuntime?.destroy()
-    layerHost.replaceChildren()
+    layerContainer.replaceChildren()
 
     const layer = getLayer(activeLayerId)
     const { el, width: layerWidth, height: layerHeight } = resolveCanvas(
-      layerHost,
+      layerContainer,
       layer.canvas
     )
     activeRuntime = layer.createRuntime({
@@ -167,7 +200,7 @@ export function createSingleActiveSvgLayerManager<LayerId extends string>(
     },
     destroy: () => {
       activeRuntime?.destroy()
-      layerHost.remove()
+      layerContainer.remove()
     }
   }
 }

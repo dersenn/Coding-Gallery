@@ -1,4 +1,4 @@
-import { Grid, GridCell, createFrameTransform } from '~/types/project'
+import { Grid, GridCell } from '~/types/project'
 
 export function drawAnni1(context) {
   const { svg, frame, theme, utils, rnd, v, controls } = context
@@ -30,18 +30,15 @@ export function drawAnni1(context) {
 
   const borderY = frame.height / (settings.grid.rows * settings.grid.cols + 2)
 
-  const tf = createFrameTransform(frame)
-  const origin = tf.toGlobal(0, 0)
-
   const startMode = utils.seed.randomInt(0, 1)
   const bottomMode = (1 - startMode + settings.grid.rows) % 2
 
 
-  svg.makeRect(v(origin.x, origin.y), frame.width, frame.height, settings.colors.background, 'none', 0)
+  svg.makeRect(v(frame.x, frame.y), frame.width, frame.height, settings.colors.background, 'none', 0)
 
-  svg.makeRectAB(v(origin.x, origin.y), v(origin.x + frame.width, origin.y + borderY), anniColors[startMode], 'none', 0)
+  svg.makeRectAB(v(frame.x, frame.y), v(frame.x + frame.width, frame.y + borderY), anniColors[startMode], 'none', 0)
 
-  svg.makeRectAB(v(origin.x, origin.y + frame.height - borderY), v(origin.x + frame.width, origin.y + frame.height), anniColors[bottomMode], 'none', 0)
+  svg.makeRectAB(v(frame.x, frame.y + frame.height - borderY), v(frame.x + frame.width, frame.y + frame.height), anniColors[bottomMode], 'none', 0)
 
   const color = {
     background: settings.colors.background,
@@ -54,8 +51,8 @@ export function drawAnni1(context) {
     rows: settings.grid.rows,
     width: frame.width,
     height: frame.height - 2 * borderY,
-    x: origin.x,
-    y: origin.y + borderY,
+    x: frame.x,
+    y: frame.y + borderY,
     utils
   }).init({ svg, color, pattern: settings.pattern, rnd, modeCount: 4, startMode })
 

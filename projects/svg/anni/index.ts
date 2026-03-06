@@ -3,18 +3,13 @@ import type {
   ProjectActionDefinition,
   ProjectContext,
   ProjectControlDefinition,
-  CanvasConfig,
-  CanvasMode,
-  SingleActiveSvgLayerCreateArgs,
-  SingleActiveSvgLayerRegistry,
-  SingleActiveSvgLayerRuntime
+  SingleActiveSvgLayerRegistry
 } from '~/types/project'
 import {
-  SVG,
   shortcuts,
   resolveCanvas,
-  createSingleActiveSvgLayerManager,
-  createSingleActiveSvgLayerSetup
+  singleActiveSvgLayerManager,
+  singleActiveSvgLayerSetup
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 import { drawAnni1 } from './layers/anni1'
@@ -22,19 +17,15 @@ import { drawAnni2 } from './layers/anni2'
 import type { LayerDrawContext } from './layers/types'
 
 type AnniLayer = 'anni-1' | 'anni-2'
-type LayerCanvas = CanvasMode | CanvasConfig
 
 interface AnniLayerRuntimeExtras extends Omit<LayerDrawContext, 'svg' | 'frame' | 'controls'> {
   getControls: () => ProjectContext['controls']
 }
 
-interface LayerRegistryEntry {
-  label: string
-  canvas: LayerCanvas
-  draw: (context: LayerDrawContext) => void
-}
-
-const LAYER_REGISTRY_SOURCE: Record<AnniLayer, LayerRegistryEntry> = {
+const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<
+  AnniLayer,
+  LayerDrawContext
+> = {
   'anni-1': { 
     label: 'Orange, Black and White (1926/27)', 
     canvas: { mode: '2:3', padding: '3vmin' }, 
@@ -42,46 +33,23 @@ const LAYER_REGISTRY_SOURCE: Record<AnniLayer, LayerRegistryEntry> = {
   },
   'anni-2': { 
     label: 'Anni 2', 
-    canvas: { mode: '2:3', padding: '3vmin' }, 
+    canvas: { mode: '1:1', padding: '3vmin' }, 
     draw: drawAnni2 
   }
 }
 
-function createLayerRuntime(
-  args: SingleActiveSvgLayerCreateArgs<AnniLayer> & AnniLayerRuntimeExtras,
-  drawLayer: (context: LayerDrawContext) => void
-): SingleActiveSvgLayerRuntime {
-  const { id, parent, width, height, theme, utils, v, rnd, getControls } = args
-  const svg = new SVG({ parent, id: `anni-${id}`, width, height })
-  const frame = { x: 0, y: 0, width, height }
-
-  return {
-    exportName: `anni-${id}`,
-    svg,
-    draw: () => {
-      svg.stage.replaceChildren()
-      drawLayer({ svg, frame, theme, utils, v, rnd, controls: getControls() })
-    },
-    destroy: () => {
-      svg.stage.remove()
-    }
+const LAYER_SETUP = singleActiveSvgLayerSetup<
+  AnniLayer,
+  AnniLayerRuntimeExtras,
+  LayerDrawContext
+>({
+  registry: LAYER_REGISTRY,
+  resolveRuntimeName: (id) => `anni-${id}`,
+  createContext: ({ svg, frame, args }) => {
+    const { theme, utils, v, rnd, getControls } = args
+    return { svg, frame, theme, utils, v, rnd, controls: getControls() }
   }
-}
-
-const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<AnniLayer, AnniLayerRuntimeExtras> = {
-  'anni-1': {
-    label: LAYER_REGISTRY_SOURCE['anni-1'].label,
-    canvas: LAYER_REGISTRY_SOURCE['anni-1'].canvas,
-    createRuntime: (args) => createLayerRuntime(args, LAYER_REGISTRY_SOURCE['anni-1'].draw)
-  },
-  'anni-2': {
-    label: LAYER_REGISTRY_SOURCE['anni-2'].label,
-    canvas: LAYER_REGISTRY_SOURCE['anni-2'].canvas,
-    createRuntime: (args) => createLayerRuntime(args, LAYER_REGISTRY_SOURCE['anni-2'].draw)
-  }
-}
-
-const LAYER_SETUP = createSingleActiveSvgLayerSetup(LAYER_REGISTRY)
+})
 
 // ─── Controls ───────────────────────────────────────────────────────────────────
 
@@ -131,13 +99,14 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
-export const canvas = { mode: 'square' as const, padding: '3vmin' }
+const ROOT_CANVAS_CONFIG = { mode: 'square' as const, padding: '3vmin' }
+export const canvas = ROOT_CANVAS_CONFIG
 
 /**
  * Anni
  *
  * Single-active layered SVG sketch:
- * - base canvas frame resolved once from project `canvas`
+ * - base container resolved once from project `canvas` config
  * - active layer chosen by control and mounted by layer manager
  * - each layer resolves its own canvas (aspect/padding) independently
  */
@@ -155,9 +124,9 @@ export async function init(
     activeLayer: (controls.activeLayer as AnniLayer | undefined) ?? LAYER_SETUP.defaultLayerId
   } as ProjectContext['controls'] & { activeLayer: AnniLayer }
 
-  const { el, width, height } = resolveCanvas(container, canvas)
-  const layerManager = createSingleActiveSvgLayerManager({
-    parent: el,
+  const { el: baseContainer, width, height } = resolveCanvas(container, ROOT_CANVAS_CONFIG)
+  const layerManager = singleActiveSvgLayerManager({
+    parent: baseContainer,
     width,
     height,
     initialLayerId: controlState.activeLayer,
