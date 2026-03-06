@@ -144,10 +144,10 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Notes: Keep deterministic frame math and avoid layout thrash; prefer centralizing this in a utility rather than sketch-local parsing once reused.
 
 - ID: `control-group-conditional-visibility`
-  - Status: `candidate`
+  - Status: `implemented`
   - Need: allow control groups (`type: 'group'`) to use the same conditional visibility gates as leaf controls (`visibleWhenSelectKey`, `visibleWhenSelectValue`, `visibleWhenSelectValues`) so layer-specific groups can hide entirely when inactive.
-  - Seen in: `projects/svg/anni/index.ts` (layer-specific controls currently merged into shared panel to avoid empty group UI)
-  - Notes: should be backward-compatible; if no visibility condition is defined on a group, current behavior remains unchanged.
+  - Seen in: `types/project.ts`, `components/ControlPanel.vue`, `projects/svg/anni/index.ts`
+  - Notes: Implemented by extending `ControlGroupDefinition` with optional `visibleWhenSelect*` fields and reusing shared select-gate visibility semantics for both groups and leaf controls; behavior remains unchanged when no visibility condition is defined.
 
 ### p5 migration helpers
 
