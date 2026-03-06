@@ -59,7 +59,7 @@
           <template v-for="control in section.controls" :key="control.key">
             <div v-if="isControlVisible(control)">
             <label
-              v-if="control.type !== 'toggle'"
+              v-if="control.type !== 'toggle' && !control.hideLabel"
               class="flex items-center justify-between font-medium mb-2"
             >
               <span>{{ control.label }}</span>
@@ -90,7 +90,7 @@
                 @change="updateControl(control.key, ($event.target as HTMLInputElement).checked)"
                 class="w-5 h-5 rounded cursor-pointer accent-foreground"
               />
-              <span class="font-medium">{{ control.label }}</span>
+              <span v-if="!control.hideLabel" class="font-medium">{{ control.label }}</span>
             </label>
 
             <!-- Select -->

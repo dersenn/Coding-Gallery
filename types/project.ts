@@ -21,6 +21,7 @@ interface ConditionalVisibilityDefinition {
 interface BaseControlDefinition extends ConditionalVisibilityDefinition {
   label: string
   key: string
+  hideLabel?: boolean
   group?: string
   order?: number
 }

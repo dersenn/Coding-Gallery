@@ -35,8 +35,16 @@ interface LayerRegistryEntry {
 }
 
 const LAYER_REGISTRY_SOURCE: Record<AnniLayer, LayerRegistryEntry> = {
-  'anni-1': { label: 'Orange, Black and White', canvas: { mode: '2:3', padding: '3vmin' }, draw: drawAnni1 },
-  'anni-2': { label: 'Anni 2', canvas: { mode: '2:3', padding: '6vmin' }, draw: drawAnni2 }
+  'anni-1': { 
+    label: 'Orange, Black and White (1926/27)', 
+    canvas: { mode: '2:3', padding: '3vmin' }, 
+    draw: drawAnni1 
+  },
+  'anni-2': { 
+    label: 'Anni 2', 
+    canvas: { mode: '2:3', padding: '3vmin' }, 
+    draw: drawAnni2 
+  }
 }
 
 function createLayerRuntime(
@@ -89,6 +97,7 @@ export const controls: ProjectControlDefinition[] = [
         type: 'select',
         label: 'Layer',
         key: 'activeLayer',
+        hideLabel: true,
         default: LAYER_SETUP.defaultLayerId,
         options: LAYER_SETUP.options
       }
@@ -97,20 +106,20 @@ export const controls: ProjectControlDefinition[] = [
   {
     type: 'group',
     id: 'anni-1',
-    label: 'Anni 1',
+    label: 'Composition Settings',
     collapsible: true,
-    defaultOpen: true,
+    defaultOpen: false,
     visibleWhenSelectKey: 'activeLayer',
     visibleWhenSelectValue: 'anni-1',
     controls: [
       {
         type: 'slider',
-        label: 'Overlay Alpha',
-        key: 'anni1_primaryOverlayAlpha',
-        default: 0.39,
-        min: 0,
-        max: 1,
-        step: 0.01
+        label: 'Rows',
+        key: 'anni1_rows',
+        default: 6,
+        min: 1,
+        max: 18,
+        step: 1
       }
     ]
   }

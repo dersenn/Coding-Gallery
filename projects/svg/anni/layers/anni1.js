@@ -7,17 +7,19 @@ export function drawAnni1(context) {
     '#fdf0d5', '#03071e', '#FF4400'
   ]
 
+  const gridRows =
+    typeof controls?.anni1_rows === 'number' ? controls.anni1_rows : 6
+  const gridCols = gridRows * 2
+
   const settings = {
     grid: {
-      cols: 12,
-      rows: 6
+      cols: gridCols,
+      rows: gridRows
     },
     pattern: {
-      stripeRows: 12,
+      stripeRows: gridCols,
       crossThickness: 0.03,
-      primaryOverlayAlpha: typeof controls?.anni1_primaryOverlayAlpha === 'number'
-        ? controls.anni1_primaryOverlayAlpha
-        : 0.39
+      primaryOverlayAlpha: 0.39,
     },
     colors: {
       background: anniColors[0] ?? theme.background,
