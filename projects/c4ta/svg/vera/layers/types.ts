@@ -1,22 +1,12 @@
 import type { ProjectContext } from '~/types/project'
-import type { GenerativeUtils } from '~/utils/generative'
+import type { ThemeTokens } from '~/utils/theme'
+import type { shortcuts, SVG } from '~/types/project'
 
-export interface VeraLayerBaseContext {
-  xPos: number
-  yPos: number
-  w: number
-  h: number
-  color: string
-  layerUtils: GenerativeUtils
-  drawLine: (x1: number, y1: number, x2: number, y2: number, color: string) => void
-}
-
-export interface Vera1DrawContext extends VeraLayerBaseContext {
-  divisions: number
-}
-
-export interface Vera2DrawContext extends VeraLayerBaseContext {
-  cols: number
-  rows: number
+export interface LayerDrawContext {
+  svg: SVG
+  theme: ThemeTokens
   utils: ProjectContext['utils']
+  controls: ProjectContext['controls']
+  v: ReturnType<typeof shortcuts>['v']
+  rnd: () => number
 }

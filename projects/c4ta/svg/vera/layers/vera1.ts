@@ -1,19 +1,22 @@
 import { Cell } from '~/types/project'
-import type { Vera1DrawContext } from './types'
+import type { LayerDrawContext } from './types'
 
 const TILE_OVERLAP_FACTOR = 3
+const DEFAULT_DIVISIONS = 12
 
 // Constrained motif selection: one line per tile from 4 fixed candidates.
 export function drawVera1({
-  xPos,
-  yPos,
-  w,
-  h,
-  divisions,
-  color,
-  layerUtils,
-  drawLine
-}: Vera1DrawContext): void {
+  svg,
+  theme,
+  v,
+  rnd
+}: LayerDrawContext): void {
+  const xPos = 0
+  const yPos = 0
+  const w = svg.w
+  const h = svg.h
+  const color = theme.palette[0] ?? '#0000ff'
+  const divisions = DEFAULT_DIVISIONS
   const cols = divisions
   const rows = cols
   const tileW = (w * TILE_OVERLAP_FACTOR) / (-cols + 3 + cols * TILE_OVERLAP_FACTOR)
@@ -24,8 +27,6 @@ export function drawVera1({
   // Overlap grid starts one overlap unit in, matching original composition framing.
   const startX = xPos + xOverlap
   const startY = yPos + yOverlap
-  const rnd = () => layerUtils.seed.random()
-
   for (let x = 0; x < cols; x++) {
     const xOff = startX + x * (tileW - xOverlap)
     for (let y = 0; y < rows; y++) {
@@ -42,7 +43,7 @@ export function drawVera1({
       ] as const
       const index = Math.floor(rnd() * positions.length)
       const [p1, p2] = positions[index]!
-      drawLine(p1.x, p1.y, p2.x, p2.y, color)
+      svg.makeLine(v(p1.x, p1.y), v(p2.x, p2.y), color, w * 0.002)
     }
   }
 }

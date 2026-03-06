@@ -9,8 +9,7 @@ import { syncControlState } from '~/composables/useControls'
 import { createGenerativeUtils } from '~/utils/generative'
 import { drawVera1 } from './layers/vera1'
 import { drawVera2 } from './layers/vera2'
-
-type VeraLayer = 'vera1' | 'vera2'
+import type { LayerDrawContext } from './layers/types'
 
 /**
  * Vera (C4TA — computational line studies)
@@ -24,7 +23,7 @@ type VeraLayer = 'vera1' | 'vera2'
  * - Vera 2: one diagonal per tile from a random left-edge point to a random right-edge point
  */
 
-const DEFAULT_DIVISIONS = 12
+type VeraLayer = 'vera1' | 'vera2'
 
 export const controls: ProjectControlDefinition[] = [
   {
@@ -68,16 +67,6 @@ export async function init(
   const { el, width, height } = resolveCanvas(container, canvas)
   const svg = new SVG({ parent: el, id: 'vera', width, height })
 
-  // Stroke scales proportionally with canvas size.
-  const strokeWidth = width * 0.002
-
-  const vera1Color = theme.palette[0] ?? '#0000ff'
-  const vera2Color = theme.palette[2] ?? '#ff0000'
-
-  const drawLine = (x1: number, y1: number, x2: number, y2: number, color: string) => {
-    svg.makeLine(v(x1, y1), v(x2, y2), color, strokeWidth)
-  }
-
   const draw = () => {
     const seed = utils.seed.current
     // Each layer gets its own PRNG stream from the same project seed.
@@ -88,33 +77,22 @@ export async function init(
     svg.stage.replaceChildren()
     svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
 
+    const makeLayerContext = (rnd: () => number): LayerDrawContext => ({
+      svg,
+      theme,
+      utils,
+      controls,
+      v,
+      rnd
+    })
+
     // Render order keeps Vera 1 on top when both are enabled, matching migration baseline.
     const enabledLayers = new Set(controlState.enabledLayers)
     if (enabledLayers.has('vera2')) {
-      drawVera2({
-        xPos: 0,
-        yPos: 0,
-        w: svg.w,
-        h: svg.h,
-        cols: DEFAULT_DIVISIONS,
-        rows: DEFAULT_DIVISIONS,
-        color: vera2Color,
-        utils,
-        layerUtils: v2rnd,
-        drawLine
-      })
+      drawVera2(makeLayerContext(() => v2rnd.seed.random()))
     }
     if (enabledLayers.has('vera1')) {
-      drawVera1({
-        xPos: 0,
-        yPos: 0,
-        w: svg.w,
-        h: svg.h,
-        divisions: DEFAULT_DIVISIONS,
-        color: vera1Color,
-        layerUtils: v1rnd,
-        drawLine
-      })
+      drawVera1(makeLayerContext(() => v1rnd.seed.random()))
     }
   }
 
