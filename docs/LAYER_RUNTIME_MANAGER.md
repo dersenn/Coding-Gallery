@@ -55,6 +55,36 @@ const LAYER_REGISTRY = {
 const LAYER_SETUP = createSingleActiveSvgLayerSetup(LAYER_REGISTRY)
 ```
 
+## Typed Index + JS Layers Pattern
+
+Recommended for fast sketch iteration:
+
+- Keep orchestration in typed `index.ts`:
+  - layer registry/setup constants
+  - controls/actions wiring
+  - manager lifecycle (`setActiveLayer`, `draw`, `export`, `destroy`)
+- Keep layer render logic in type-free modules:
+  - `layers/anni1.js`, `layers/anni2.js`, etc.
+  - local sketch settings and draw logic only
+
+Typical runtime boundary:
+
+1. `index.ts` resolves runtime extras once (`theme`, `utils`, shortcuts, controls getter).
+2. Manager creates the active layer runtime (`createRuntime(...)`).
+3. Layer module `draw(...)` receives runtime context and stays framework-light.
+
+This split keeps TypeScript where it helps most (wiring/contracts) while minimizing typing overhead inside creative draw code.
+
+## Per-layer controls with shared schema
+
+You can still keep one shared `controls` export while scoping controls to specific layers:
+
+- Namespace layer-specific keys (for example `anni1_*`, `anni2_*`).
+- Gate visibility with `visibleWhenSelectKey: 'activeLayer'` plus `visibleWhenSelectValue` (or `visibleWhenSelectValues`).
+- Pass current controls into layer draw/runtime context from `index.ts`.
+
+This avoids separate control systems per layer and keeps control state deterministic across layer switches.
+
 ## Naming convention
 
 - `PascalCase` for types/classes/interfaces.
