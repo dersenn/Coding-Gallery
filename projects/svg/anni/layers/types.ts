@@ -8,6 +8,7 @@ export interface LayerDrawContext {
   frame: InnerFrameResult
   theme: ThemeTokens
   utils: ProjectContext['utils']
+  controls: ProjectContext['controls']
   v: ReturnType<typeof shortcuts>['v']
   rnd: ReturnType<typeof shortcuts>['rnd']
 }

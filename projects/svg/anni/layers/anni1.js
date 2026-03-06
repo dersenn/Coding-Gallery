@@ -1,7 +1,7 @@
 import { Grid, GridCell, createFrameTransform } from '~/types/project'
 
 export function drawAnni1(context) {
-  const { svg, frame, theme, utils, rnd, v } = context
+  const { svg, frame, theme, utils, rnd, v, controls } = context
 
   const anniColors = [
     '#fdf0d5', '#03071e', '#FF4400'
@@ -15,7 +15,9 @@ export function drawAnni1(context) {
     pattern: {
       stripeRows: 12,
       crossThickness: 0.03,
-      primaryOverlayAlpha: 0.39
+      primaryOverlayAlpha: typeof controls?.anni1_primaryOverlayAlpha === 'number'
+        ? controls.anni1_primaryOverlayAlpha
+        : 0.39
     },
     colors: {
       background: anniColors[0] ?? theme.background,
@@ -30,7 +32,6 @@ export function drawAnni1(context) {
   const origin = tf.toGlobal(0, 0)
 
   const startMode = utils.seed.randomInt(0, 1)
-  const rowBaseMode = (row) => (1 - startMode + row) % 2
   const bottomMode = (1 - startMode + settings.grid.rows) % 2
 
 

@@ -4,13 +4,17 @@ import type {
   ProjectContext,
   ProjectControlDefinition,
   CanvasConfig,
-  CanvasMode
+  CanvasMode,
+  SingleActiveSvgLayerCreateArgs,
+  SingleActiveSvgLayerRegistry,
+  SingleActiveSvgLayerRuntime
 } from '~/types/project'
 import {
   SVG,
   shortcuts,
   resolveCanvas,
-  resolveInnerFrame
+  createSingleActiveSvgLayerManager,
+  createSingleActiveSvgLayerSetup
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 import { drawAnni1 } from './layers/anni1'
@@ -20,20 +24,56 @@ import type { LayerDrawContext } from './layers/types'
 type AnniLayer = 'anni-1' | 'anni-2'
 type LayerCanvas = CanvasMode | CanvasConfig
 
-interface LayerDefinition {
+interface AnniLayerRuntimeExtras extends Omit<LayerDrawContext, 'svg' | 'frame' | 'controls'> {
+  getControls: () => ProjectContext['controls']
+}
+
+interface LayerRegistryEntry {
   label: string
   canvas: LayerCanvas
   draw: (context: LayerDrawContext) => void
 }
 
-// Single source of truth for layer selection and simulated per-layer framing.
-const LAYERS: Record<AnniLayer, LayerDefinition> = {
+const LAYER_REGISTRY_SOURCE: Record<AnniLayer, LayerRegistryEntry> = {
   'anni-1': { label: 'Orange, Black and White', canvas: { mode: '2:3', padding: '3vmin' }, draw: drawAnni1 },
   'anni-2': { label: 'Anni 2', canvas: { mode: '2:3', padding: '6vmin' }, draw: drawAnni2 }
 }
 
-const LAYER_ENTRIES = Object.entries(LAYERS) as Array<[AnniLayer, LayerDefinition]>
-const DEFAULT_LAYER = LAYER_ENTRIES[0]![0]
+function createLayerRuntime(
+  args: SingleActiveSvgLayerCreateArgs<AnniLayer> & AnniLayerRuntimeExtras,
+  drawLayer: (context: LayerDrawContext) => void
+): SingleActiveSvgLayerRuntime {
+  const { id, parent, width, height, theme, utils, v, rnd, getControls } = args
+  const svg = new SVG({ parent, id: `anni-${id}`, width, height })
+  const frame = { x: 0, y: 0, width, height }
+
+  return {
+    exportName: `anni-${id}`,
+    svg,
+    draw: () => {
+      svg.stage.replaceChildren()
+      drawLayer({ svg, frame, theme, utils, v, rnd, controls: getControls() })
+    },
+    destroy: () => {
+      svg.stage.remove()
+    }
+  }
+}
+
+const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<AnniLayer, AnniLayerRuntimeExtras> = {
+  'anni-1': {
+    label: LAYER_REGISTRY_SOURCE['anni-1'].label,
+    canvas: LAYER_REGISTRY_SOURCE['anni-1'].canvas,
+    createRuntime: (args) => createLayerRuntime(args, LAYER_REGISTRY_SOURCE['anni-1'].draw)
+  },
+  'anni-2': {
+    label: LAYER_REGISTRY_SOURCE['anni-2'].label,
+    canvas: LAYER_REGISTRY_SOURCE['anni-2'].canvas,
+    createRuntime: (args) => createLayerRuntime(args, LAYER_REGISTRY_SOURCE['anni-2'].draw)
+  }
+}
+
+const LAYER_SETUP = createSingleActiveSvgLayerSetup(LAYER_REGISTRY)
 
 // ─── Controls ───────────────────────────────────────────────────────────────────
 
@@ -49,8 +89,19 @@ export const controls: ProjectControlDefinition[] = [
         type: 'select',
         label: 'Layer',
         key: 'activeLayer',
-        default: DEFAULT_LAYER,
-        options: LAYER_ENTRIES.map(([id, entry]) => ({ label: entry.label, value: id }))
+        default: LAYER_SETUP.defaultLayerId,
+        options: LAYER_SETUP.options
+      },
+      {
+        type: 'slider',
+        label: 'Anni 1 Overlay Alpha',
+        key: 'anni1_primaryOverlayAlpha',
+        default: 0.39,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        visibleWhenSelectKey: 'activeLayer',
+        visibleWhenSelectValue: 'anni-1'
       }
     ]
   }
@@ -82,24 +133,29 @@ export async function init(
 
   // Local mutable state mirrors control values used by this sketch.
   const controlState = {
-    activeLayer: (controls.activeLayer as AnniLayer | undefined) ?? DEFAULT_LAYER
-  }
+    ...controls,
+    activeLayer: (controls.activeLayer as AnniLayer | undefined) ?? LAYER_SETUP.defaultLayerId
+  } as ProjectContext['controls'] & { activeLayer: AnniLayer }
 
   const { el, width, height } = resolveCanvas(container, canvas)
-  const svg = new SVG({ parent: el, id: 'anni', width, height })
+  const layerManager = createSingleActiveSvgLayerManager({
+    parent: el,
+    width,
+    height,
+    initialLayerId: controlState.activeLayer,
+    layers: LAYER_SETUP.createLayerDefinitions({
+      theme,
+      utils,
+      v,
+      rnd,
+      getControls: () => controlState
+    })
+  })
 
-  // Draw is deterministic per user interaction by resetting seed first.
   const draw = () => {
     utils.seed.reset()
-    svg.stage.replaceChildren()
-    svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
-
-    const activeLayer = LAYERS[controlState.activeLayer]
-    if (!activeLayer) {
-      throw new Error(`Unknown selected layer: ${controlState.activeLayer}`)
-    }
-    const frame = resolveInnerFrame(svg.w, svg.h, activeLayer.canvas)
-    activeLayer.draw({ svg, frame, theme, utils, v, rnd })
+    layerManager.setActiveLayer(controlState.activeLayer)
+    layerManager.draw()
   }
 
   draw()
@@ -112,11 +168,11 @@ export async function init(
 
   // Action targets whichever layer is currently active.
   registerAction('download-svg', () => {
-    svg.save(utils.seed.current, `anni-${controlState.activeLayer}`)
+    layerManager.exportActiveSvg(utils.seed.current)
   })
 
   // Ensure current layer runtime and wrapper nodes are fully cleaned up.
   return () => {
-    svg.stage.remove()
+    layerManager.destroy()
   }
 }

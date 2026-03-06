@@ -143,6 +143,12 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `projects/svg/anni/index.ts` (`resolveInsetPx(...)` in single-SVG frame mode)
   - Notes: Keep deterministic frame math and avoid layout thrash; prefer centralizing this in a utility rather than sketch-local parsing once reused.
 
+- ID: `control-group-conditional-visibility`
+  - Status: `candidate`
+  - Need: allow control groups (`type: 'group'`) to use the same conditional visibility gates as leaf controls (`visibleWhenSelectKey`, `visibleWhenSelectValue`, `visibleWhenSelectValues`) so layer-specific groups can hide entirely when inactive.
+  - Seen in: `projects/svg/anni/index.ts` (layer-specific controls currently merged into shared panel to avoid empty group UI)
+  - Notes: should be backward-compatible; if no visibility condition is defined on a group, current behavior remains unchanged.
+
 ### p5 migration helpers
 
 - ID: `asset-path-preload-helper`
