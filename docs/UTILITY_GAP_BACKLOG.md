@@ -95,6 +95,15 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `projects/svg/anni/layers/anni1.js` (neighbor-influenced cell modes), anticipated for future left-to-right progressive pattern sketches.
   - Notes: Keep this iteration-only and backward-compatible; avoid mode-dependent indexing conversions to prevent breaking existing cell/index logic.
 
+- ID: `grid-irregular-track-sizing`
+  - Status: `candidate`
+  - Need: Optional irregular row/column track sizing (`rowHeights` / `colWidths` by weights or explicit sizes) for non-uniform grids.
+  - Seen in: design discussion after square-fit extension (`squareByCount` / `squareByShortSide` + `contain|cover|stretch`).
+  - Notes:
+    - Deferred intentionally; current `Grid` remains uniform-cell focused, with opt-in square-fit behavior and non-breaking default `stretch`.
+    - Irregular tracks impact layout normalization, cumulative offsets, validation, and expected geometry in sketches that currently assume uniform cell dimensions.
+    - Recommend revisiting as a separate utility/class once at least 2 sketches need it, rather than broadening base `Grid` prematurely.
+
 ### Seed and noise
 
 - ID: `coordinate-cell-hash`

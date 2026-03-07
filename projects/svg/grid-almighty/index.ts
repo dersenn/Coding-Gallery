@@ -12,7 +12,7 @@ import {
   singleActiveSvgLayerSetup
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
-import { drawGridCore } from './layers/anni1'
+import { drawGridCore } from './layers/grid1.js'
 import type { LayerDrawContext } from './layers/types'
 
 type GridAlmightyLayer = 'grid-core'
@@ -25,6 +25,7 @@ const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<
   GridAlmightyLayer,
   LayerDrawContext
 > = {
+  // Single layer runtime; control scaffolding supports future layers.
   'grid-core': {
     label: 'Grid Core',
     canvas: { mode: 'full' },
@@ -55,12 +56,110 @@ export const controls: ProjectControlDefinition[] = [
     controls: [
       {
         type: 'slider',
-        label: 'Rows',
-        key: 'grid_rows',
-        default: 8,
-        min: 1,
-        max: 40,
+        label: 'Short Side Divisions',
+        key: 'grid_short_side_divisions',
+        default: 60,
+        min: 12,
+        max: 90,
         step: 1
+      }
+    ]
+  },
+  {
+    type: 'group',
+    id: 'rules',
+    label: 'Rules',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'select',
+        label: 'Rule Preset',
+        key: 'rule_preset',
+        default: 'auto',
+        options: [
+          { label: 'Auto', value: 'auto' },
+          { label: 'Balanced', value: 'balanced' },
+          { label: 'Chaotic', value: 'chaotic' },
+          { label: 'Dense', value: 'dense' },
+          { label: 'Sparse', value: 'sparse' }
+        ]
+      }
+    ]
+  },
+  {
+    type: 'group',
+    id: 'noise',
+    label: 'Noise',
+    collapsible: true,
+    defaultOpen: false,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Noise Scale',
+        key: 'noiseScale',
+        default: 21,
+        min: 2,
+        max: 80,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Stretch X',
+        key: 'stretchX',
+        default: 1.2,
+        min: 0.2,
+        max: 3,
+        step: 0.15
+      },
+      {
+        type: 'slider',
+        label: 'Stretch Y',
+        key: 'stretchY',
+        default: 0.75,
+        min: 0.2,
+        max: 3,
+        step: 0.15
+      },
+      {
+        type: 'slider',
+        label: 'Amplitude',
+        key: 'amplitude',
+        default: 1.5,
+        min: 0.1,
+        max: 2.0,
+        step: 0.1
+      },
+      {
+        type: 'slider',
+        label: 'Octaves',
+        key: 'octaves',
+        default: 1,
+        min: 1,
+        max: 4,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Lacunarity',
+        key: 'lacunarity',
+        default: 2.4,
+        min: 1.5,
+        max: 3.0,
+        step: 0.1,
+        visibleWhenSelectKey: 'octaves',
+        visibleWhenSelectValues: [2, 3, 4]
+      },
+      {
+        type: 'slider',
+        label: 'Persistence',
+        key: 'persistence',
+        default: 0.9,
+        min: 0.1,
+        max: 1.0,
+        step: 0.1,
+        visibleWhenSelectKey: 'octaves',
+        visibleWhenSelectValues: [2, 3, 4]
       }
     ]
   }

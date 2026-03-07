@@ -19,8 +19,17 @@ export interface GridConfig {
   x?: number
   y?: number
   margin?: number
+  cellSizing?: GridCellSizing
+  fit?: GridFit
+  alignX?: GridAlign
+  alignY?: GridAlign
+  shortSideDivisions?: number
   utils: GenerativeUtils
 }
+
+export type GridCellSizing = 'stretch' | 'squareByCount' | 'squareByShortSide'
+export type GridFit = 'contain' | 'cover' | 'stretch'
+export type GridAlign = 'start' | 'center' | 'end'
 
 export interface SubdivideConfig {
   maxLevel: number
@@ -229,19 +238,32 @@ export class Grid {
   x: number
   y: number
   margin: number
+  cellSizing: GridCellSizing
+  fit: GridFit
+  alignX: GridAlign
+  alignY: GridAlign
+  shortSideDivisions: number | null
   utils: GenerativeUtils
   
   cells: GridCell[] = []
   private grid2D: GridCell[][] = []
 
   constructor(config: GridConfig) {
-    this.cols = config.cols
-    this.rows = config.rows
+    this.cols = Math.max(1, Math.floor(config.cols))
+    this.rows = Math.max(1, Math.floor(config.rows))
     this.width = config.width
     this.height = config.height
     this.x = config.x ?? 0
     this.y = config.y ?? 0
     this.margin = config.margin ?? 0
+    this.cellSizing = config.cellSizing ?? 'stretch'
+    this.fit = config.fit ?? (this.cellSizing === 'stretch' ? 'stretch' : 'contain')
+    this.alignX = config.alignX ?? 'center'
+    this.alignY = config.alignY ?? 'center'
+    this.shortSideDivisions =
+      typeof config.shortSideDivisions === 'number'
+        ? Math.max(1, Math.floor(config.shortSideDivisions))
+        : null
     this.utils = config.utils
 
     this.initializeCells()
@@ -291,10 +313,10 @@ export class Grid {
    * custom cell types rather than overriding this method.
    */
   private initializeCells(): void {
-    const gridWidth = this.width - this.margin * 2
-    const gridHeight = this.height - this.margin * 2
-    const cellWidth = gridWidth / this.cols
-    const cellHeight = gridHeight / this.rows
+    const layout = this.resolveLayout()
+    const { cols, rows, cellWidth, cellHeight, originX, originY } = layout
+    this.cols = cols
+    this.rows = rows
 
     this.cells = []
     this.grid2D = []
@@ -303,8 +325,8 @@ export class Grid {
       const rowCells: GridCell[] = []
       
       for (let col = 0; col < this.cols; col++) {
-        const x = this.x + this.margin + col * cellWidth
-        const y = this.y + this.margin + row * cellHeight
+        const x = originX + col * cellWidth
+        const y = originY + row * cellHeight
         const index = row * this.cols + col
 
         const cell = this.createCell({
@@ -325,6 +347,91 @@ export class Grid {
 
       this.grid2D.push(rowCells)
     }
+  }
+
+  private resolveLayout(): {
+    cols: number
+    rows: number
+    cellWidth: number
+    cellHeight: number
+    originX: number
+    originY: number
+  } {
+    const gridWidth = Math.max(0, this.width - this.margin * 2)
+    const gridHeight = Math.max(0, this.height - this.margin * 2)
+    const baseX = this.x + this.margin
+    const baseY = this.y + this.margin
+
+    let cols = Math.max(1, Math.floor(this.cols))
+    let rows = Math.max(1, Math.floor(this.rows))
+
+    if (this.cellSizing === 'squareByShortSide') {
+      const divisions = this.shortSideDivisions ?? Math.min(cols, rows)
+      if (gridWidth <= gridHeight) {
+        const shortSideCell = divisions > 0 ? gridWidth / divisions : 0
+        cols = Math.max(1, divisions)
+        rows = this.resolveCountForTargetCell(gridHeight, shortSideCell, this.fit)
+      } else {
+        const shortSideCell = divisions > 0 ? gridHeight / divisions : 0
+        rows = Math.max(1, divisions)
+        cols = this.resolveCountForTargetCell(gridWidth, shortSideCell, this.fit)
+      }
+    }
+
+    const useStretch = this.cellSizing === 'stretch' || this.fit === 'stretch'
+    if (useStretch) {
+      return {
+        cols,
+        rows,
+        cellWidth: cols > 0 ? gridWidth / cols : 0,
+        cellHeight: rows > 0 ? gridHeight / rows : 0,
+        originX: baseX,
+        originY: baseY
+      }
+    }
+
+    const sizeByWidth = cols > 0 ? gridWidth / cols : 0
+    const sizeByHeight = rows > 0 ? gridHeight / rows : 0
+    const side = this.fit === 'cover'
+      ? Math.max(sizeByWidth, sizeByHeight)
+      : Math.min(sizeByWidth, sizeByHeight)
+
+    const usedWidth = side * cols
+    const usedHeight = side * rows
+    const remainingX = gridWidth - usedWidth
+    const remainingY = gridHeight - usedHeight
+
+    return {
+      cols,
+      rows,
+      cellWidth: side,
+      cellHeight: side,
+      originX: baseX + this.resolveAlignOffset(remainingX, this.alignX),
+      originY: baseY + this.resolveAlignOffset(remainingY, this.alignY)
+    }
+  }
+
+  private resolveCountForTargetCell(total: number, targetCell: number, fit: GridFit): number {
+    if (!Number.isFinite(targetCell) || targetCell <= 0) {
+      return 1
+    }
+
+    const raw = total / targetCell
+    if (!Number.isFinite(raw) || raw <= 1) return 1
+
+    if (fit === 'cover') {
+      return Math.max(1, Math.ceil(raw))
+    }
+    if (fit === 'stretch') {
+      return Math.max(1, Math.round(raw))
+    }
+    return Math.max(1, Math.floor(raw))
+  }
+
+  private resolveAlignOffset(remaining: number, align: GridAlign): number {
+    if (align === 'start') return 0
+    if (align === 'end') return remaining
+    return remaining / 2
   }
 
   /**

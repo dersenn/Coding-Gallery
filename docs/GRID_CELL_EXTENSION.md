@@ -93,6 +93,55 @@ leaves.forEach(cell => (cell as MyLeafCell).draw(svg))
 
 Note: subdivision leaf cells have `row = col = index = -1` since they are positional only and not part of the primary grid topology.
 
+## Grid sizing modes (add-on)
+
+`Grid` now supports optional sizing controls while preserving legacy behavior by default.
+
+```typescript
+type GridCellSizing = 'stretch' | 'squareByCount' | 'squareByShortSide'
+type GridFit = 'contain' | 'cover' | 'stretch'
+```
+
+- `cellSizing: 'stretch'` (default): legacy behavior; fills available width/height independently.
+- `cellSizing: 'squareByCount'`: keeps configured `rows`/`cols`, then applies `fit`.
+- `cellSizing: 'squareByShortSide'`: uses `shortSideDivisions` as the cell count on the shorter axis, derives the longer axis count, then applies `fit`.
+- `fit: 'contain'`: square cells remain inside bounds; leftover space may appear.
+- `fit: 'cover'`: square cells cover bounds; overflow is aligned by `alignX/alignY`.
+- `fit: 'stretch'`: fills full bounds; cells may become non-square.
+
+### Examples
+
+```typescript
+// 1) Legacy/default behavior (non-breaking)
+const a = new Grid({ cols: 12, rows: 8, width: w, height: h, utils })
+
+// 2) Keep explicit counts, force square cells inside bounds
+const b = new Grid({
+  cols: 12, rows: 8, width: w, height: h, utils,
+  cellSizing: 'squareByCount',
+  fit: 'contain',
+  alignX: 'center',
+  alignY: 'center'
+})
+
+// 3) Keep explicit counts, square cover (can overflow frame)
+const c = new Grid({
+  cols: 12, rows: 8, width: w, height: h, utils,
+  cellSizing: 'squareByCount',
+  fit: 'cover',
+  alignX: 'center',
+  alignY: 'center'
+})
+
+// 4) Derive counts from short side denominator
+const d = new Grid({
+  cols: 1, rows: 1, width: w, height: h, utils,
+  cellSizing: 'squareByShortSide',
+  shortSideDivisions: 16,
+  fit: 'contain'
+})
+```
+
 ## When NOT to subclass Grid
 
 If you are using `Cell` standalone (without a `Grid`) — for sketch-local tile agents, positioned objects, etc. — just extend `Cell` directly. No `Grid` subclass is needed:

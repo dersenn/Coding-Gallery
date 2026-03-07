@@ -140,6 +140,7 @@ export { quadBezControlPoint, splineControlPoints, quadBezHandles, splineHandles
 export { SVG, Path, pPt, PathBuilder } from '~/utils/svg'
 export { shortcuts } from '~/utils/shortcuts'
 export { Grid, GridCell } from '~/utils/grid'
+export type { GridConfig, GridCellConfig, GridCellSizing, GridFit, GridAlign } from '~/utils/grid'
 export { Cell } from '~/utils/cell'
 export { Color } from '~/utils/color'
 export { resolveCanvas } from '~/utils/canvas'
