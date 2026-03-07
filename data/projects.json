@@ -138,6 +138,16 @@
     "hidden": false
   },
   {
+    "id": "grid-almighty",
+    "title": "Grid Almighty",
+    "description": "Single-layer full-canvas grid skeleton that draws circles per cell",
+    "date": "2026-03",
+    "tags": ["svg", "grid"],
+    "libraries": ["svg"],
+    "entryFile": "/projects/svg/grid-almighty/index.ts",
+    "hidden": false
+  },
+  {
     "id": "template",
     "title": "P5 Template",
     "description": "Template",
