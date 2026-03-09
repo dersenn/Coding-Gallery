@@ -7,6 +7,7 @@ export interface CanvasCreateConfig {
   width?: number
   height?: number
   alpha?: boolean
+  pixelRatio?: number | 'auto'
   defaults?: CanvasDefaultStyle
 }
 
@@ -99,14 +100,25 @@ export class Canvas {
   id: string
   w: number
   h: number
+  pixelRatio: number
   c: Vec
   el: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   def: CanvasDefaults
 
+  private resolvePixelRatio(value: CanvasCreateConfig['pixelRatio']): number {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) && value > 0 ? value : 1
+    }
+    if (typeof window === 'undefined') return 1
+    const dpr = window.devicePixelRatio || 1
+    return Number.isFinite(dpr) && dpr > 0 ? dpr : 1
+  }
+
   constructor(setup: CanvasCreateConfig) {
     this.parent = setup.parent
     this.id = setup.id
+    this.pixelRatio = this.resolvePixelRatio(setup.pixelRatio ?? 'auto')
     this.w = clampDimension(setup.width ?? this.parent.clientWidth)
     this.h = clampDimension(setup.height ?? this.parent.clientHeight)
     this.c = new Vec(this.w / 2, this.h / 2)
@@ -115,8 +127,6 @@ export class Canvas {
 
     this.el = document.createElement('canvas')
     this.el.id = this.id
-    this.el.width = this.w
-    this.el.height = this.h
     this.parent.append(this.el)
 
     const ctx = this.el.getContext('2d', { alpha: setup.alpha ?? true })
@@ -124,15 +134,21 @@ export class Canvas {
       throw new Error('Unable to create 2D canvas context')
     }
     this.ctx = ctx
-    applyStyle(this.ctx, this.def)
+    this.resize(this.w, this.h)
   }
 
   resize(width: number, height: number): void {
     this.w = clampDimension(width)
     this.h = clampDimension(height)
     this.c = new Vec(this.w / 2, this.h / 2)
-    this.el.width = this.w
-    this.el.height = this.h
+
+    // Keep logical drawing units in CSS pixels, but scale backing store for DPR.
+    this.el.width = Math.max(1, Math.round(this.w * this.pixelRatio))
+    this.el.height = Math.max(1, Math.round(this.h * this.pixelRatio))
+    this.el.style.width = `${this.w}px`
+    this.el.style.height = `${this.h}px`
+
+    this.ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0)
     applyStyle(this.ctx, this.def)
   }
 
