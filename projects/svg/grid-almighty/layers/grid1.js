@@ -120,10 +120,9 @@ class GridCoreGrid extends Grid {
 
 class GridCoreCell extends GridCell {
   draw() {
-    const center = this.center()
     const fill = this.resolveFillColor()
     if (!fill) return
-    this.grid.svg.rect(center, this.width, this.height, fill, 'none', 0)
+    this.grid.svg.rect(this.tl(), this.width, this.height, fill, 'none', 0)
   }
 
   resolveFillColor() {

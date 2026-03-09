@@ -13,9 +13,10 @@ import {
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 import { drawGridCore } from './layers/grid1.js'
+import { drawGridGrowth } from './layers/grid2.js'
 import type { LayerDrawContext } from './layers/types'
 
-type GridAlmightyLayer = 'grid-core'
+type GridAlmightyLayer = 'grid-core' | 'grid-growth'
 
 interface GridAlmightyLayerRuntimeExtras extends Omit<LayerDrawContext, 'svg' | 'frame' | 'controls'> {
   getControls: () => ProjectContext['controls']
@@ -25,11 +26,16 @@ const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<
   GridAlmightyLayer,
   LayerDrawContext
 > = {
-  // Single layer runtime; control scaffolding supports future layers.
+  // Single-active layer runtime.
   'grid-core': {
     label: 'Grid Core',
     canvas: { mode: 'full' },
     draw: drawGridCore
+  },
+  'grid-growth': {
+    label: 'Grid Growth',
+    canvas: { mode: 'full' },
+    draw: drawGridGrowth
   }
 }
 
@@ -47,6 +53,23 @@ const LAYER_SETUP = singleActiveSvgLayerSetup<
 })
 
 export const controls: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'composition',
+    label: 'Composition',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'select',
+        label: 'Layer',
+        key: 'activeLayer',
+        hideLabel: true,
+        default: LAYER_SETUP.defaultLayerId,
+        options: LAYER_SETUP.options
+      }
+    ]
+  },
   {
     type: 'group',
     id: 'grid',
@@ -67,10 +90,69 @@ export const controls: ProjectControlDefinition[] = [
   },
   {
     type: 'group',
+    id: 'growth',
+    label: 'Growth',
+    collapsible: true,
+    defaultOpen: true,
+    visibleWhenSelectKey: 'activeLayer',
+    visibleWhenSelectValue: 'grid-growth',
+    controls: [
+      {
+        type: 'slider',
+        label: 'Seed Count',
+        key: 'growth_seed_count',
+        default: 8,
+        min: 1,
+        max: 64,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Growth Chance',
+        key: 'growth_chance',
+        default: 68,
+        min: 1,
+        max: 100,
+        step: 1
+      },
+      {
+        type: 'select',
+        label: 'Neighborhood',
+        key: 'growth_neighborhood',
+        default: '8',
+        options: [
+          { label: '8 Neighbors', value: '8' },
+          { label: '4 Neighbors', value: '4' }
+        ]
+      },
+      {
+        type: 'slider',
+        label: 'Max Passes',
+        key: 'growth_max_passes',
+        default: 420,
+        min: 10,
+        max: 2000,
+        step: 10
+      },
+      {
+        type: 'slider',
+        label: 'Target Fill',
+        key: 'growth_target_fill',
+        default: 100,
+        min: 10,
+        max: 100,
+        step: 1
+      }
+    ]
+  },
+  {
+    type: 'group',
     id: 'rules',
     label: 'Rules',
     collapsible: true,
     defaultOpen: true,
+    visibleWhenSelectKey: 'activeLayer',
+    visibleWhenSelectValue: 'grid-core',
     controls: [
       {
         type: 'select',
@@ -105,6 +187,8 @@ export const controls: ProjectControlDefinition[] = [
     label: 'Noise',
     collapsible: true,
     defaultOpen: false,
+    visibleWhenSelectKey: 'activeLayer',
+    visibleWhenSelectValue: 'grid-core',
     controls: [
       {
         type: 'slider',
@@ -193,7 +277,7 @@ export async function init(
 
   const controlState = {
     ...controls,
-    activeLayer: LAYER_SETUP.defaultLayerId
+    activeLayer: (controls.activeLayer as GridAlmightyLayer | undefined) ?? LAYER_SETUP.defaultLayerId
   } as ProjectContext['controls'] & { activeLayer: GridAlmightyLayer }
 
   const { el: baseContainer, width, height } = resolveContainer(container, ROOT_CANVAS_CONFIG)
