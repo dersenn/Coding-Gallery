@@ -26,7 +26,7 @@ Use this folder for supporting docs while keeping the repository root focused on
 - Framework contract and module surface: `../types/project.ts`
 - Main project/runtime and controls/actions docs: `../README.md`
 - Seed determinism rules: `SEED_SYSTEM.md`
-- Canvas sizing and layout: `CANVAS_UTILITY.md`
+- Container sizing and layout: `CONTAINER_UTILITY.md`
 - Lightweight canvas drawing API: `CANVAS_DRAWING_UTILITY.md`
 - Utility families to check before reimplementing primitives:
   - `../utils/generative.ts` (seed/noise/math/vec/array)

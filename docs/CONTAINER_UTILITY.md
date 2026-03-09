@@ -1,4 +1,4 @@
-# Canvas Layout Utility
+# Container Layout Utility
 
 `utils/container.ts` — imported via `~/types/project` alongside `SVG`, `shortcuts`, etc.
 

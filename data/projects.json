@@ -166,7 +166,7 @@
     "tags": ["canvas2d", "template"],
     "libraries": ["canvas2d"],
     "entryFile": "/projects/_Templates/_canvas2d-template/index.ts",
-    "hidden": false
+    "hidden": true
   },
   {
     "id": "svg-template",
@@ -203,7 +203,7 @@
     "title": "SVG Showcase",
     "description": "One cell per SVG primitive and path mode — a live reference for the engine",
     "date": "2026-02",
-    "tags": ["svg", "generative", "grid", "reference"],
+    "tags": ["svg", "grid", "reference"],
     "libraries": ["svg"],
     "prefersTheme": "light",
     "entryFile": "/projects/_Templates/_svg-example/index.ts",
