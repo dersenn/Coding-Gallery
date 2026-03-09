@@ -116,13 +116,13 @@ export async function init(
     for (let i = 0; i < count; i++) {
       const pos = v(rnd() * svg.w, rnd() * svg.h)
       const r = rnd() * 20 + 4
-      svg.makeCircle(pos, r, 'none', theme.foreground, 1)
+      svg.circle(pos, r, 'none', theme.foreground, 1)
     }
 
     // Example: a spline through seeded random points.
     // const pts = Array.from({ length: 6 }, () => v(rnd() * svg.w, rnd() * svg.h))
     // const pathStr = new Path(pts, false).buildSpline(0.4)
-    // svg.makePath(pathStr, 'none', theme.foreground, 1)
+    // svg.path(pathStr, 'none', theme.foreground, 1)
   }
 
   draw()

@@ -157,13 +157,13 @@ export async function init(
   const drawStraight = () => {
     const pts = buildPoints()
     const path = new Path(pts, true)
-    svg.makePath(path.buildPolygon(false), 'transparent', straightColor, 2)
+    svg.path(path.buildPolygon(false), 'transparent', straightColor, 2)
   }
 
   const drawQuadratic = () => {
     const pts = buildPoints()
     const path = new Path(pts, true)
-    svg.makePath(
+    svg.path(
       path.buildQuadBez(controlState.quadraticTension, controlState.quadraticOffset, false),
       'transparent',
       quadraticColor,
@@ -174,13 +174,13 @@ export async function init(
   const drawCubic = () => {
     const pts = buildPoints()
     const path = new Path(pts, true)
-    svg.makePath(path.buildSpline(controlState.cubicTension, false), 'transparent', cubicColor, 2)
+    svg.path(path.buildSpline(controlState.cubicTension, false), 'transparent', cubicColor, 2)
   }
 
   const drawSamplePoints = () => {
     const pts = buildPoints()
     pts.forEach((pt) => {
-      svg.makeCircle(pt, 4, controlPointColor, 'transparent')
+      svg.circle(pt, 4, controlPointColor, 'transparent')
     })
   }
 
@@ -189,9 +189,9 @@ export async function init(
     const quadraticHandleColor =
       quadraticBase?.withAlpha(controlState.handleOpacity).toCss('rgba') ?? theme.foreground
     for (const { a, cp, b } of quadBezHandles(pts, controlState.quadraticTension, controlState.quadraticOffset)) {
-      svg.makeLine(a, cp, quadraticHandleColor, 1)
-      svg.makeLine(cp, b, quadraticHandleColor, 1)
-      svg.makeCircle(cp, 3, quadraticHandleColor, 'transparent')
+      svg.line(a, cp, quadraticHandleColor, 1)
+      svg.line(cp, b, quadraticHandleColor, 1)
+      svg.circle(cp, 3, quadraticHandleColor, 'transparent')
     }
   }
 
@@ -200,16 +200,16 @@ export async function init(
     const cubicHandleColor =
       cubicBase?.withAlpha(controlState.handleOpacity).toCss('rgba') ?? theme.foreground
     for (const { pt, cpIn, cpOut } of splineHandles(pts, controlState.cubicTension)) {
-      svg.makeLine(pt, cpIn, cubicHandleColor, 1)
-      svg.makeLine(pt, cpOut, cubicHandleColor, 1)
-      svg.makeCircle(cpIn, 3, cubicHandleColor, 'transparent')
-      svg.makeCircle(cpOut, 3, cubicHandleColor, 'transparent')
+      svg.line(pt, cpIn, cubicHandleColor, 1)
+      svg.line(pt, cpOut, cubicHandleColor, 1)
+      svg.circle(cpIn, 3, cubicHandleColor, 'transparent')
+      svg.circle(cpOut, 3, cubicHandleColor, 'transparent')
     }
   }
 
   const draw = () => {
     svg.stage.innerHTML = ''
-    svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
+    svg.rect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
 
     // Curve toggles intentionally behave like "compare overlays" (can render all together).
     const enabled = new Set(controlState.enabledCurves)

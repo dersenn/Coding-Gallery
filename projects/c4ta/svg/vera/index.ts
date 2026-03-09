@@ -75,7 +75,7 @@ export async function init(
     const v2rnd = createGenerativeUtils(seed)
 
     svg.stage.replaceChildren()
-    svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
+    svg.rect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
 
     const makeLayerContext = (rnd: () => number): LayerDrawContext => ({
       svg,

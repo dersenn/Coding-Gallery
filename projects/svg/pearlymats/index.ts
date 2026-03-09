@@ -433,7 +433,7 @@ export async function init(
         ? parsedColor.withAlpha(parsedColor.a * this.alpha).toCss('rgba')
         : this.color
 
-      svg.makeCircle(center, radius, fillColor, 'none', 0)
+      svg.circle(center, radius, fillColor, 'none', 0)
     }
   }
 
@@ -443,7 +443,7 @@ export async function init(
     svg.stage.innerHTML = ''
 
     // Add background
-    svg.makeRect(v(0, 0), size, size, backgroundColor, 'none')
+    svg.rect(v(0, 0), size, size, backgroundColor, 'none')
 
     // Recreate grid if gridSize changed
     if (grid.cols !== controlState.gridSize || grid.rows !== controlState.gridSize) {
@@ -672,20 +672,20 @@ export async function init(
       // Draw vertical grid lines
       for (let col = 0; col <= controlState.gridSize; col++) {
         const x = margin + col * cellSize
-        svg.makeLine(v(x, margin), v(x, margin + gridArea), annotationColor, 0.5)
+        svg.line(v(x, margin), v(x, margin + gridArea), annotationColor, 0.5)
       }
 
       // Draw horizontal grid lines
       for (let row = 0; row <= controlState.gridSize; row++) {
         const y = margin + row * cellSize
-        svg.makeLine(v(margin, y), v(margin + gridArea, y), annotationColor, 0.5)
+        svg.line(v(margin, y), v(margin + gridArea, y), annotationColor, 0.5)
       }
 
       // Draw column numbers (top)
       for (let col = 0; col < controlState.gridSize; col++) {
         const cellSize = gridArea / controlState.gridSize
         const x = margin + col * cellSize + cellSize / 2
-        svg.makeText(
+        svg.text(
           (col + 1).toString(),
           v(x, margin - 10),
           annotationColor,
@@ -697,7 +697,7 @@ export async function init(
       for (let row = 0; row < controlState.gridSize; row++) {
         const cellSize = gridArea / controlState.gridSize
         const y = margin + row * cellSize + cellSize / 2
-        svg.makeText(
+        svg.text(
           (row + 1).toString(),
           v(margin - 10, y + 3),
           annotationColor,

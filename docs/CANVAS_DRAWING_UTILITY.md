@@ -16,7 +16,7 @@ Use it together with `resolveContainer()` from `utils/container.ts` (or `~/types
 import { Canvas, createCanvas2D, draw } from '~/types/project'
 ```
 
-- `new Canvas({ parent, id, width, height, alpha? })`
+- `new Canvas({ parent, id, width, height, alpha?, defaults? })`
 - `createCanvas2D(config)` convenience constructor
 - `draw(target, callback)` context save/restore wrapper
 
@@ -24,6 +24,7 @@ import { Canvas, createCanvas2D, draw } from '~/types/project'
 
 - `clear()`
 - `background(fill)`
+- `background(fill?)` (uses constructor default when omitted)
 - `resize(width, height)`
 - `fill(color | null)`
 - `stroke(color | null)`
@@ -46,14 +47,25 @@ export const container = 'full'
 
 export async function init(container: HTMLElement, context: ProjectContext): Promise<CleanupFunction> {
   const { theme, utils } = context
-  const { rnd } = shortcuts(utils)
+  const { v, rnd } = shortcuts(utils)
   const { el, width, height } = resolveContainer(container, 'full')
-  const cv = new Canvas({ parent: el, id: 'my-canvas', width, height })
+  const cv = new Canvas({
+    parent: el,
+    id: 'my-canvas',
+    width,
+    height,
+    defaults: {
+      background: theme.background,
+      stroke: theme.foreground,
+      fill: theme.foreground,
+      text: theme.foreground
+    }
+  })
 
-  cv.background(theme.background)
+  cv.background()
   for (let i = 0; i < 200; i++) {
     cv.circle(
-      { x: rnd() * width, y: rnd() * height },
+      v(rnd() * width, rnd() * height),
       2,
       theme.foreground,
       'transparent'
@@ -70,3 +82,5 @@ export async function init(container: HTMLElement, context: ProjectContext): Pro
 
 - Keep this utility intentionally compact for now; avoid adding advanced path/transform APIs until needed by at least one sketch.
 - p5 remains fully supported and is still a recommended option for rapid prototyping.
+- Point-based APIs expect `Vec` instances.
+- Template starter: `projects/_Templates/_canvas2d-template/`.

@@ -34,11 +34,11 @@ export function drawAnni1(context) {
   const bottomMode = (1 - startMode + settings.grid.rows) % 2
 
 
-  svg.makeRect(v(frame.x, frame.y), frame.width, frame.height, settings.colors.background, 'none', 0)
+  svg.rect(v(frame.x, frame.y), frame.width, frame.height, settings.colors.background, 'none', 0)
 
-  svg.makeRectAB(v(frame.x, frame.y), v(frame.x + frame.width, frame.y + borderY), anniColors[startMode], 'none', 0)
+  svg.rectAB(v(frame.x, frame.y), v(frame.x + frame.width, frame.y + borderY), anniColors[startMode], 'none', 0)
 
-  svg.makeRectAB(v(frame.x, frame.y + frame.height - borderY), v(frame.x + frame.width, frame.y + frame.height), anniColors[bottomMode], 'none', 0)
+  svg.rectAB(v(frame.x, frame.y + frame.height - borderY), v(frame.x + frame.width, frame.y + frame.height), anniColors[bottomMode], 'none', 0)
 
   const color = {
     background: settings.colors.background,
@@ -124,13 +124,13 @@ class Anni1Cell extends GridCell {
 
     switch (mode) {
       case 0:
-        g.svg.makeRectC(center, this.width * g.pattern.crossThickness, this.height, g.color.primary, 'none', 0)
-        g.svg.makeRectC(center, this.width, this.width * g.pattern.crossThickness, g.color.primary, 'none', 0)
+        g.svg.rectC(center, this.width * g.pattern.crossThickness, this.height, g.color.primary, 'none', 0)
+        g.svg.rectC(center, this.width, this.width * g.pattern.crossThickness, g.color.primary, 'none', 0)
         break
       case 1:
-        g.svg.makeRectAB(this.tl(), this.br(), g.color.primary, 'none', 0)
-        g.svg.makeRectC(center, this.width * g.pattern.crossThickness, this.height, g.color.background, 'none', 0)
-        g.svg.makeRectC(center, this.width, this.width * g.pattern.crossThickness, g.color.background, 'none', 0)
+        g.svg.rectAB(this.tl(), this.br(), g.color.primary, 'none', 0)
+        g.svg.rectC(center, this.width * g.pattern.crossThickness, this.height, g.color.background, 'none', 0)
+        g.svg.rectC(center, this.width, this.width * g.pattern.crossThickness, g.color.background, 'none', 0)
         break
       case 2: {
         drawOddRowStripes(this, g, g.pattern.stripeRows, g.color.accent)
@@ -138,7 +138,7 @@ class Anni1Cell extends GridCell {
       }
       case 3: {
         drawOddRowStripes(this, g, g.pattern.stripeRows, g.color.accent)
-        g.svg.makeRectAB(this.tl(), this.br(), primary30, 'none', 0)
+        g.svg.rectAB(this.tl(), this.br(), primary30, 'none', 0)
         break
       }
     }
@@ -157,6 +157,6 @@ function drawOddRowStripes(cell, grid, stripeRows, fill) {
     const y = tl.y + i * stripeH
     const a = grid.utils.vec.create(tl.x, y)
     const b = grid.utils.vec.create(br.x, y + stripeH)
-    grid.svg.makeRectAB(a, b, fill, 'none', 0)
+    grid.svg.rectAB(a, b, fill, 'none', 0)
   }
 }

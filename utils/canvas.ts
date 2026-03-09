@@ -1,9 +1,5 @@
 import { Vec } from './generative'
-
-export interface PointLike {
-  x: number
-  y: number
-}
+import { Color } from './color'
 
 export interface CanvasCreateConfig {
   parent: HTMLElement
@@ -11,6 +7,7 @@ export interface CanvasCreateConfig {
   width?: number
   height?: number
   alpha?: boolean
+  defaults?: CanvasDefaultStyle
 }
 
 export interface CanvasStyle {
@@ -34,12 +31,19 @@ export interface CanvasExportOptions {
   seed?: string | number
 }
 
+export interface CanvasDefaultStyle extends CanvasStyle {
+  background?: string
+  text?: string
+}
+
 interface CanvasDefaults {
   fill: string
   stroke: string
   strokeW: number
   lineCap: CanvasLineCap
   lineJoin: CanvasLineJoin
+  background: string
+  text: string
 }
 
 const applyStyle = (ctx: CanvasRenderingContext2D, style: CanvasStyle): void => {
@@ -62,6 +66,34 @@ const applyStyle = (ctx: CanvasRenderingContext2D, style: CanvasStyle): void => 
 
 const clampDimension = (value: number): number => Math.max(1, Math.round(value))
 
+const resolveCssColor = (value: string | null | undefined): string | undefined => {
+  if (!value) return undefined
+  const parsed = Color.parse(value)
+  if (!parsed) return undefined
+  return parsed.toCss('rgba')
+}
+
+const resolveCanvasDefaults = (
+  parent: HTMLElement,
+  overrides?: CanvasDefaultStyle
+): CanvasDefaults => {
+  const computed = getComputedStyle(parent)
+  const computedColor = resolveCssColor(computed.color)
+  const computedBackground = Color.parse(computed.backgroundColor)
+
+  return {
+    fill: overrides?.fill ?? computedColor ?? 'transparent',
+    stroke: overrides?.stroke ?? computedColor ?? '#000',
+    strokeW: overrides?.strokeW ?? 1,
+    lineCap: overrides?.lineCap ?? 'butt',
+    lineJoin: overrides?.lineJoin ?? 'miter',
+    background: overrides?.background
+      ?? ((computedBackground && computedBackground.a > 0) ? computedBackground.toCss('rgba') : undefined)
+      ?? '#000000',
+    text: overrides?.text ?? computedColor ?? '#000'
+  }
+}
+
 export class Canvas {
   parent: HTMLElement
   id: string
@@ -79,13 +111,7 @@ export class Canvas {
     this.h = clampDimension(setup.height ?? this.parent.clientHeight)
     this.c = new Vec(this.w / 2, this.h / 2)
 
-    this.def = {
-      fill: 'transparent',
-      stroke: '#000',
-      strokeW: 1,
-      lineCap: 'butt',
-      lineJoin: 'miter'
-    }
+    this.def = resolveCanvasDefaults(this.parent, setup.defaults)
 
     this.el = document.createElement('canvas')
     this.el.id = this.id
@@ -114,7 +140,7 @@ export class Canvas {
     this.ctx.clearRect(0, 0, this.w, this.h)
   }
 
-  background(fill: string): void {
+  background(fill: string = this.def.background): void {
     this.ctx.save()
     this.ctx.fillStyle = fill
     this.ctx.fillRect(0, 0, this.w, this.h)
@@ -134,8 +160,8 @@ export class Canvas {
   }
 
   line(
-    a: PointLike,
-    b: PointLike,
+    a: Vec,
+    b: Vec,
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): void {
@@ -149,7 +175,7 @@ export class Canvas {
   }
 
   circle(
-    at: PointLike,
+    at: Vec,
     r: number = 5,
     fill: string = this.def.fill,
     stroke: string = this.def.stroke,
@@ -165,7 +191,7 @@ export class Canvas {
   }
 
   rect(
-    at: PointLike,
+    at: Vec,
     width: number,
     height: number,
     fill: string = this.def.fill,
@@ -184,7 +210,7 @@ export class Canvas {
   }
 
   rectC(
-    center: PointLike,
+    center: Vec,
     width: number,
     height: number,
     fill: string = this.def.fill,
@@ -203,8 +229,8 @@ export class Canvas {
 
   text(
     value: string,
-    at: PointLike,
-    fill: string = this.def.stroke,
+    at: Vec,
+    fill: string = this.def.text,
     options: CanvasTextOptions = {}
   ): void {
     this.ctx.save()

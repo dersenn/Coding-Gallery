@@ -47,7 +47,7 @@ export function drawVera2({
         [new Vec(tile.tl().x, varPt.y), tile.tr()]   // (left, random y) -> top-right
       ] as const
       const [p1, p2] = positions[Math.floor(rnd() * 2)]!
-      svg.makeLine(v(p1.x, p1.y), v(p2.x, p2.y), color, w * 0.002)
+      svg.line(v(p1.x, p1.y), v(p2.x, p2.y), color, w * 0.002)
     }
   }
 }

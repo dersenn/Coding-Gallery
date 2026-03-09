@@ -26,7 +26,7 @@ export function drawGridCore(context) {
     : [theme.foreground]
   const zones = createZones(palette, utils, controls, theme.foreground)
 
-  svg.makeRect(v(frame.x, frame.y), frame.width, frame.height, theme.background, 'none', 0)
+  svg.rect(v(frame.x, frame.y), frame.width, frame.height, theme.background, 'none', 0)
 
   const grid = new GridCoreGrid({
     cols,
@@ -123,7 +123,7 @@ class GridCoreCell extends GridCell {
     const center = this.center()
     const fill = this.resolveFillColor()
     if (!fill) return
-    this.grid.svg.makeRect(center, this.width, this.height, fill, 'none', 0)
+    this.grid.svg.rect(center, this.width, this.height, fill, 'none', 0)
   }
 
   resolveFillColor() {

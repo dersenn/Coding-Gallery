@@ -251,7 +251,7 @@ export async function init(
     if (controlState.showPaths) {
       for (const strandPts of structure.strands) {
         const strand = new Path(strandPts, false)
-        svg.makePath(
+        svg.path(
           strand.buildSpline(0.4, false),
           'transparent',
           controlState.pathStroke,
@@ -262,7 +262,7 @@ export async function init(
 
     if (controlState.showPoints) {
       for (let y = 0; y <= structure.rows; y++) {
-        svg.makeCircles(
+        svg.circles(
           structure.pointsByRow[y]!,
           controlState.pointRadius,
           rowColor(y),

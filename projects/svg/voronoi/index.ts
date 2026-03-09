@@ -132,13 +132,13 @@ export async function init(
     const circumStroke = (parsed?.withAlpha(0.14).toRgbaString()) ?? theme.foreground
     const centerFill = (parsed?.withAlpha(0.55).toRgbaString()) ?? theme.foreground
     // Edges + circumcircle + center dot provide geometric debugging at a glance.
-    svg.makePath(path.buildPolygon(), 'transparent', edgeStroke, 2)
-    svg.makeCircle(triangle.circumcenter, triangle.radius, 'none', circumStroke, 1)
-    svg.makeCircle(triangle.circumcenter, 4, centerFill)
+    svg.path(path.buildPolygon(), 'transparent', edgeStroke, 2)
+    svg.circle(triangle.circumcenter, triangle.radius, 'none', circumStroke, 1)
+    svg.circle(triangle.circumcenter, 4, centerFill)
   }
 
   // Step 4: overlay point markers for the sampled sites.
-  svg.makeCircles(points, 5, theme.palette[0] ?? theme.foreground)
+  svg.circles(points, 5, theme.palette[0] ?? theme.foreground)
 
   registerAction('download-svg', () => {
     svg.save(utils.seed.current, 'voronoi')

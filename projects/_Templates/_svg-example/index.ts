@@ -220,7 +220,7 @@ class ShowcaseCell extends GridCell {
       case 0: {
         // makeLine — random diagonal; endpoints scattered in opposing quadrants
         // so the line always crosses the cell centre area.
-        svg.makeLine(
+        svg.line(
           v(ix + rnd() * iw * 0.25, iy + rnd() * ih),
           v(ix + iw * (0.75 + rnd() * 0.25), iy + rnd() * ih),
           clr, sw
@@ -229,13 +229,13 @@ class ShowcaseCell extends GridCell {
       }
       case 1: {
         // makeCircle — stroke only, no fill. Radius varies per seed.
-        svg.makeCircle(v(cx, cy), r * (0.45 + rnd() * 0.55), 'none', clr, sw)
+        svg.circle(v(cx, cy), r * (0.45 + rnd() * 0.55), 'none', clr, sw)
         break
       }
       case 2: {
         // makeCircle — fill only, no stroke. Same radius range as case 1 for
         // visual consistency when labels are off.
-        svg.makeCircle(v(cx, cy), r * (0.45 + rnd() * 0.55), clr, 'none', 0)
+        svg.circle(v(cx, cy), r * (0.45 + rnd() * 0.55), clr, 'none', 0)
         break
       }
       case 3: {
@@ -246,30 +246,30 @@ class ShowcaseCell extends GridCell {
           const angle = (i / n) * Math.PI * 2
           return v(cx + Math.cos(angle) * r * 0.75, cy + Math.sin(angle) * r * 0.75)
         })
-        svg.makeCircles(pts, r * 0.15, clr, 'none', 0)
+        svg.circles(pts, r * 0.15, clr, 'none', 0)
         break
       }
       case 4: {
         // makeEllipse — horizontal (rx > ry). Both axes vary independently
         // so proportions differ each seed, but the shape stays wider than tall.
-        svg.makeEllipse(v(cx, cy), r * (0.6 + rnd() * 0.4), r * (0.2 + rnd() * 0.2), 'none', clr, sw)
+        svg.ellipse(v(cx, cy), r * (0.6 + rnd() * 0.4), r * (0.2 + rnd() * 0.2), 'none', clr, sw)
         break
       }
       case 5: {
         // makeEllipse — vertical (ry > rx). Mirror of case 4.
-        svg.makeEllipse(v(cx, cy), r * (0.2 + rnd() * 0.2), r * (0.6 + rnd() * 0.4), 'none', clr, sw)
+        svg.ellipse(v(cx, cy), r * (0.2 + rnd() * 0.2), r * (0.6 + rnd() * 0.4), 'none', clr, sw)
         break
       }
       case 6: {
         // makeRect — stroke only. Size varies; always centred in the inset area.
         const s = iw * (0.4 + rnd() * 0.4)
-        svg.makeRect(v(cx - s / 2, cy - s / 2), s, s, 'none', clr, sw)
+        svg.rect(v(cx - s / 2, cy - s / 2), s, s, 'none', clr, sw)
         break
       }
       case 7: {
         // makeRect — fill only. Same size logic as case 6.
         const s = iw * (0.4 + rnd() * 0.4)
-        svg.makeRect(v(cx - s / 2, cy - s / 2), s, s, clr, 'none', 0)
+        svg.rect(v(cx - s / 2, cy - s / 2), s, s, clr, 'none', 0)
         break
       }
       case 8: {
@@ -278,7 +278,7 @@ class ShowcaseCell extends GridCell {
         // of a, giving a positive-area rect.
         const a = v(ix + rnd() * iw * 0.25, iy + rnd() * ih * 0.25)
         const b = v(ix + iw * (0.65 + rnd() * 0.25), iy + ih * (0.65 + rnd() * 0.25))
-        svg.makeRectAB(a, b, 'none', clr, sw)
+        svg.rectAB(a, b, 'none', clr, sw)
         break
       }
 
@@ -290,7 +290,7 @@ class ShowcaseCell extends GridCell {
         const pts = Array.from({ length: 5 }, (_, i) =>
           v(ix + (i / 4) * iw, iy + ih * (0.2 + rnd() * 0.6))
         )
-        svg.makePath(new Path(pts, false).buildPolygon(), 'none', clr, sw)
+        svg.path(new Path(pts, false).buildPolygon(), 'none', clr, sw)
         break
       }
       case 10: {
@@ -304,7 +304,7 @@ class ShowcaseCell extends GridCell {
             cy + Math.sin(angle) * r * (0.5 + rnd() * 0.5)
           )
         })
-        svg.makePath(new Path(pts, true).buildPolygon(), 'none', clr, sw)
+        svg.path(new Path(pts, true).buildPolygon(), 'none', clr, sw)
         break
       }
       case 11: {
@@ -313,7 +313,7 @@ class ShowcaseCell extends GridCell {
         const pts = Array.from({ length: 5 }, (_, i) =>
           v(ix + (i / 4) * iw, iy + ih * (0.2 + rnd() * 0.6))
         )
-        svg.makePath(new Path(pts, false).buildQuadBez(0.5, 0.4), 'none', clr, sw)
+        svg.path(new Path(pts, false).buildQuadBez(0.5, 0.4), 'none', clr, sw)
         break
       }
       case 12: {
@@ -323,7 +323,7 @@ class ShowcaseCell extends GridCell {
         const pts = Array.from({ length: 5 }, (_, i) =>
           v(ix + (i / 4) * iw, iy + ih * (0.2 + rnd() * 0.6))
         )
-        svg.makePath(new Path(pts, false).buildSpline(0.4), 'none', clr, sw)
+        svg.path(new Path(pts, false).buildSpline(0.4), 'none', clr, sw)
         break
       }
       case 13: {
@@ -335,7 +335,7 @@ class ShowcaseCell extends GridCell {
           const angle = (i / n) * Math.PI * 2
           return v(cx + Math.cos(angle) * r * (0.4 + rnd() * 0.6), cy + Math.sin(angle) * r * (0.4 + rnd() * 0.6))
         })
-        svg.makePath(new Path(pts, true).buildSpline(0.4), clr, 'none', 0)
+        svg.path(new Path(pts, true).buildSpline(0.4), clr, 'none', 0)
         break
       }
 
@@ -354,7 +354,7 @@ class ShowcaseCell extends GridCell {
           .arcTo(r, r, 0, span > Math.PI ? 1 : 0, 1,               // arc sweep CW
             cx + Math.cos(endAngle) * r, cy + Math.sin(endAngle) * r)
           .close().build()                                          // back to centre
-        svg.makePath(d, clr, 'none', 0)
+        svg.path(d, clr, 'none', 0)
         break
       }
       case 15: {
@@ -363,7 +363,7 @@ class ShowcaseCell extends GridCell {
         // corners, producing the classic cubic S shape.
         const cp1 = v(ix + iw * 0.25, iy)          // upper control point
         const cp2 = v(ix + iw * 0.75, iy + ih)     // lower control point
-        svg.makePath(
+        svg.path(
           new PathBuilder().moveTo(ix, iy + ih / 2).cubicToVec(cp1, cp2, v(ix + iw, iy + ih / 2)).build(),
           'none', clr, sw
         )
@@ -377,7 +377,7 @@ class ShowcaseCell extends GridCell {
         const cp1 = v(ix + iw * 0.15, iy)
         const mid = v(cx, cy)
         const cp2 = v(cx + iw * 0.1, iy + ih)      // handle for the smooth continuation
-        svg.makePath(
+        svg.path(
           new PathBuilder()
             .moveTo(ix, iy + ih / 2)
             .cubicToVec(cp1, v(cx - iw * 0.1, iy + ih * 0.2), mid)   // first C
@@ -394,7 +394,7 @@ class ShowcaseCell extends GridCell {
         const halfH = ih * 0.28
         const lx = cx - iw * 0.22; const rx = cx + iw * 0.22
         const ty = cy - halfH; const by = cy + halfH
-        svg.makePath(
+        svg.path(
           new PathBuilder()
             .moveTo(lx, ty).lineTo(rx, ty)                        // top edge
             .arcTo(halfH, halfH, 0, 0, 1, rx, by)                 // right semicircle CW
@@ -419,7 +419,7 @@ class ShowcaseCell extends GridCell {
         g.forEach((subCell) => {
           const subNoise = sg.utils.noise.cell(subCell.x / sg.svgW, subCell.y / sg.svgH, 2)
           const subClr = pal[Math.min(pal.length - 1, Math.floor(subNoise * pal.length))] ?? clr
-          svg.makeRect(v(subCell.x, subCell.y), subCell.width, subCell.height, subClr, 'none', 0)
+          svg.rect(v(subCell.x, subCell.y), subCell.width, subCell.height, subClr, 'none', 0)
         })
         break
       }
@@ -434,7 +434,7 @@ class ShowcaseCell extends GridCell {
         // and variant gradients continue seamlessly into the sub-grid.
         if (depth >= 1) {
           // Fallback at max depth — filled rect preserves the dominant colour.
-          svg.makeRect(v(ix, iy), iw, ih, clr, 'none', 0)
+          svg.rect(v(ix, iy), iw, ih, clr, 'none', 0)
           break
         }
         const g = new ShowcaseGrid({ cols: 3, rows: 3, width: iw, height: ih, x: ix, y: iy, utils: sg.utils })
@@ -450,7 +450,7 @@ class ShowcaseCell extends GridCell {
     // Labels are rendered last so they sit on top of the shape.
     // Font size scales with cell width so text stays legible at any subdivision level.
     if (showLabel) {
-      svg.makeText(
+      svg.text(
         VARIANT_LABELS[variant] ?? '',
         v(cx, cy),
         ann,
@@ -545,7 +545,7 @@ export async function init(
   function draw() {
     utils.seed.reset()  // reset PRNG to position 0 so every full redraw is identical
     svg.stage.replaceChildren()
-    svg.makeRect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
+    svg.rect(v(0, 0), svg.w, svg.h, theme.background, 'none', 0)
 
     const subs = Math.floor(controlState.subdivisions)
     const ns = controlState.noiseScale

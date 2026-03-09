@@ -304,6 +304,7 @@ export async function init(
 
 - **SVG Static**: `projects/_Templates/_svg-template/`
 - **SVG Animated**: `projects/_Templates/_svg-animated-template/`
+- **Canvas2D**: `projects/_Templates/_canvas2d-template/`
 
 ## Vanilla Canvas Option
 
@@ -315,7 +316,7 @@ import { resolveContainer, Canvas } from '~/types/project'
 const { el, width, height } = resolveContainer(container, 'full')
 const cv = new Canvas({ parent: el, id: 'my-canvas', width, height })
 cv.background('#111')
-cv.circle({ x: width / 2, y: height / 2 }, 32, '#fff', 'transparent')
+cv.circle(cv.c, 32, '#fff', 'transparent')
 ```
 
 Use `docs/CANVAS_DRAWING_UTILITY.md` for full helper details.

@@ -48,7 +48,7 @@ class MyCell extends GridCell {
 
   draw(svg: SVG, theme: ThemeTokens, sw: number) {
     switch (this.variant) {
-      case 0: svg.makeCircle(this.center(), this.width * 0.3, theme.foreground); break
+      case 0: svg.circle(this.center(), this.width * 0.3, theme.foreground); break
       // ...
     }
   }

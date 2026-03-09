@@ -50,6 +50,7 @@
     "noControls": true,
     "hidden": false
   },
+
   {
     "id": "clicky-polygon",
     "title": "Clicky Polygon",
@@ -156,6 +157,16 @@
     "libraries": [],
     "entryFile": "/projects/_Templates/_template/index.ts",
     "hidden": true
+  },
+  {
+    "id": "canvas2d-template",
+    "title": "Canvas2D Template",
+    "description": "Template",
+    "date": "2026-03",
+    "tags": ["canvas2d", "template"],
+    "libraries": ["canvas2d"],
+    "entryFile": "/projects/_Templates/_canvas2d-template/index.ts",
+    "hidden": false
   },
   {
     "id": "svg-template",

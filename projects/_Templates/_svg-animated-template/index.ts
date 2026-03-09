@@ -82,7 +82,7 @@ export async function init(
   }> = []
   
   for (let i = 0; i < 20; i++) {
-    const circle = svg.makeCircle(
+    const circle = svg.circle(
       v(svg.w / 2, svg.h / 2),
       10,
       'none',

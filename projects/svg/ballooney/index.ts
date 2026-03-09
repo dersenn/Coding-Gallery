@@ -164,7 +164,7 @@ export async function init(
         const cp = m.lerp(tile.c, 0.5)
         d += `Q ${cp.x} ${cp.y} ${pts[j]!.x} ${pts[j]!.y} `
       }
-      svg.makePath(d, theme.foreground, 'transparent', 1)
+      svg.path(d, theme.foreground, 'transparent', 1)
     }
   }
   draw()

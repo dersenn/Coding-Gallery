@@ -486,7 +486,7 @@ class MyCell extends Cell {
   }
   
   draw(svg: SVG) {
-    svg.makeRect(
+    svg.rect(
       utils.vec.create(this.x, this.y),
       this.width,
       this.height,
@@ -604,23 +604,23 @@ export async function init(container, context) {
   const svg = new SVG({ parent: container, id: 'my-sketch' })
   
   // Draw shapes
-  svg.makeCircle(svg.c, 100, 'none', '#000', 2)
-  svg.makeLine(v(0, 0), v(100, 100), '#000', 1)
+  svg.circle(svg.c, 100, 'none', '#000', 2)
+  svg.line(v(0, 0), v(100, 100), '#000', 1)
   
   // Create paths with bezier curves
   const pts = [v(100, 100), v(200, 150), v(300, 100)]
   const path = new Path(pts, true)  // true = closed path
-  svg.makePath(path.buildSpline(0.3), 'none', '#000', 2)
+  svg.path(path.buildSpline(0.3), 'none', '#000', 2)
   
   return () => svg.stage.remove()
 }
 ```
 
 **SVG Methods:**
-- `makeLine(a, b, stroke?, strokeW?)` - Line between two points
-- `makeCircle(center, r, fill?, stroke?, strokeW?)` - Circle
-- `makeRect(pt, w, h, fill?, stroke?, strokeW?)` - Rectangle
-- `makePath(d, fill?, stroke?, strokeW?)` - Custom path
+- `line(a, b, stroke?, strokeW?)` - Line between two points
+- `circle(center, r, fill?, stroke?, strokeW?)` - Circle
+- `rect(pt, w, h, fill?, stroke?, strokeW?)` - Rectangle
+- `path(d, fill?, stroke?, strokeW?)` - Custom path
 
 **Path Builders:**
 - `buildPolygon()` - Simple polygon

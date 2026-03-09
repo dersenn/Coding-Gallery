@@ -74,6 +74,30 @@ export class SVG {
     return stage
   }
 
+  private createSvgElement<T extends keyof SVGElementTagNameMap>(tag: T): SVGElementTagNameMap[T] {
+    return document.createElementNS(this.ns, tag) as SVGElementTagNameMap[T]
+  }
+
+  private setAttrs(el: Element, attrs: Record<string, string | number | null | undefined>): void {
+    Object.entries(attrs).forEach(([key, value]) => {
+      if (value === null || value === undefined) return
+      el.setAttribute(key, String(value))
+    })
+  }
+
+  private applyStrokeFill(
+    el: SVGElement,
+    fill: string,
+    stroke: string,
+    strokeW: number
+  ): void {
+    this.setAttrs(el, {
+      fill,
+      stroke,
+      'stroke-width': strokeW
+    })
+  }
+
   save(seed?: string, sketchName?: string, controls?: DownloadControlValues): void {
     const str = serializeSvgWithMetadata(this.stage, {
       projectId: sketchName || this.id,
@@ -93,64 +117,59 @@ export class SVG {
     URL.revokeObjectURL(link.href)
   }
 
-  makeLine(
+  line(
     a: Vec,
     b: Vec,
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGLineElement {
-    const line = document.createElementNS(this.ns, 'line') as SVGLineElement
-    line.setAttribute('x1', a.x.toString())
-    line.setAttribute('y1', a.y.toString())
-    line.setAttribute('x2', b.x.toString())
-    line.setAttribute('y2', b.y.toString())
-    line.setAttribute('stroke', stroke)
-    line.setAttribute('stroke-width', strokeW.toString())
+    const line = this.createSvgElement('line')
+    this.setAttrs(line, {
+      x1: a.x,
+      y1: a.y,
+      x2: b.x,
+      y2: b.y,
+      stroke,
+      'stroke-width': strokeW
+    })
     this.stage.append(line)
     return line
   }
 
-  makeCircle(
+  circle(
     c: Vec,
     r: number = 5,
     fill: string = this.def.fill,
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGCircleElement {
-    const circle = document.createElementNS(this.ns, 'circle') as SVGCircleElement
-    circle.setAttribute('cx', c.x.toString())
-    circle.setAttribute('cy', c.y.toString())
-    circle.setAttribute('r', r.toString())
-    circle.setAttribute('fill', fill)
-    circle.setAttribute('stroke', stroke)
-    circle.setAttribute('stroke-width', strokeW.toString())
+    const circle = this.createSvgElement('circle')
+    this.setAttrs(circle, {
+      cx: c.x,
+      cy: c.y,
+      r
+    })
+    this.applyStrokeFill(circle, fill, stroke, strokeW)
     this.stage.append(circle)
     return circle
   }
 
-  makeCircles(
+  circles(
     iA: Vec[],
     r: number = 5,
-    fill: string = '#f00',
-    stroke: string = 'transparent',
+    fill: string = this.def.fill,
+    stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGCircleElement[] {
     const oA: SVGCircleElement[] = []
     for (let c = 0; c < iA.length; c++) {
-      const circle = document.createElementNS(this.ns, 'circle') as SVGCircleElement
-      circle.setAttribute('cx', iA[c]!.x.toString())
-      circle.setAttribute('cy', iA[c]!.y.toString())
-      circle.setAttribute('r', r.toString())
-      circle.setAttribute('fill', fill)
-      circle.setAttribute('stroke', stroke)
-      circle.setAttribute('stroke-width', strokeW.toString())
-      this.stage.append(circle)
+      const circle = this.circle(iA[c]!, r, fill, stroke, strokeW)
       oA.push(circle)
     }
     return oA
   }
 
-  makeEllipse(
+  ellipse(
     c: Vec,
     rx: number,
     ry: number,
@@ -158,19 +177,19 @@ export class SVG {
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGEllipseElement {
-    const ellipse = document.createElementNS(this.ns, 'ellipse') as SVGEllipseElement
-    ellipse.setAttribute('cx', c.x.toString())
-    ellipse.setAttribute('cy', c.y.toString())
-    ellipse.setAttribute('rx', rx.toString())
-    ellipse.setAttribute('ry', ry.toString())
-    ellipse.setAttribute('fill', fill)
-    ellipse.setAttribute('stroke', stroke)
-    ellipse.setAttribute('stroke-width', strokeW.toString())
+    const ellipse = this.createSvgElement('ellipse')
+    this.setAttrs(ellipse, {
+      cx: c.x,
+      cy: c.y,
+      rx,
+      ry
+    })
+    this.applyStrokeFill(ellipse, fill, stroke, strokeW)
     this.stage.append(ellipse)
     return ellipse
   }
 
-  makeRect(
+  rect(
     pt: Vec,
     w: number,
     h: number,
@@ -178,19 +197,19 @@ export class SVG {
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGRectElement {
-    const rect = document.createElementNS(this.ns, 'rect') as SVGRectElement
-    rect.setAttribute('x', pt.x.toString())
-    rect.setAttribute('y', pt.y.toString())
-    rect.setAttribute('width', w.toString())
-    rect.setAttribute('height', h.toString())
-    rect.setAttribute('fill', fill)
-    rect.setAttribute('stroke', stroke)
-    rect.setAttribute('stroke-width', strokeW.toString())
+    const rect = this.createSvgElement('rect')
+    this.setAttrs(rect, {
+      x: pt.x,
+      y: pt.y,
+      width: w,
+      height: h
+    })
+    this.applyStrokeFill(rect, fill, stroke, strokeW)
     this.stage.append(rect)
     return rect
   }
 
-  makeRectC(
+  rectC(
     c: Vec,
     w: number,
     h: number,
@@ -198,74 +217,63 @@ export class SVG {
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGRectElement {
-    const rect = document.createElementNS(this.ns, 'rect') as SVGRectElement
-    rect.setAttribute('x', (c.x - w / 2).toString())
-    rect.setAttribute('y', (c.y - h / 2).toString())
-    rect.setAttribute('width', w.toString())
-    rect.setAttribute('height', h.toString())
-    rect.setAttribute('fill', fill)
-    rect.setAttribute('stroke', stroke)
-    rect.setAttribute('stroke-width', strokeW.toString())
-    this.stage.append(rect)
-    return rect
+    return this.rect(
+      new Vec(c.x - w / 2, c.y - h / 2),
+      w,
+      h,
+      fill,
+      stroke,
+      strokeW
+    )
   }
 
-  makeRectAB(
+  rectAB(
     a: Vec,
     b: Vec,
     fill: string = 'transparent',
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGRectElement {
-    const rect = document.createElementNS(this.ns, 'rect') as SVGRectElement
-    rect.setAttribute('x', a.x.toString())
-    rect.setAttribute('y', a.y.toString())
-    rect.setAttribute('width', (b.x - a.x).toString())
-    rect.setAttribute('height', (b.y - a.y).toString())
-    rect.setAttribute('fill', fill)
-    rect.setAttribute('stroke', stroke)
-    rect.setAttribute('stroke-width', strokeW.toString())
-    this.stage.append(rect)
-    return rect
+    return this.rect(
+      a,
+      b.x - a.x,
+      b.y - a.y,
+      fill,
+      stroke,
+      strokeW
+    )
   }
 
-  makePath(
+  path(
     d: string = 'M 0,0 ',
     fill: string = this.def.fill,
     stroke: string = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): SVGPathElement {
-    const path = document.createElementNS(this.ns, 'path') as SVGPathElement
-    path.setAttribute('d', d)
-    path.setAttribute('fill', fill)
-    path.setAttribute('stroke', stroke)
-    path.setAttribute('stroke-width', strokeW.toString())
+    const path = this.createSvgElement('path')
+    this.setAttrs(path, { d })
+    this.applyStrokeFill(path, fill, stroke, strokeW)
     this.stage.append(path)
     return path
   }
 
-  makeText(
+  text(
     text: string,
     at: Vec,
     fill: string = this.def.stroke,
     options: SVGTextOptions = {}
   ): SVGTextElement {
-    const textEl = document.createElementNS(this.ns, 'text') as SVGTextElement
-    textEl.setAttribute('x', at.x.toString())
-    textEl.setAttribute('y', at.y.toString())
-    textEl.setAttribute('fill', fill)
-    textEl.setAttribute('text-anchor', options.anchor ?? 'start')
-    textEl.setAttribute('font-size', (options.fontSize ?? 12).toString())
-
-    if (options.fontFamily) {
-      textEl.setAttribute('font-family', options.fontFamily)
-    }
-    if (options.fontWeight) {
-      textEl.setAttribute('font-weight', options.fontWeight)
-    }
-    if (options.baseline) {
-      textEl.setAttribute('dominant-baseline', options.baseline)
-    }
+    const textEl = this.createSvgElement('text')
+    this.setAttrs(textEl, {
+      x: at.x,
+      y: at.y,
+      fill,
+      'text-anchor': options.anchor ?? 'start',
+      'font-size': options.fontSize ?? 12,
+      'font-family': options.fontFamily,
+      'font-weight': options.fontWeight,
+      'dominant-baseline': options.baseline
+    })
 
     textEl.textContent = text
     this.stage.append(textEl)
@@ -450,7 +458,7 @@ export class Path {
  *     .arcTo(r, r, 0, 0, 1, arcEnd.x, arcEnd.y)
  *     .close()
  *     .build()
- *   svg.makePath(d, fill, stroke)
+ *   svg.path(d, fill, stroke)
  *
  * Contrast with the `Path` class, which is algorithm-driven (point array → named curve type).
  */

@@ -36,7 +36,7 @@ Common aliases for quick coding:
 Use `makeText` for labels/annotations instead of manual SVG DOM creation.
 
 ```typescript
-svg.makeText('12', v(120, 32), '#666', {
+svg.text('12', v(120, 32), '#666', {
   anchor: 'middle',
   fontSize: 10
 })
@@ -45,7 +45,7 @@ svg.makeText('12', v(120, 32), '#666', {
 Signature:
 
 ```typescript
-makeText(
+text(
   text: string,
   at: Vec,
   fill?: string,
@@ -76,7 +76,7 @@ export async function init(container, context) {
   const svg = new SVG({ parent: container, id: 'my-sketch' })
   const pts = [v(100, 100), v(200, 150), v(300, 100)]
   const path = new Path(pts, false)
-  svg.makePath(path.buildSpline(0.3), 'none', '#000', 2)
+  svg.path(path.buildSpline(0.3), 'none', '#000', 2)
   return () => svg.stage.remove()
 }
 ```

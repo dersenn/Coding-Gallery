@@ -145,8 +145,8 @@ export { Cell } from '~/utils/cell'
 export { Color } from '~/utils/color'
 export { Canvas, createCanvas2D, draw } from '~/utils/canvas'
 export type {
-  PointLike,
   CanvasCreateConfig,
+  CanvasDefaultStyle,
   CanvasStyle,
   CanvasTextOptions,
   CanvasExportOptions
