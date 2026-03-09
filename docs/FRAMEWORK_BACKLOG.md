@@ -99,3 +99,36 @@ Concrete design options (pick one or combine):
 - Existing control panel toggle (top-right) already works on mobile; this
   backlog item is specifically about the core stateless actions that bypass
   the panel.
+
+---
+
+## Runtime architecture
+
+### Multi-technique project/layer runtime
+
+- ID: `multi-technique-runtime`
+- Status: `candidate`
+- Priority: **medium**
+- Area: `types/project.ts`, `utils/layerRuntime.ts`, `components/ProjectViewer.vue`
+
+**Problem**  
+Project metadata can already represent multiple libraries/techniques, but the
+current layer manager contract is SVG-specialized (`SingleActiveSvg...`,
+`exportActiveSvg`). This makes mixed or switchable technique workflows harder
+than necessary when adding canvas2d-first sketches.
+
+**Proposal doc**  
+See `MULTI_TECHNIQUE_RUNTIME_PLAN.md` for phased design and migration strategy.
+
+**Next step**  
+Implement Phase 1 only:
+
+- Add canonical `Technique` type and optional module declarations
+  (`supportedTechniques`, `defaultTechnique`) in `types/project.ts`.
+- Finalize the Phase 1 checklist in `MULTI_TECHNIQUE_RUNTIME_PLAN.md`,
+  including decision on optional `data/projects.json` `techniques/layers`
+  metadata.
+- Define the metadata-first target shape where layers can declare
+  `technique`, `container.mode`, and module path, with runtime auto-injecting
+  layer selection UI when multiple layers are present.
+- Keep runtime behavior unchanged until pilot validation in Phase 2.

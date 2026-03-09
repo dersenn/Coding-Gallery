@@ -16,6 +16,7 @@ Use this folder for supporting docs while keeping the repository root focused on
 - Legacy source manifests: `legacy-manifests/`
 - Utility gap backlog: `UTILITY_GAP_BACKLOG.md` (centralized reusable utility candidates from migrations)
 - Layer runtime helper pattern (single-active SVG layers): `LAYER_RUNTIME_MANAGER.md`
+- Multi-technique runtime proposal (SVG + canvas2d): `MULTI_TECHNIQUE_RUNTIME_PLAN.md`
 - Framework backlog: `FRAMEWORK_BACKLOG.md` (viewer shell, controls UI, and runtime improvements)
 - Open backlog: add `validate:projects` metadata/file drift checker (see checklist in main `../README.md` and project rules)
 - Agent prompt preambles and naming guidance: `AGENT_PROMPT_PREAMBLES.md`
