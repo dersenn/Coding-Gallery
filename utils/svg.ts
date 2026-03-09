@@ -282,24 +282,6 @@ export class SVG {
 }
 
 /**
- * PathPoint - Helper class for path construction
- */
-export class pPt {
-  b: Vec // base point
-  type: string
-  t: number
-  d: number
-  cp?: Vec
-
-  constructor(pt: Vec, type: string = 'LINE', t: number = 0.5, d: number = 0.5) {
-    this.b = pt
-    this.type = type
-    this.t = t
-    this.d = d
-  }
-}
-
-/**
  * Path - Helper class for building SVG path d-strings
  * Supports polygons, quadratic bezier curves, and cubic splines
  */

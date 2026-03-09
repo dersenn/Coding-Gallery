@@ -137,7 +137,7 @@ export type CleanupFunction = () => void
 // Re-export common types for convenience in project files
 export type { Vec } from '~/utils/generative'
 export { quadBezControlPoint, splineControlPoints, quadBezHandles, splineHandles } from '~/utils/generative'
-export { SVG, Path, pPt, PathBuilder } from '~/utils/svg'
+export { SVG, Path, PathBuilder } from '~/utils/svg'
 export { shortcuts } from '~/utils/shortcuts'
 export { Grid, GridCell } from '~/utils/grid'
 export type { GridConfig, GridCellConfig, GridCellSizing, GridFit, GridAlign } from '~/utils/grid'

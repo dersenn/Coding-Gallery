@@ -6,7 +6,7 @@ Technical reference for the SVG-oriented workflow in this gallery.
 
 - Vector and math helpers used by SVG sketches
 - Shorthand APIs for rapid sketching
-- `utils/svg.ts` classes (`SVG`, `Path`, `pPt`)
+- `utils/svg.ts` classes (`SVG`, `Path`, `PathBuilder`)
 - Template locations and example usage patterns
 
 ## Core building blocks
@@ -27,7 +27,7 @@ Common aliases for quick coding:
 
 ### SVG classes (`utils/svg.ts`)
 
-- `SVG`: stage and shape creation (`makeLine`, `makeCircle`, `makeRect`, `makePath`, `makeText`, etc.)
+- `SVG`: stage and shape creation (`line`, `circle`, `rect`, `path`, `text`, etc.)
 - `Path`: polygon and bezier/spline builders (`buildPolygon`, `buildQuadBez`, `buildSpline`)
 - `save(seed?, sketchName?)` for deterministic filename exports
 
