@@ -4,7 +4,7 @@ import type {
   ProjectControlDefinition,
   ProjectActionDefinition
 } from '~/types/project'
-import { SVG, shortcuts, resolveCanvas } from '~/types/project'
+import { SVG, shortcuts, resolveContainer } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 /**
@@ -42,10 +42,10 @@ export const actions: ProjectActionDefinition[] = [
   }
 ]
 
-// Declarative canvas sizing — mirrors the resolveCanvas() call in init().
-// export const canvas = 'square'
-// export const canvas = '4:3'
-export const canvas = 'full'
+// Declarative container sizing — mirrors the resolveContainer() call in init().
+// export const container = 'square'
+// export const container = '4:3'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -55,7 +55,7 @@ export async function init(
   const { v, rnd, map, rad, simplex2 } = shortcuts(utils)
   const controlState = { ...controls }
 
-  // resolveCanvas sets up container centering and returns the sized wrapper element.
+  // resolveContainer sets up container centering and returns the sized wrapper element.
   // Switch the mode string to change the layout — no other code needs to change.
   //
   //   'full'        fills the viewport (default)
@@ -63,9 +63,9 @@ export async function init(
   //   '4:3'         centered rect at a custom ratio (any 'W:H' string works)
   //
   // Add padding for a responsive inset:
-  //   resolveCanvas(container, { mode: 'square', padding: '2vmin' })
+  //   resolveContainer(container, { mode: 'square', padding: '2vmin' })
   //   → result.padding is the resolved px value, useful for grid gaps / margins
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
   const svg = new SVG({ parent: el, id: 'animated-sketch', width, height })
 
   // Animation state

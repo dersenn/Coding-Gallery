@@ -24,7 +24,7 @@ export function drawGridCore(context) {
   const palette = Array.isArray(theme.palette) && theme.palette.length > 0
     ? theme.palette
     : [theme.foreground]
-  const zones = createZones(palette, utils, controls)
+  const zones = createZones(palette, utils, controls, theme.foreground)
 
   svg.makeRect(v(frame.x, frame.y), frame.width, frame.height, theme.background, 'none', 0)
 
@@ -142,14 +142,20 @@ class GridCoreCell extends GridCell {
   }
 }
 
-function createZones(palette, utils, controls) {
+function createZones(palette, utils, controls, foregroundColor) {
   // Extend this list to add more noise zones.
   const baseRules = chooseRuleSet(utils, controls)
   const shuffledRules = shuffleRules(baseRules, utils)
+  const singleColor = controls?.rule_single_color === true
+  const c0 = singleColor ? foregroundColor : palette[0]
+  const c1 = singleColor ? foregroundColor : (palette[1] ?? palette[0])
+  const c2 = singleColor
+    ? foregroundColor
+    : (palette[2] ?? palette[palette.length - 1] ?? palette[0])
   const zoneConfig = [
-    { color: palette[0], rule: shuffledRules[0] },
-    { color: palette[1] ?? palette[0], rule: shuffledRules[1] ?? baseRules[1] },
-    { color: palette[2] ?? palette[palette.length - 1] ?? palette[0], rule: shuffledRules[2] ?? baseRules[2] }
+    { color: c0, rule: shuffledRules[0] },
+    { color: c1, rule: shuffledRules[1] ?? baseRules[1] },
+    { color: c2, rule: shuffledRules[2] ?? baseRules[2] }
   ]
 
   const zones = []
@@ -172,7 +178,11 @@ function chooseRuleSet(utils, controls) {
   }
   const presetKey = normalizePresetKey(controls?.rule_preset)
   if (presetKey !== 'auto') {
-    return presets[presetKey] ?? presets.balanced
+    const selected = presets[presetKey] ?? presets.balanced
+    if (controls?.rule_single_mode === true) {
+      return [selected[0], selected[0], selected[0]]
+    }
+    return selected
   }
 
   const autoRuleSets = [
@@ -183,9 +193,22 @@ function chooseRuleSet(utils, controls) {
   ]
 
   const randomInt = utils?.seed?.randomInt
-  if (typeof randomInt !== 'function') return presets.balanced
+  if (typeof randomInt !== 'function') {
+    const fallback = presets.balanced
+    if (controls?.rule_single_mode === true) {
+      return [fallback[0], fallback[0], fallback[0]]
+    }
+    return fallback
+  }
+
   const index = randomInt(0, autoRuleSets.length - 1)
-  return autoRuleSets[index] ?? presets.balanced
+  const selected = autoRuleSets[index] ?? presets.balanced
+  if (controls?.rule_single_mode === true) {
+    const singleIndex = randomInt(0, selected.length - 1)
+    const singleRule = selected[singleIndex] ?? selected[0]
+    return [singleRule, singleRule, singleRule]
+  }
+  return selected
 }
 
 function normalizePresetKey(value) {

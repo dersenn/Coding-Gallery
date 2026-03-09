@@ -1,8 +1,8 @@
-import { resolveCanvas } from '~/utils/canvas'
-import type { CanvasConfig, CanvasMode } from '~/utils/canvas'
+import { resolveContainer } from '~/utils/container'
+import type { ContainerConfig, ContainerMode } from '~/utils/container'
 import { SVG } from '~/utils/svg'
 
-export type LayerCanvas = CanvasConfig | CanvasMode
+export type LayerCanvas = ContainerConfig | ContainerMode
 
 export interface SingleActiveSvgLayerRuntime {
   exportName: string
@@ -143,7 +143,7 @@ export function singleActiveSvgLayerManager<LayerId extends string>(
   const { parent, width, height, layers } = args
 
   const layerContainer = document.createElement('div')
-  // Keep container dimensions explicit so nested resolveCanvas calls have
+  // Keep container dimensions explicit so nested resolveContainer calls have
   // concrete measurement bounds for per-layer aspect ratios.
   layerContainer.style.width = `${width}px`
   layerContainer.style.height = `${height}px`
@@ -174,7 +174,7 @@ export function singleActiveSvgLayerManager<LayerId extends string>(
     layerContainer.replaceChildren()
 
     const layer = getLayer(activeLayerId)
-    const { el, width: layerWidth, height: layerHeight } = resolveCanvas(
+    const { el, width: layerWidth, height: layerHeight } = resolveContainer(
       layerContainer,
       layer.canvas
     )

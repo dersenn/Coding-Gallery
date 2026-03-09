@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition, Vec } from '~/types/project'
-import { resolveCanvas } from '~/types/project'
+import { resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 import { shortcuts } from '~/utils/shortcuts'
@@ -92,7 +92,7 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
-export const canvas = 'full'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -108,7 +108,7 @@ export async function init(
     elevationScale: controls.elevationScale as number
   }
 
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
 
   let gridSize = Math.max(1, Math.floor(controlState.gridSize))
   let cellSize = 0

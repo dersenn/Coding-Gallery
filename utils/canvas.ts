@@ -1,228 +1,254 @@
-/**
- * Canvas Layout Utility
- *
- * resolveCanvas() computes sketch canvas dimensions and sets up container
- * centering for three sizing modes: full container, centered square, and a
- * custom aspect ratio. Supports optional inset padding using any CSS length unit.
- *
- * Usage:
- *   import { resolveCanvas } from '~/utils/canvas'
- *   const { el, width, height } = resolveCanvas(container, 'square')
- *   const svg = new SVG({ parent: el, id: 'sketch', width, height })
- *
- * Or with padding:
- *   const { el, width, height, padding } = resolveCanvas(container, { mode: '4:3', padding: '2vmin' })
- *   // `padding` is the resolved px value — usable for grid gaps, margins, etc.
- */
+import { Vec } from './generative'
 
-/** Sizing mode for resolveCanvas.
- * - 'full'        — fills the container (default)
- * - 'square'      — centered square (Math.min of available width/height)
- * - 'W:H' string  — centered rect at a custom ratio (e.g. '4:3', '16:9', '1:1.414' for A4)
- */
-export type CanvasMode = 'full' | 'square' | `${number}:${number}`
-
-export interface CanvasConfig {
-  mode?: CanvasMode
-  /**
-   * Inset padding applied to the container before computing dimensions.
-   * - number → interpreted as px (e.g. 32)
-   * - string → any valid CSS length ('2vmin', '1em', '5%')
-   * The browser resolves the unit; the returned `padding` field is always in px.
-   */
-  padding?: number | string
-}
-
-export interface CanvasResult {
-  /** Canvas width in px (accounts for padding). */
-  width: number
-  /** Canvas height in px (accounts for padding). */
-  height: number
-  /**
-   * Resolved padding in px (uniform, top value).
-   * Useful for grid gaps, inner margins, and other layout math that should
-   * harmonise with the viewport inset.
-   */
-  padding: number
-  /**
-   * The element to use as parent for SVG / p5.
-   * - 'full' mode: the original container itself.
-   * - 'square' / ratio modes: a new sized wrapper div appended to the container.
-   */
-  el: HTMLElement
-}
-
-/** Inner frame rectangle resolved inside a fixed outer canvas. */
-export interface InnerFrameResult {
+export interface PointLike {
   x: number
   y: number
-  width: number
-  height: number
 }
 
-export interface FrameTransform {
-  toGlobal: (x: number, y: number) => { x: number; y: number }
-  toLocal: (x: number, y: number) => { x: number; y: number }
+export interface CanvasCreateConfig {
+  parent: HTMLElement
+  id: string
+  width?: number
+  height?: number
+  alpha?: boolean
 }
 
-const resolveInsetPx = (
-  padding: CanvasConfig['padding'],
-  width: number,
-  height: number
-): number => {
-  if (padding === undefined) return 0
-  if (typeof padding === 'number') return Math.max(0, padding)
+export interface CanvasStyle {
+  fill?: string | null
+  stroke?: string | null
+  strokeW?: number
+  lineCap?: CanvasLineCap
+  lineJoin?: CanvasLineJoin
+}
 
-  const value = padding.trim().toLowerCase()
-  const parsed = Number.parseFloat(value)
-  if (!Number.isFinite(parsed)) return 0
+export interface CanvasTextOptions {
+  align?: CanvasTextAlign
+  baseline?: CanvasTextBaseline
+  fontSize?: number
+  fontFamily?: string
+  fontWeight?: string
+}
 
-  if (value.endsWith('vmin')) {
-    return Math.max(0, (parsed / 100) * Math.min(width, height))
+export interface CanvasExportOptions {
+  projectId?: string
+  seed?: string | number
+}
+
+interface CanvasDefaults {
+  fill: string
+  stroke: string
+  strokeW: number
+  lineCap: CanvasLineCap
+  lineJoin: CanvasLineJoin
+}
+
+const applyStyle = (ctx: CanvasRenderingContext2D, style: CanvasStyle): void => {
+  if (style.fill !== undefined) {
+    ctx.fillStyle = style.fill ?? 'transparent'
   }
-  if (value.endsWith('%')) {
-    return Math.max(0, (parsed / 100) * Math.min(width, height))
+  if (style.stroke !== undefined) {
+    ctx.strokeStyle = style.stroke ?? 'transparent'
   }
-  if (value.endsWith('px')) {
-    return Math.max(0, parsed)
+  if (style.strokeW !== undefined) {
+    ctx.lineWidth = style.strokeW
   }
-  return Math.max(0, parsed)
+  if (style.lineCap !== undefined) {
+    ctx.lineCap = style.lineCap
+  }
+  if (style.lineJoin !== undefined) {
+    ctx.lineJoin = style.lineJoin
+  }
 }
 
-const parseAspectMode = (mode: Exclude<CanvasMode, 'full' | 'square'>): number => {
-  const [wStr, hStr] = mode.split(':')
-  const w = Number.parseFloat(wStr ?? '')
-  const h = Number.parseFloat(hStr ?? '')
-  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) return 1
-  return w / h
-}
+const clampDimension = (value: number): number => Math.max(1, Math.round(value))
 
-/**
- * Resolves an inner frame from canvas mode/padding inside a fixed outer size.
- * Useful for single-SVG sketches that simulate per-layer artboards.
- */
-export function resolveInnerFrame(
-  outerWidth: number,
-  outerHeight: number,
-  config?: CanvasMode | CanvasConfig
-): InnerFrameResult {
-  const cfg: CanvasConfig = typeof config === 'string' ? { mode: config } : (config ?? {})
-  const mode = cfg.mode ?? 'full'
-  const inset = resolveInsetPx(cfg.padding, outerWidth, outerHeight)
-  const availableWidth = Math.max(1, outerWidth - inset * 2)
-  const availableHeight = Math.max(1, outerHeight - inset * 2)
+export class Canvas {
+  parent: HTMLElement
+  id: string
+  w: number
+  h: number
+  c: Vec
+  el: HTMLCanvasElement
+  ctx: CanvasRenderingContext2D
+  def: CanvasDefaults
 
-  let width = availableWidth
-  let height = availableHeight
+  constructor(setup: CanvasCreateConfig) {
+    this.parent = setup.parent
+    this.id = setup.id
+    this.w = clampDimension(setup.width ?? this.parent.clientWidth)
+    this.h = clampDimension(setup.height ?? this.parent.clientHeight)
+    this.c = new Vec(this.w / 2, this.h / 2)
 
-  if (mode === 'square') {
-    width = height = Math.min(availableWidth, availableHeight)
-  } else if (mode !== 'full') {
-    const ratio = parseAspectMode(mode)
-    if (availableWidth / availableHeight > ratio) {
-      height = availableHeight
-      width = height * ratio
-    } else {
-      width = availableWidth
-      height = width / ratio
+    this.def = {
+      fill: 'transparent',
+      stroke: '#000',
+      strokeW: 1,
+      lineCap: 'butt',
+      lineJoin: 'miter'
     }
-  }
 
-  return {
-    x: (outerWidth - width) / 2,
-    y: (outerHeight - height) / 2,
-    width,
-    height
-  }
-}
+    this.el = document.createElement('canvas')
+    this.el.id = this.id
+    this.el.width = this.w
+    this.el.height = this.h
+    this.parent.append(this.el)
 
-/** Creates local<->global coordinate mappers for an inner frame rectangle. */
-export function createFrameTransform(frame: InnerFrameResult): FrameTransform {
-  return {
-    toGlobal: (x, y) => ({ x: frame.x + x, y: frame.y + y }),
-    toLocal: (x, y) => ({ x: x - frame.x, y: y - frame.y })
-  }
-}
-
-/**
- * Resolves canvas dimensions and prepares the container for the given sizing mode.
- *
- * @param container — The HTMLElement passed to init() by the framework.
- * @param config    — A CanvasMode string or a CanvasConfig object.
- * @returns         — { width, height, padding, el } ready for use in SVG / p5 constructors.
- *
- * @example
- * // Centered square
- * const { el, width, height } = resolveCanvas(container, 'square')
- * const svg = new SVG({ parent: el, id: 'sketch', width, height })
- *
- * @example
- * // 4:3 ratio with responsive inset
- * const { el, width, height, padding } = resolveCanvas(container, { mode: '4:3', padding: '2vmin' })
- * const gap = padding * 0.5
- *
- * @example
- * // p5 square sketch
- * const { el, width, height } = resolveCanvas(container, 'square')
- * const sketch = new p5((p) => {
- *   p.setup = () => p.createCanvas(width, height)
- * }, el)
- */
-export function resolveCanvas(
-  container: HTMLElement,
-  config?: CanvasMode | CanvasConfig
-): CanvasResult {
-  const cfg: CanvasConfig = typeof config === 'string' ? { mode: config } : (config ?? {})
-  const mode = cfg.mode ?? 'full'
-
-  // Apply padding before measuring — browser resolves the unit synchronously
-  if (cfg.padding !== undefined) {
-    container.style.padding = typeof cfg.padding === 'number'
-      ? `${cfg.padding}px`
-      : cfg.padding
-  }
-
-  // clientWidth includes padding; subtract it to get the true available content area
-  const cs = getComputedStyle(container)
-  const resolvedPadding = parseFloat(cs.paddingTop)
-  const availW = container.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
-  const availH = container.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-
-  if (mode === 'full') {
-    return { width: availW, height: availH, padding: resolvedPadding, el: container }
-  }
-
-  // Compute target dimensions from mode
-  let width: number
-  let height: number
-
-  if (mode === 'square') {
-    width = height = Math.min(availW, availH)
-  } else {
-    // Parse 'W:H' ratio string — letterbox fit within available area
-    const [wStr, hStr] = mode.split(':')
-    const ratio = parseFloat(wStr!) / parseFloat(hStr!)
-    if (availW / availH > ratio) {
-      // Container is wider than the target ratio — constrain by height
-      height = availH
-      width = height * ratio
-    } else {
-      // Container is taller than the target ratio — constrain by width
-      width = availW
-      height = width / ratio
+    const ctx = this.el.getContext('2d', { alpha: setup.alpha ?? true })
+    if (!ctx) {
+      throw new Error('Unable to create 2D canvas context')
     }
+    this.ctx = ctx
+    applyStyle(this.ctx, this.def)
   }
 
-  // Center the wrapper within the container content area
-  container.style.display = 'flex'
-  container.style.alignItems = 'center'
-  container.style.justifyContent = 'center'
+  resize(width: number, height: number): void {
+    this.w = clampDimension(width)
+    this.h = clampDimension(height)
+    this.c = new Vec(this.w / 2, this.h / 2)
+    this.el.width = this.w
+    this.el.height = this.h
+    applyStyle(this.ctx, this.def)
+  }
 
-  const wrapper = document.createElement('div')
-  wrapper.style.width = `${width}px`
-  wrapper.style.height = `${height}px`
-  wrapper.style.flexShrink = '0'
-  container.appendChild(wrapper)
+  clear(): void {
+    this.ctx.clearRect(0, 0, this.w, this.h)
+  }
 
-  return { width, height, padding: resolvedPadding, el: wrapper }
+  background(fill: string): void {
+    this.ctx.save()
+    this.ctx.fillStyle = fill
+    this.ctx.fillRect(0, 0, this.w, this.h)
+    this.ctx.restore()
+  }
+
+  fill(fill: string | null): void {
+    this.def.fill = fill ?? 'transparent'
+  }
+
+  stroke(stroke: string | null): void {
+    this.def.stroke = stroke ?? 'transparent'
+  }
+
+  strokeWeight(weight: number): void {
+    this.def.strokeW = weight
+  }
+
+  line(
+    a: PointLike,
+    b: PointLike,
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW
+  ): void {
+    this.ctx.save()
+    applyStyle(this.ctx, { stroke, strokeW, fill: 'transparent', lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
+    this.ctx.beginPath()
+    this.ctx.moveTo(a.x, a.y)
+    this.ctx.lineTo(b.x, b.y)
+    this.ctx.stroke()
+    this.ctx.restore()
+  }
+
+  circle(
+    at: PointLike,
+    r: number = 5,
+    fill: string = this.def.fill,
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW
+  ): void {
+    this.ctx.save()
+    applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
+    this.ctx.beginPath()
+    this.ctx.arc(at.x, at.y, Math.max(0, r), 0, Math.PI * 2)
+    if (fill !== 'transparent') this.ctx.fill()
+    if (stroke !== 'transparent' && strokeW > 0) this.ctx.stroke()
+    this.ctx.restore()
+  }
+
+  rect(
+    at: PointLike,
+    width: number,
+    height: number,
+    fill: string = this.def.fill,
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW
+  ): void {
+    this.ctx.save()
+    applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
+    if (fill !== 'transparent') {
+      this.ctx.fillRect(at.x, at.y, width, height)
+    }
+    if (stroke !== 'transparent' && strokeW > 0) {
+      this.ctx.strokeRect(at.x, at.y, width, height)
+    }
+    this.ctx.restore()
+  }
+
+  rectC(
+    center: PointLike,
+    width: number,
+    height: number,
+    fill: string = this.def.fill,
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW
+  ): void {
+    this.rect(
+      new Vec(center.x - width / 2, center.y - height / 2),
+      width,
+      height,
+      fill,
+      stroke,
+      strokeW
+    )
+  }
+
+  text(
+    value: string,
+    at: PointLike,
+    fill: string = this.def.stroke,
+    options: CanvasTextOptions = {}
+  ): void {
+    this.ctx.save()
+    this.ctx.fillStyle = fill
+    this.ctx.textAlign = options.align ?? 'start'
+    this.ctx.textBaseline = options.baseline ?? 'alphabetic'
+
+    const fontSize = options.fontSize ?? 12
+    const fontWeight = options.fontWeight ?? '400'
+    const fontFamily = options.fontFamily ?? 'system-ui, sans-serif'
+    this.ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`
+    this.ctx.fillText(value, at.x, at.y)
+    this.ctx.restore()
+  }
+
+  withContext(draw: (ctx: CanvasRenderingContext2D) => void): void {
+    this.ctx.save()
+    draw(this.ctx)
+    this.ctx.restore()
+  }
+
+  save(options: CanvasExportOptions = {}): void {
+    const { projectId, seed } = options
+    const baseName = projectId ?? this.id
+    const safeSeed = seed === undefined ? '' : `-${String(seed)}`
+    const filename = `${baseName}${safeSeed}.png`
+
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = this.el.toDataURL('image/png')
+    link.click()
+  }
+}
+
+export const createCanvas2D = (config: CanvasCreateConfig): Canvas => {
+  return new Canvas(config)
+}
+
+export const draw = (
+  target: Canvas | CanvasRenderingContext2D,
+  callback: (ctx: CanvasRenderingContext2D) => void
+): void => {
+  const ctx = target instanceof Canvas ? target.ctx : target
+  ctx.save()
+  callback(ctx)
+  ctx.restore()
 }

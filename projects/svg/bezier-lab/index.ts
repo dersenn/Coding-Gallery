@@ -5,7 +5,7 @@ import type {
   ProjectControlDefinition,
   Vec
 } from '~/types/project'
-import { Color, Path, SVG, shortcuts, quadBezHandles, splineHandles, resolveCanvas } from '~/types/project'
+import { Color, Path, SVG, shortcuts, quadBezHandles, splineHandles, resolveContainer } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 type CurveLayer = 'straight' | 'quadratic' | 'cubic'
@@ -111,7 +111,7 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
-export const canvas = 'full'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -137,7 +137,7 @@ export async function init(
   const cubicColor = cubicBase?.toCss('rgba') ?? theme.foreground
   const controlPointColor = theme.palette[0]
 
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
   const svg = new SVG({ parent: el, id: 'bezier-lab', width, height })
 
   // Deterministic point scaffold keeps shape stable when toggling curve types.

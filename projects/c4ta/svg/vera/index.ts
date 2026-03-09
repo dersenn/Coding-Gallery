@@ -4,7 +4,7 @@ import type {
   ProjectContext,
   ProjectControlDefinition
 } from '~/types/project'
-import { SVG, shortcuts, resolveCanvas } from '~/types/project'
+import { SVG, shortcuts, resolveContainer } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 import { createGenerativeUtils } from '~/utils/generative'
 import { drawVera1 } from './layers/vera1'
@@ -51,7 +51,7 @@ export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
-export const canvas = 'square'
+export const container = 'square'
 
 export async function init(
   container: HTMLElement,
@@ -64,7 +64,7 @@ export async function init(
     enabledLayers: controls.enabledLayers as VeraLayer[]
   }
 
-  const { el, width, height } = resolveCanvas(container, canvas)
+  const { el, width, height } = resolveContainer(container, 'square')
   const svg = new SVG({ parent: el, id: 'vera', width, height })
 
   const draw = () => {

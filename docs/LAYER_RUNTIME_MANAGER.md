@@ -14,7 +14,7 @@ Both are implemented in `utils/layerRuntime.ts` and re-exported from `types/proj
 
 ## Why this exists
 
-- Keeps per-layer aspect and padding logic in `resolveCanvas(...)`.
+- Keeps per-layer aspect and padding logic in `resolveContainer(...)`.
 - Removes sketch-local lifecycle boilerplate.
 - Makes adding layers mostly one-entry work in a registry.
 
@@ -100,8 +100,8 @@ This avoids separate control systems per layer and keeps control state determini
 ## Naming convention
 
 - Runtime term split:
-  - `canvas`: sizing intent/config (`CanvasMode | CanvasConfig`)
-  - `container`: DOM host element that `resolveCanvas(...)` and managers mount into
+  - `canvas`: sizing intent/config (`ContainerMode | ContainerConfig`)
+  - `container`: DOM host element that `resolveContainer(...)` and managers mount into
   - `svg`: active render surface
   - `frame`: drawable geometry passed to layer draw logic
 

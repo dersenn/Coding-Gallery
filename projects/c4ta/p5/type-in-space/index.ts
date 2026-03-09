@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext } from '~/types/project'
-import { resolveCanvas } from '~/types/project'
+import { resolveContainer } from '~/types/project'
 import p5 from 'p5'
 
 /**
@@ -42,7 +42,7 @@ const GLYPH_SAMPLE_FACTOR = 0.3
 const CAMERA_DISTANCE_FACTOR = 0.1
 const ORTHO_FRUSTUM_SCALE = 0.02
 
-export const canvas = 'full'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -101,7 +101,7 @@ export async function init(
     glyph = { chunks }
   }
 
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
 
   const sketch = new p5((p) => {
     p.setup = () => {

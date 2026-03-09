@@ -1,5 +1,5 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
-import { resolveCanvas } from '~/types/project'
+import { resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -70,9 +70,9 @@ export async function init(
 ): Promise<CleanupFunction> {
   const { controls, utils, onControlChange } = context
 
-  // resolveCanvas sets up container centering and returns the sized wrapper + dimensions.
+  // resolveContainer sets up container centering and returns the sized wrapper + dimensions.
   // 'full' fills the viewport — change to 'square' or '4:3' etc. as needed.
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
 
   // Reactive state
   const controlState = {

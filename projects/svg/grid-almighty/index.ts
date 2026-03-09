@@ -7,7 +7,7 @@ import type {
 } from '~/types/project'
 import {
   shortcuts,
-  resolveCanvas,
+  resolveContainer,
   singleActiveSvgLayerManager,
   singleActiveSvgLayerSetup
 } from '~/types/project'
@@ -84,6 +84,18 @@ export const controls: ProjectControlDefinition[] = [
           { label: 'Dense', value: 'dense' },
           { label: 'Sparse', value: 'sparse' }
         ]
+      },
+      {
+        type: 'toggle',
+        label: 'Single Rule',
+        key: 'rule_single_mode',
+        default: false
+      },
+      {
+        type: 'toggle',
+        label: 'Single Color',
+        key: 'rule_single_color',
+        default: false
       }
     ]
   },
@@ -170,7 +182,7 @@ export const actions: ProjectActionDefinition[] = [
 ]
 
 const ROOT_CANVAS_CONFIG = { mode: 'full' as const }
-export const canvas = ROOT_CANVAS_CONFIG
+export const container = ROOT_CANVAS_CONFIG
 
 export async function init(
   container: HTMLElement,
@@ -184,7 +196,7 @@ export async function init(
     activeLayer: LAYER_SETUP.defaultLayerId
   } as ProjectContext['controls'] & { activeLayer: GridAlmightyLayer }
 
-  const { el: baseContainer, width, height } = resolveCanvas(container, ROOT_CANVAS_CONFIG)
+  const { el: baseContainer, width, height } = resolveContainer(container, ROOT_CANVAS_CONFIG)
   const layerManager = singleActiveSvgLayerManager({
     parent: baseContainer,
     width,

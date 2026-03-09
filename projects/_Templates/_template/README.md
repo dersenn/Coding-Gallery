@@ -305,6 +305,21 @@ export async function init(
 - **SVG Static**: `projects/_Templates/_svg-template/`
 - **SVG Animated**: `projects/_Templates/_svg-animated-template/`
 
+## Vanilla Canvas Option
+
+If you want a lighter alternative to p5 for raster sketches:
+
+```typescript
+import { resolveContainer, Canvas } from '~/types/project'
+
+const { el, width, height } = resolveContainer(container, 'full')
+const cv = new Canvas({ parent: el, id: 'my-canvas', width, height })
+cv.background('#111')
+cv.circle({ x: width / 2, y: height / 2 }, 32, '#fff', 'transparent')
+```
+
+Use `docs/CANVAS_DRAWING_UTILITY.md` for full helper details.
+
 ## See Also
 
 - Main README: `/README.md`

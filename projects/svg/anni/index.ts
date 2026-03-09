@@ -7,7 +7,7 @@ import type {
 } from '~/types/project'
 import {
   shortcuts,
-  resolveCanvas,
+  resolveContainer,
   singleActiveSvgLayerManager,
   singleActiveSvgLayerSetup
 } from '~/types/project'
@@ -100,7 +100,7 @@ export const actions: ProjectActionDefinition[] = [
 ]
 
 const ROOT_CANVAS_CONFIG = { mode: 'square' as const, padding: '3vmin' }
-export const canvas = ROOT_CANVAS_CONFIG
+export const container = ROOT_CANVAS_CONFIG
 
 /**
  * Anni
@@ -124,7 +124,7 @@ export async function init(
     activeLayer: (controls.activeLayer as AnniLayer | undefined) ?? LAYER_SETUP.defaultLayerId
   } as ProjectContext['controls'] & { activeLayer: AnniLayer }
 
-  const { el: baseContainer, width, height } = resolveCanvas(container, ROOT_CANVAS_CONFIG)
+  const { el: baseContainer, width, height } = resolveContainer(container, ROOT_CANVAS_CONFIG)
   const layerManager = singleActiveSvgLayerManager({
     parent: baseContainer,
     width,

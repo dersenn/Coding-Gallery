@@ -1,5 +1,5 @@
 import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
-import { SVG, Grid, GridCell, Color, resolveCanvas } from '~/types/project'
+import { SVG, Grid, GridCell, Color, resolveContainer } from '~/types/project'
 import {
   buildColorOptionLabels,
   buildPaletteMap,
@@ -307,7 +307,7 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
-export const canvas = 'square'
+export const container = 'square'
 
 export async function init(
   container: HTMLElement,
@@ -340,7 +340,7 @@ export async function init(
   const backgroundColor = theme.background
   const annotationColor = (Color.parse(theme.annotation) ?? Color.fromHex('#666')!).toCss('rgba')
 
-  const { el, width } = resolveCanvas(container, 'square')
+  const { el, width } = resolveContainer(container, 'square')
   const size = width // square: width === height; internal layout uses `size` throughout
   const margin = 40 // Space for grid numbers
 

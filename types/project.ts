@@ -1,6 +1,6 @@
 import type { GenerativeUtils } from '~/utils/generative'
 import type { ThemeOverride, ThemeTokens } from '~/utils/theme'
-import type { CanvasMode, CanvasConfig } from '~/utils/canvas'
+import type { ContainerMode, ContainerConfig } from '~/utils/container'
 
 export type ControlPrimitiveValue = number | boolean | string
 export type ControlArrayValue = Array<string | number>
@@ -121,7 +121,7 @@ export interface ProjectModule {
   controls?: ProjectControlDefinition[] // Optional: controls can be defined in the module
   actions?: ProjectActionDefinition[] // Optional: contextual actions exposed by the module
   theme?: ThemeOverride // Optional: project-level theme overrides
-  canvas?: CanvasMode | CanvasConfig // Optional: declarative canvas sizing intent ('full' | 'square' | '4:3' | …)
+  container?: ContainerMode | ContainerConfig // Optional: declarative layout sizing intent ('full' | 'square' | '4:3' | …)
 }
 
 export interface ProjectContext {
@@ -143,10 +143,24 @@ export { Grid, GridCell } from '~/utils/grid'
 export type { GridConfig, GridCellConfig, GridCellSizing, GridFit, GridAlign } from '~/utils/grid'
 export { Cell } from '~/utils/cell'
 export { Color } from '~/utils/color'
-export { resolveCanvas } from '~/utils/canvas'
-export { resolveInnerFrame } from '~/utils/canvas'
-export { createFrameTransform } from '~/utils/canvas'
-export type { CanvasMode, CanvasConfig, CanvasResult, InnerFrameResult, FrameTransform } from '~/utils/canvas'
+export { Canvas, createCanvas2D, draw } from '~/utils/canvas'
+export type {
+  PointLike,
+  CanvasCreateConfig,
+  CanvasStyle,
+  CanvasTextOptions,
+  CanvasExportOptions
+} from '~/utils/canvas'
+export { resolveContainer } from '~/utils/container'
+export { resolveInnerFrame } from '~/utils/container'
+export { createFrameTransform } from '~/utils/container'
+export type {
+  ContainerMode,
+  ContainerConfig,
+  ContainerResult,
+  InnerFrameResult,
+  FrameTransform
+} from '~/utils/container'
 export {
   singleActiveSvgLayerManager,
   singleActiveSvgLayerSetup

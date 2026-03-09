@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, Vec } from '~/types/project'
-import { resolveCanvas } from '~/types/project'
+import { resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -47,7 +47,7 @@ class MovingNode {
   }
 }
 
-export const canvas = 'full'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -71,7 +71,7 @@ export async function init(
     nodes.push(new MovingNode(v(x, y), speed))
   }
 
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
 
   const sketch = new p5((p) => {
     p.setup = () => {

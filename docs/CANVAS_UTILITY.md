@@ -1,17 +1,17 @@
 # Canvas Layout Utility
 
-`utils/canvas.ts` — imported via `~/types/project` alongside `SVG`, `shortcuts`, etc.
+`utils/container.ts` — imported via `~/types/project` alongside `SVG`, `shortcuts`, etc.
 
 ## Overview
 
-`resolveCanvas()` replaces the scattered `Math.min` / manual flex boilerplate for canvas sizing. It handles three layout modes, optional responsive inset padding, and returns dimensions ready for use in SVG or p5 constructors.
+`resolveContainer()` replaces the scattered `Math.min` / manual flex boilerplate for container sizing. It handles three layout modes, optional responsive inset padding, and returns dimensions ready for use in SVG, p5, or vanilla 2D constructors.
 
 ## Quick reference
 
 ```typescript
-import { resolveCanvas } from '~/types/project'
+import { resolveContainer } from '~/types/project'
 
-const { el, width, height, padding } = resolveCanvas(container, config)
+const { el, width, height, padding } = resolveContainer(container, config)
 ```
 
 | Field | Type | Description |
@@ -23,10 +23,10 @@ const { el, width, height, padding } = resolveCanvas(container, config)
 
 ## Modes
 
-`config` is a `CanvasMode` string or a `CanvasConfig` object.
+`config` is a `ContainerMode` string or a `ContainerConfig` object.
 
 ```typescript
-type CanvasMode = 'full' | 'square' | `${number}:${number}`
+type ContainerMode = 'full' | 'square' | `${number}:${number}`
 ```
 
 | Mode | Behavior |
@@ -38,8 +38,8 @@ type CanvasMode = 'full' | 'square' | `${number}:${number}`
 ## Padding
 
 ```typescript
-interface CanvasConfig {
-  mode?: CanvasMode
+interface ContainerConfig {
+  mode?: ContainerMode
   padding?: number | string
 }
 ```
@@ -55,21 +55,21 @@ Padding is applied to the container before dimensions are measured, so `width` a
 ### SVG sketch — full container (default)
 
 ```typescript
-const { el, width, height } = resolveCanvas(container, 'full')
+const { el, width, height } = resolveContainer(container, 'full')
 const svg = new SVG({ parent: el, id: 'sketch', width, height })
 ```
 
 ### SVG sketch — centered square
 
 ```typescript
-const { el, width, height } = resolveCanvas(container, 'square')
+const { el, width, height } = resolveContainer(container, 'square')
 const svg = new SVG({ parent: el, id: 'sketch', width, height })
 ```
 
 ### SVG sketch — custom ratio with inset padding
 
 ```typescript
-const { el, width, height, padding } = resolveCanvas(container, { mode: '4:3', padding: '2vmin' })
+const { el, width, height, padding } = resolveContainer(container, { mode: '4:3', padding: '2vmin' })
 const svg = new SVG({ parent: el, id: 'sketch', width, height })
 
 // Use resolved padding for internal layout math
@@ -80,7 +80,7 @@ const margin = padding
 ### p5 sketch — centered square
 
 ```typescript
-const { el, width, height } = resolveCanvas(container, 'square')
+const { el, width, height } = resolveContainer(container, 'square')
 const sketch = new p5((p) => {
   p.setup = () => p.createCanvas(width, height)
   p.windowResized = () => p.resizeCanvas(el.clientWidth, el.clientHeight)
@@ -91,26 +91,26 @@ Note: for p5, pass `el` (not `container`) as the second argument to `new p5()`, 
 
 ## Module-level declaration
 
-Every sketch should export a `canvas` constant that mirrors the `resolveCanvas` call in `init()`. This is the "one-value" declaration and makes the sizing intent machine-readable for future tooling (thumbnailing, screenshot crops, etc.).
+Every sketch should export a `container` constant that mirrors the `resolveContainer` call in `init()`. This is the "one-value" declaration and makes the sizing intent machine-readable for future tooling (thumbnailing, screenshot crops, etc.).
 
 ```typescript
-// Matches resolveCanvas(container, 'square') in init()
-export const canvas = 'square'
+// Matches resolveContainer(container, 'square') in init()
+export const container = 'square'
 
 // Or with config:
-export const canvas = { mode: '4:3', padding: '2vmin' }
+export const container = { mode: '4:3', padding: '2vmin' }
 ```
 
-The `canvas` field is typed as `CanvasMode | CanvasConfig` on `ProjectModule` in `types/project.ts`.
+The `container` field is typed as `ContainerMode | ContainerConfig` on `ProjectModule` in `types/project.ts`.
 
 ## Per-layer canvases
 
-Layers that share one canvas (e.g. vera) call `resolveCanvas` once — all layers draw into the same `svg.w` / `svg.h`. If a future sketch needs separate canvases per layer, call `resolveCanvas` multiple times; each call creates its own wrapper div inside the container.
+Layers that share one container-resolved artboard (e.g. vera) call `resolveContainer` once — all layers draw into the same `svg.w` / `svg.h`. If a future sketch needs separate artboards per layer, call `resolveContainer` multiple times; each call creates its own wrapper div inside the container.
 
 ```typescript
 // Hypothetical two-canvas sketch
-const { el: elA, width: wA, height: hA } = resolveCanvas(container, 'square')
-const { el: elB, width: wB, height: hB } = resolveCanvas(container, '16:9')
+const { el: elA, width: wA, height: hA } = resolveContainer(container, 'square')
+const { el: elB, width: wB, height: hB } = resolveContainer(container, '16:9')
 const svgA = new SVG({ parent: elA, id: 'layer-a', width: wA, height: hA })
 const svgB = new SVG({ parent: elB, id: 'layer-b', width: wB, height: hB })
 ```
@@ -120,3 +120,20 @@ const svgB = new SVG({ parent: elB, id: 'layer-b', width: wB, height: hB })
 - Padding is set on `container.style.padding` before reading dimensions. `clientWidth/clientHeight` includes padding, so the utility subtracts it to get the true content area.
 - For `'full'` mode, `el = container` — no wrapper is created, and behavior is identical to the previous `new SVG({ parent: container })` default.
 - For `'square'` and ratio modes, a `div` wrapper with explicit `width`/`height` inline styles is appended to the container, and the container gets `display: flex` centering. The wrapper's `flexShrink: 0` prevents it from collapsing.
+
+## Drawing utility split
+
+Layout and drawing utilities are intentionally split:
+
+- `utils/container.ts`: sizing/layout (`resolveContainer`, `resolveInnerFrame`, `createFrameTransform`)
+- `utils/canvas.ts`: lightweight 2D drawing helper (`Canvas`, `createCanvas2D`, `draw`)
+
+Example:
+
+```typescript
+import { resolveContainer, Canvas } from '~/types/project'
+
+const { el, width, height } = resolveContainer(container, 'full')
+const cv = new Canvas({ parent: el, id: 'my-canvas', width, height })
+cv.background('#111')
+```

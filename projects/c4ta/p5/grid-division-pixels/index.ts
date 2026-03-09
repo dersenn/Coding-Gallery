@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition } from '~/types/project'
-import { Grid, Cell, shortcuts, resolveCanvas } from '~/types/project'
+import { Grid, Cell, shortcuts, resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -55,7 +55,7 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
-export const canvas = 'full'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -80,7 +80,7 @@ export async function init(
     return activePalette[index] ?? theme.foreground
   }
 
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
 
   const sketch = new p5((p) => {
     // Step 2: render a recursive 2x2 subdivision region as leaf Cells.

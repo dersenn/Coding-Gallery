@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition, Vec } from '~/types/project'
-import { resolveCanvas } from '~/types/project'
+import { resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 import { shortcuts } from '~/utils/shortcuts'
@@ -88,7 +88,7 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
-export const canvas = 'full'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -102,7 +102,7 @@ export async function init(
     size: controls.size as number
   }
 
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
   let trail: ParticleTrail
 
   const sketch = new p5((p) => {

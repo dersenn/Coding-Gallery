@@ -7,7 +7,7 @@ import type {
 } from '~/types/project'
 import type { ThemeTokens } from '~/utils/theme'
 import type { GridCellConfig } from '~/utils/grid'
-import { SVG, Path, PathBuilder, Grid, GridCell, shortcuts, resolveCanvas } from '~/types/project'
+import { SVG, Path, PathBuilder, Grid, GridCell, shortcuts, resolveContainer } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 
 /**
@@ -64,7 +64,7 @@ import { syncControlState } from '~/composables/useControls'
  *  9  Path.buildPolygon     19  Grid recursive (ShowcaseGrid, depth-capped)
  */
 
-export const canvas = 'square'
+export const container = 'square'
 
 // ─── Variant registry ──────────────────────────────────────────────────────────
 
@@ -539,7 +539,7 @@ export async function init(
   // 'square' centres the canvas; '2vmin' padding keeps it off the viewport edges.
   // The resolved padding value (in px) is available as result.padding if needed
   // for grid gap calculations downstream.
-  const { el, width, height } = resolveCanvas(container, { mode: 'square', padding: '2vmin' })
+  const { el, width, height } = resolveContainer(container, { mode: 'square', padding: '2vmin' })
   const svg = new SVG({ parent: el, id: 'svg-example', width, height })
 
   function draw() {

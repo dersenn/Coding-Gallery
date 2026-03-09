@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, Vec } from '~/types/project'
-import { resolveCanvas } from '~/types/project'
+import { resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { shortcuts } from '~/utils/shortcuts'
 
@@ -105,7 +105,7 @@ class RandomSpherePoints {
   }
 }
 
-export const canvas = 'full'
+export const container = 'full'
 
 export async function init(
   container: HTMLElement,
@@ -114,7 +114,7 @@ export async function init(
   const { utils } = context
   const { rndRange, map, v, vLerp } = shortcuts(utils)
 
-  const { el, width, height } = resolveCanvas(container, 'full')
+  const { el, width, height } = resolveContainer(container, 'full')
   let sphereRadius = 0
   let rsp: RandomSpherePoints
   const center = v(0, 0, 0)
