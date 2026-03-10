@@ -54,7 +54,7 @@
           <div v-if="canShowControlsUI && showControls" class="flex-1 min-h-0">
             <ControlPanel
               :controls="loadedControls"
-              :context-actions="loadedActions"
+              :context-actions="visibleActions"
               :panel-state-key="project.id"
               class="h-full"
               @action="handleControlAction"
@@ -118,12 +118,28 @@ useHead(() => ({
 const canShowControlsUI = computed(() => !!project.value && !project.value.noControls)
 const loadedControls = ref<ProjectControlDefinition[]>([])
 const loadedActions = ref<ProjectActionDefinition[]>([])
+const isActionVisible = (action: ProjectActionDefinition): boolean => {
+  if (!action.visibleWhenSelectKey) return true
+  const selectedValue = controlValues.value[action.visibleWhenSelectKey]
+  if (selectedValue === undefined) return false
+  if (action.visibleWhenSelectValues && action.visibleWhenSelectValues.length > 0) {
+    return action.visibleWhenSelectValues.some((value) => String(value) === String(selectedValue))
+  }
+  if (action.visibleWhenSelectValue !== undefined) {
+    return String(action.visibleWhenSelectValue) === String(selectedValue)
+  }
+  return true
+}
+const visibleActions = computed(() => loadedActions.value.filter((action) => isActionVisible(action)))
 const isPanelExpanded = ref(false)
 const viewerInstanceKey = ref(0)
 const actionRequest = ref<{ key: string; nonce: number } | null>(null)
 const actionNonce = ref(0)
 const hasSvgDownloadAction = computed(() => {
-  return loadedActions.value.some((action) => action.key === 'download-svg')
+  return visibleActions.value.some((action) => action.key === 'download-svg')
+})
+const hasPngDownloadAction = computed(() => {
+  return visibleActions.value.some((action) => action.key === 'download-png')
 })
 const shortcutHints = computed(() => {
   const hints: Array<{ key: string; label: string }> = [
@@ -135,6 +151,8 @@ const shortcutHints = computed(() => {
   }
   if (hasSvgDownloadAction.value) {
     hints.push({ key: 's', label: 'save SVG' })
+  } else if (hasPngDownloadAction.value) {
+    hints.push({ key: 's', label: 'save PNG' })
   }
   return hints
 })
@@ -178,6 +196,8 @@ const handleActionsLoaded = (actions: ProjectActionDefinition[]) => {
   loadedActions.value = (actions || []).map((action) => (
     action.key === 'download-svg'
       ? { ...action, label: 'Save SVG' }
+      : action.key === 'download-png'
+        ? { ...action, label: 'Save PNG' }
       : action
   ))
 }
@@ -192,7 +212,7 @@ const createSeed = () => {
 
 const handleControlAction = async (key: string) => {
   if (key === 'reset-controls') {
-    await resetControls(loadedControls.value)
+    await resetControls(loadedControls.value, { preserveKeys: ['activeLayer'] })
     return
   }
 
@@ -307,9 +327,9 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
   }
 
   if (event.key.toLowerCase() === 's') {
-    if (!hasSvgDownloadAction.value) return
+    if (!hasSvgDownloadAction.value && !hasPngDownloadAction.value) return
     event.preventDefault()
-    void handleControlAction('download-svg')
+    void handleControlAction(hasSvgDownloadAction.value ? 'download-svg' : 'download-png')
   }
 }
 

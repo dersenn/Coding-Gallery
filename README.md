@@ -205,9 +205,31 @@ context.registerAction('download-svg', () => {
 
 For SVG projects, if you do not register `download-svg`, the viewer injects a fallback handler automatically.
 
-### 6. Add Metadata
+### 6. Add Project Definition + Index Entry
 
-Add your project to `data/projects.json`:
+Create `project.config.ts` beside your project `index.ts`:
+
+```ts
+import type { ProjectDefinition, ProjectModule } from '~/types/project'
+import * as legacyModuleExports from './index'
+
+const legacyModule = legacyModuleExports as unknown as Partial<ProjectModule>
+
+const definition: ProjectDefinition = {
+  id: 'my-new-project',
+  title: 'My New Project',
+  description: 'A cool sketch',
+  date: '2024-12',
+  tags: ['p5js', 'generative'],
+  init: legacyModule.init as ProjectDefinition['init'],
+  controls: legacyModule.controls,
+  actions: legacyModule.actions
+}
+
+export default definition
+```
+
+Then add a thin entry to `data/projects.json`:
 
 ```json
 {
@@ -216,12 +238,13 @@ Add your project to `data/projects.json`:
   "description": "A cool sketch",
   "date": "2024-12",
   "tags": ["p5js", "generative"],
-  "libraries": ["p5"],
-  "entryFile": "/projects/p5/my-new-project/index.ts"
+  "entryFile": "/projects/p5/my-new-project/index.ts",
+  "configFile": "/projects/p5/my-new-project/project.config.ts"
 }
 ```
 
-`entryFile` can target either `/projects/.../index.ts` or `/projects/.../index.js`.
+`configFile` is the canonical runtime definition.  
+`entryFile` remains in the index as canonical source path for structure/taxonomy validation.
 
 **Optional fields:**
 - `"hidden": true` - Hide from gallery (still accessible via direct URL)

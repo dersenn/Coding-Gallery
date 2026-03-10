@@ -16,6 +16,17 @@ At metadata level, projects already allow multiple libraries via
 `Project.libraries: string[]`, but runtime contracts are still centered on
 SVG-specific layer helpers.
 
+## Current implementation status (v1 slice)
+
+- Canonical `Technique` and technique/layer contracts were added to `types/project.ts`.
+- Generalized runtime helpers were added in `utils/layerRuntime.ts`:
+  - `singleActiveLayerSetup(...)`
+  - `singleActiveLayerManager(...)`
+- `grid-almighty` was migrated as the pilot mixed-technique project (SVG + canvas2d).
+- Strict metadata validation is available through `npm run validate:projects`.
+- Canonical runtime loading now uses per-project `project.config.ts`.
+- `data/projects.json` is a thin index with canonical `entryFile` + `configFile`.
+
 ## Current constraints
 
 ### Project module contract is technique-agnostic, but minimal

@@ -1,16 +1,20 @@
 # Single-Active Layer Runtime
 
-Reusable pattern for layered SVG sketches where each layer can have its own canvas mode (including ratio and padding), while only one layer is mounted at a time.
+Reusable pattern for layered multi-technique sketches where each layer can have its own container mode (including ratio and padding), while only one layer is mounted at a time.
+
+Use the generalized runtime utilities:
+
+- `singleActiveLayerSetup(...)`
+- `singleActiveLayerManager(...)`
 
 ## Utilities
 
-- `singleActiveSvgLayerSetup(...)`
-  - Input: one layer registry object (`label`, `canvas`, `draw`) plus context/runtime adapters.
+- `singleActiveLayerSetup(...)`
+  - Input: technique-aware registry (`label`, `technique`, `canvas`, `draw`, `createContext`).
   - Output: derived select options, default layer ID, and manager-ready layer definitions.
-- `singleActiveSvgLayerManager(...)`
-  - Runtime lifecycle helper: mount/switch/draw/export/destroy for the active layer.
-
-Both are implemented in `utils/layerRuntime.ts` and re-exported from `types/project.ts`.
+- `singleActiveLayerManager(...)`
+  - Runtime lifecycle helper for technique-specific layer mount/switch/draw/export/destroy.
+The runtime helper is implemented in `utils/layerRuntime.ts` and re-exported from `types/project.ts`.
 
 ## Why this exists
 
@@ -25,14 +29,14 @@ Both are implemented in `utils/layerRuntime.ts` and re-exported from `types/proj
    - `canvas`
    - `draw`
 2. Build setup once:
-   - `const setup = singleActiveSvgLayerSetup({ registry, createContext, resolveRuntimeName })`
+   - `const setup = singleActiveLayerSetup({ registry })`
 3. Wire controls from setup:
    - `default: setup.defaultLayerId`
    - `options: setup.options`
 4. In `init()`:
-   - resolve base canvas once
+   - resolve base container once
    - call `setup.createLayerDefinitions(runtimeExtras)`
-   - pass those definitions into `singleActiveSvgLayerManager(...)`
+   - pass those definitions into `singleActiveLayerManager(...)`
 
 ## Minimal example
 
@@ -42,28 +46,42 @@ type LayerId = 'layer-1' | 'layer-2'
 const LAYER_REGISTRY = {
   'layer-1': {
     label: 'Layer 1',
+    technique: 'svg',
     canvas: { mode: 'square' },
-    draw: drawLayer1
+    draw: drawLayer1,
+    resolveRuntimeName: (id) => `sketch-${id}`,
+    createContext: ({ technique, svg, frame, args }) => ({
+      technique,
+      svg,
+      frame,
+      theme: args.theme,
+      utils: args.utils,
+      controls: args.getControls(),
+      v: args.v,
+      rnd: args.rnd
+    })
   },
   'layer-2': {
     label: 'Layer 2',
+    technique: 'svg',
     canvas: { mode: '2:3', padding: '6vmin' },
-    draw: drawLayer2
+    draw: drawLayer2,
+    resolveRuntimeName: (id) => `sketch-${id}`,
+    createContext: ({ technique, svg, frame, args }) => ({
+      technique,
+      svg,
+      frame,
+      theme: args.theme,
+      utils: args.utils,
+      controls: args.getControls(),
+      v: args.v,
+      rnd: args.rnd
+    })
   }
 } as const
 
-const LAYER_SETUP = singleActiveSvgLayerSetup({
-  registry: LAYER_REGISTRY,
-  resolveRuntimeName: (id) => `sketch-${id}`,
-  createContext: ({ svg, frame, args }) => ({
-    svg,
-    frame,
-    theme: args.theme,
-    utils: args.utils,
-    controls: args.getControls(),
-    v: args.v,
-    rnd: args.rnd
-  })
+const LAYER_SETUP = singleActiveLayerSetup({
+  registry: LAYER_REGISTRY
 })
 ```
 
@@ -111,12 +129,7 @@ This avoids separate control systems per layer and keeps control state determini
 
 ## Naming polish follow-up (optional)
 
-Current API names intentionally favor explicitness and discoverability. If the module stays sketch-local and usage remains small, a future pass may shorten selected type names while preserving behavior:
-
-- `SingleActiveSvgLayerCreateArgs` -> `LayerCreateArgs`
-- `SingleActiveSvgLayerDefinition` -> `LayerDefinition`
-- `SingleActiveSvgLayerRegistryEntry` -> `LayerRegistryEntry`
-- `SingleActiveSvgLayerSetupArgs` -> `LayerSetupArgs`
+Current API names intentionally favor explicitness and discoverability.
 
 Keep runtime object terms stable (`canvas`, `container`, `svg`, `frame`) even if type names are shortened.
 

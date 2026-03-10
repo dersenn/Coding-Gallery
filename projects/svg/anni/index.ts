@@ -1,15 +1,16 @@
 import type {
   CleanupFunction,
+  ProjectLayerDefinition,
   ProjectActionDefinition,
   ProjectContext,
   ProjectControlDefinition,
-  SingleActiveSvgLayerRegistry
+  SingleActiveLayerRegistry
 } from '~/types/project'
 import {
   shortcuts,
   resolveContainer,
-  singleActiveSvgLayerManager,
-  singleActiveSvgLayerSetup
+  singleActiveLayerManager,
+  singleActiveLayerSetup
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 import { drawAnni1 } from './layers/anni1'
@@ -18,37 +19,48 @@ import type { LayerDrawContext } from './layers/types'
 
 type AnniLayer = 'anni-1' | 'anni-2'
 
-interface AnniLayerRuntimeExtras extends Omit<LayerDrawContext, 'svg' | 'frame' | 'controls'> {
+interface AnniLayerRuntimeExtras extends Omit<
+  LayerDrawContext,
+  'technique' | 'svg' | 'canvas' | 'ctx' | 'frame' | 'controls'
+> {
   getControls: () => ProjectContext['controls']
 }
 
-const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<
+const LAYER_REGISTRY: SingleActiveLayerRegistry<
   AnniLayer,
+  AnniLayerRuntimeExtras,
   LayerDrawContext
 > = {
-  'anni-1': { 
-    label: 'Orange, Black and White (1926/27)', 
-    canvas: { mode: '2:3', padding: '3vmin' }, 
-    draw: drawAnni1 
+  'anni-1': {
+    label: 'Orange, Black and White (1926/27)',
+    technique: 'svg',
+    canvas: { mode: '2:3', padding: '3vmin' },
+    draw: drawAnni1,
+    resolveRuntimeName: (id) => `anni-${id}`,
+    createContext: ({ technique, svg, canvas, ctx, frame, args }) => {
+      const { theme, utils, v, rnd, getControls } = args
+      return { technique, svg, canvas, ctx, frame, theme, utils, v, rnd, controls: getControls() }
+    }
   },
-  'anni-2': { 
-    label: 'Anni 2', 
-    canvas: { mode: '1:1', padding: '3vmin' }, 
-    draw: drawAnni2 
+  'anni-2': {
+    label: 'Anni 2',
+    technique: 'svg',
+    canvas: { mode: '1:1', padding: '3vmin' },
+    draw: drawAnni2,
+    resolveRuntimeName: (id) => `anni-${id}`,
+    createContext: ({ technique, svg, canvas, ctx, frame, args }) => {
+      const { theme, utils, v, rnd, getControls } = args
+      return { technique, svg, canvas, ctx, frame, theme, utils, v, rnd, controls: getControls() }
+    }
   }
 }
 
-const LAYER_SETUP = singleActiveSvgLayerSetup<
+const LAYER_SETUP = singleActiveLayerSetup<
   AnniLayer,
   AnniLayerRuntimeExtras,
   LayerDrawContext
 >({
-  registry: LAYER_REGISTRY,
-  resolveRuntimeName: (id) => `anni-${id}`,
-  createContext: ({ svg, frame, args }) => {
-    const { theme, utils, v, rnd, getControls } = args
-    return { svg, frame, theme, utils, v, rnd, controls: getControls() }
-  }
+  registry: LAYER_REGISTRY
 })
 
 // ─── Controls ───────────────────────────────────────────────────────────────────
@@ -98,6 +110,22 @@ export const controls: ProjectControlDefinition[] = [
 export const actions: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
+export const layers: ProjectLayerDefinition[] = [
+  {
+    id: 'anni-1',
+    label: 'Orange, Black and White (1926/27)',
+    technique: 'svg',
+    container: { mode: '2:3', padding: '3vmin' },
+    module: './layers/anni1.js'
+  },
+  {
+    id: 'anni-2',
+    label: 'Anni 2',
+    technique: 'svg',
+    container: { mode: '1:1', padding: '3vmin' },
+    module: './layers/anni2.js'
+  }
+]
 
 const ROOT_CANVAS_CONFIG = { mode: 'square' as const, padding: '3vmin' }
 export const container = ROOT_CANVAS_CONFIG
@@ -125,7 +153,7 @@ export async function init(
   } as ProjectContext['controls'] & { activeLayer: AnniLayer }
 
   const { el: baseContainer, width, height } = resolveContainer(container, ROOT_CANVAS_CONFIG)
-  const layerManager = singleActiveSvgLayerManager({
+  const layerManager = singleActiveLayerManager({
     parent: baseContainer,
     width,
     height,

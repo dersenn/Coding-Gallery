@@ -2,6 +2,8 @@ import type { GenerativeUtils } from '~/utils/generative'
 import type { ThemeOverride, ThemeTokens } from '~/utils/theme'
 import type { ContainerMode, ContainerConfig } from '~/utils/container'
 
+export type Technique = 'svg' | 'canvas2d' | 'p5'
+
 export type ControlPrimitiveValue = number | boolean | string
 export type ControlArrayValue = Array<string | number>
 export type ControlValue = ControlPrimitiveValue | ControlArrayValue
@@ -12,7 +14,7 @@ export interface ControlOptionDefinition {
   swatch?: string
 }
 
-interface ConditionalVisibilityDefinition {
+export interface ConditionalVisibilityDefinition {
   visibleWhenSelectKey?: string
   visibleWhenSelectValue?: ControlPrimitiveValue
   visibleWhenSelectValues?: ControlPrimitiveValue[]
@@ -94,35 +96,75 @@ export interface ControlValues {
   [key: string]: ControlValue
 }
 
-export interface ProjectActionDefinition {
+export interface ProjectActionDefinition extends ConditionalVisibilityDefinition {
   key: string
   label: string
+  scope?: 'shared' | 'layer'
+  layerId?: string
 }
 
-export interface Project {
+export interface ProjectLayerDefinition {
+  id: string
+  label?: string
+  technique: Technique
+  container?: ContainerMode | ContainerConfig
+  module: string
+  controls?: ProjectControlDefinition[]
+  actions?: ProjectActionDefinition[]
+  defaultActive?: boolean
+}
+
+export interface ProjectMetadata {
   id: string
   title: string
   description: string
   date: string
   tags: string[]
   thumbnail?: string
-  libraries: string[]
-  entryFile: string  // Path to JS/TS module (e.g., '/projects/noise-field/index.ts')
   prefersTheme?: 'dark' | 'light' // Optional per-project UI/sketch theme preference
-  controls?: ProjectControlDefinition[]
   noControls?: boolean // Hide controls panel/toggle for sketches without controls
   github?: string
   hidden?: boolean  // Hide from gallery (still accessible via direct URL)
 }
 
-// Project module interface - all projects must export this
+export interface ProjectIndexEntry extends ProjectMetadata {
+  configFile: string // Path to canonical project definition (e.g., '/projects/svg/foo/project.config.ts')
+}
+
+export interface ProjectDefinition extends ProjectMetadata {
+  techniques?: string[]
+  defaultTechnique?: Technique
+  container?: ContainerMode | ContainerConfig
+  controls?: ProjectControlDefinition[]
+  actions?: ProjectActionDefinition[]
+  layers?: ProjectLayerDefinition[]
+  libraries?: string[]
+  /**
+   * Optional escape hatch for advanced/custom sketches.
+   * Prefer metadata-driven layer/runtime bootstrap where possible.
+   */
+  init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
+  theme?: ThemeOverride
+  supportedTechniques?: string[]
+}
+
+/**
+ * @deprecated Use ProjectDefinition in `project.config.ts`.
+ * Legacy init-first project modules are being phased out.
+ */
 export interface ProjectModule {
   init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
-  controls?: ProjectControlDefinition[] // Optional: controls can be defined in the module
-  actions?: ProjectActionDefinition[] // Optional: contextual actions exposed by the module
-  theme?: ThemeOverride // Optional: project-level theme overrides
-  container?: ContainerMode | ContainerConfig // Optional: declarative layout sizing intent ('full' | 'square' | '4:3' | …)
+  controls?: ProjectControlDefinition[]
+  actions?: ProjectActionDefinition[]
+  theme?: ThemeOverride
+  container?: ContainerMode | ContainerConfig
+  supportedTechniques?: Technique[]
+  defaultTechnique?: Technique
+  layers?: ProjectLayerDefinition[]
 }
+
+// Compatibility alias during migration.
+export type Project = ProjectIndexEntry
 
 export interface ProjectContext {
   controls: ControlValues
@@ -162,20 +204,21 @@ export type {
   FrameTransform
 } from '~/utils/container'
 export {
-  singleActiveSvgLayerManager,
-  singleActiveSvgLayerSetup
+  singleActiveLayerManager,
+  singleActiveLayerSetup
 } from '~/utils/layerRuntime'
 export type {
   LayerCanvas,
-  SingleActiveSvgLayerRuntime,
-  SingleActiveSvgLayerCreateArgs,
-  SingleActiveSvgLayerDefinition,
-  SingleActiveSvgLayerManagerArgs,
-  SingleActiveSvgLayerManager,
-  SingleActiveSvgLayerRegistryEntry,
-  SingleActiveSvgLayerRegistry,
-  SingleActiveSvgLayerFrame,
-  SingleActiveSvgLayerSetupArgs,
-  SingleActiveSvgLayerSelectOption,
-  SingleActiveSvgLayerSetup
+  LayerTechniqueRuntime,
+  SingleActiveLayerFrame,
+  SingleActiveLayerRuntime,
+  SingleActiveLayerCreateArgs,
+  SingleActiveLayerDefinition,
+  SingleActiveLayerManagerArgs,
+  SingleActiveLayerManager,
+  SingleActiveLayerRegistryEntry,
+  SingleActiveLayerRegistry,
+  SingleActiveLayerSetupArgs,
+  SingleActiveLayerSelectOption,
+  SingleActiveLayerSetup
 } from '~/utils/layerRuntime'

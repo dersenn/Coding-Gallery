@@ -19,11 +19,11 @@ Minimal template for creating new p5.js projects in the gallery.
      "description": "A cool generative sketch",
      "date": "2026-02",
      "tags": ["p5js", "generative"],
-     "libraries": ["p5"],
-     "entryFile": "/projects/p5/my-sketch/index.ts"
+     "entryFile": "/projects/p5/my-sketch/index.ts",
+     "configFile": "/projects/p5/my-sketch/project.config.ts"
    }
    ```
-   `entryFile` can point to either `index.ts` or `index.js`.
+   Keep `entryFile` canonical and define runtime behavior in `project.config.ts`.
 
 4. **Run and test**:
    ```bash

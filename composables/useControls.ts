@@ -146,19 +146,35 @@ export const useControls = () => {
     void syncQueryWithControl(key, value, 'push')
   }
 
-  const resetControls = async (controls?: ProjectControlDefinition[]) => {
+  const resetControls = async (
+    controls?: ProjectControlDefinition[],
+    options?: { preserveKeys?: string[] }
+  ) => {
     const leafControls = flattenControls(controls)
     if (!leafControls.length) return
-    
+
+    const preserveKeys = new Set(options?.preserveKeys ?? [])
+
     // Remove control params from URL
     const newQuery = { ...route.query }
     leafControls.forEach(control => {
+      if (preserveKeys.has(control.key)) return
       delete newQuery[control.key]
     })
     await router.push({ query: newQuery })
-    
+
     // Reset to defaults
     initializeControls(controls)
+    preserveKeys.forEach((key) => {
+      const preservedValue = route.query[key]
+      if (preservedValue === undefined || preservedValue === null) return
+      const targetControl = leafControls.find((control) => control.key === key)
+      if (!targetControl) return
+      controlValues.value[key] = parseControlValueFromQuery(
+        targetControl,
+        preservedValue as string | string[] | null
+      )
+    })
   }
 
   return {

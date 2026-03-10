@@ -132,3 +132,52 @@ Implement Phase 1 only:
   `technique`, `container.mode`, and module path, with runtime auto-injecting
   layer selection UI when multiple layers are present.
 - Keep runtime behavior unchanged until pilot validation in Phase 2.
+
+---
+
+## Controls and actions UX
+
+### Layer-scoped actions and defaults for multi-tech projects
+
+- ID: `layer-scoped-controls-actions`
+- Status: `candidate`
+- Priority: **high**
+- Area: `components/ControlPanel.vue`, `components/ProjectRouteView.vue`, `components/ProjectViewer.vue`, `composables/useControls.ts`
+
+**Problem**  
+In multi-layer/multi-technique projects, controls and action buttons are currently treated as project-global. This causes two UX issues:
+
+- The panel can show actions that do not apply to the active layer (for example showing both SVG and PNG save options simultaneously).
+- "Defaults" reset is global, so it can reset `activeLayer` and jump to the default layer instead of only resetting the currently active layer settings.
+
+**Desired behavior**
+- Action visibility should be layer-aware:
+  - show shared/global actions always
+  - show layer-specific actions only for the active layer
+- Defaults should support scoped reset:
+  - `Reset Layer` resets only controls owned by the active layer and preserves `activeLayer`
+  - optional `Reset All` resets shared + all layer controls
+- Download action behavior should be capability-aware (active layer/runtime decides whether SVG or PNG save is available).
+
+**Proposed direction**
+1. Introduce a control/action scoping model in runtime contracts:
+   - shared project-level controls/actions
+   - per-layer controls/actions
+2. Add active-layer capability reporting from runtime to viewer (for action filtering).
+3. Update panel action rendering so it resolves effective actions from:
+   - shared actions
+   - active-layer actions
+   - active runtime capabilities
+4. Split reset semantics:
+   - keep keyboard shortcut `d` mapped to `Reset Layer`
+   - add optional panel action for `Reset All`
+5. Keep backward compatibility:
+   - projects without layer-scoped metadata continue to use current global behavior.
+
+**Files likely affected**
+- `types/project.ts` — formalize scoped controls/actions contract (if needed)
+- `projects/*/index.ts` (layered projects) — declare layer-scoped controls/actions
+- `composables/useControls.ts` — add reset-by-scope helpers
+- `components/ControlPanel.vue` — action grouping/visibility by scope
+- `components/ProjectRouteView.vue` — keyboard/action dispatch semantics
+- `components/ProjectViewer.vue` — runtime capability plumbing for effective actions

@@ -4,8 +4,9 @@ import { Grid, GridCell } from '~/types/project'
  * Grid Almighty layer skeleton:
  * keep the grid/cell runtime structure, but draw only a simple circle per cell.
  */
-export function drawGridCore(context) {
+export function draw(context) {
   const { svg, frame, theme, utils, controls, v } = context
+  if (!svg) return
 
   const rows = 8
   const cols = rows

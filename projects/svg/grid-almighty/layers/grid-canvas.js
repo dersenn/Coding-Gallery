@@ -1,14 +1,12 @@
 import { Grid } from '~/types/project'
 
 /**
- * Frontier-based 2D growth:
- * - starts from random seed cells
- * - expands into 4- or 8-neighborhood
- * - retries boundary cells across passes until coverage/max-pass stop
+ * Canvas variation of the grid-growth layer:
+ * preserves the seeded frontier fill behavior while drawing through Canvas2D.
  */
 export function draw(context) {
-  const { svg, frame, theme, utils, controls, v } = context
-  if (!svg) return
+  const { canvas, frame, theme, utils, controls } = context
+  if (!canvas) return
 
   const shortSideDivisions = typeof controls?.grid_short_side_divisions === 'number'
     ? controls.grid_short_side_divisions
@@ -27,7 +25,7 @@ export function draw(context) {
     : 100
   const neighborhood = controls?.growth_neighborhood === '4' ? '4' : '8'
 
-  svg.rect(v(frame.x, frame.y), frame.width, frame.height, theme.background, 'none', 0)
+  canvas.background(theme.background)
 
   const grid = new Grid({
     cols: 8,
@@ -92,7 +90,6 @@ export function draw(context) {
         nextFrontier.push(neighborIndex)
       }
 
-      // Keep boundary cells active so failed probability checks can retry.
       if (hasUnfilledNeighbor) {
         nextFrontier.push(cellIndex)
       }
@@ -103,11 +100,14 @@ export function draw(context) {
     pass++
   }
 
-  grid.forEach((cell) => {
-    const owner = ownerByIndex[cell.index]
-    if (owner < 0) return
-    const fill = palette[owner % colorCount] ?? theme.foreground
-    svg.rect(cell.tl(), cell.width, cell.height, fill, 'none', 0)
+  canvas.withContext((ctx) => {
+    for (const cell of grid.cells) {
+      const owner = ownerByIndex[cell.index]
+      if (owner < 0) continue
+      const fill = palette[owner % colorCount] ?? theme.foreground
+      ctx.fillStyle = fill
+      ctx.fillRect(cell.x, cell.y, cell.width, cell.height)
+    }
   })
 }
 

@@ -1,15 +1,15 @@
-import type { Project } from '~/types/project'
+import type { ProjectIndexEntry } from '~/types/project'
 import projectsData from '~/data/projects.json'
 
 export const useProjectLoader = () => {
-  const projects = useState<Project[]>('projects', () => projectsData as Project[])
-  const currentProject = useState<Project | null>('currentProject', () => null)
+  const projects = useState<ProjectIndexEntry[]>('projects', () => projectsData as ProjectIndexEntry[])
+  const currentProject = useState<ProjectIndexEntry | null>('currentProject', () => null)
 
-  const getProjectById = (id: string): Project | undefined => {
+  const getProjectById = (id: string): ProjectIndexEntry | undefined => {
     return projects.value.find(p => p.id === id)
   }
 
-  const getVisibleProjects = (includeHidden: boolean = false): Project[] => {
+  const getVisibleProjects = (includeHidden: boolean = false): ProjectIndexEntry[] => {
     if (includeHidden) {
       return projects.value
     }
@@ -17,7 +17,7 @@ export const useProjectLoader = () => {
     return projects.value.filter(p => !p.hidden)
   }
 
-  const setCurrentProject = (project: Project | null) => {
+  const setCurrentProject = (project: ProjectIndexEntry | null) => {
     currentProject.value = project
   }
 

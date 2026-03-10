@@ -17,8 +17,8 @@ Minimal template for lightweight 2D canvas sketches using `utils/canvas.ts`.
      "description": "A lightweight canvas2d sketch",
      "date": "2026-03",
      "tags": ["canvas2d", "generative"],
-     "libraries": ["canvas2d"],
-     "entryFile": "/projects/canvas2d/my-sketch/index.ts"
+     "entryFile": "/projects/canvas2d/my-sketch/index.ts",
+     "configFile": "/projects/canvas2d/my-sketch/project.config.ts"
    }
    ```
 

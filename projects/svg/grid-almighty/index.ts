@@ -1,75 +1,102 @@
 import type {
   CleanupFunction,
+  ProjectLayerDefinition,
   ProjectActionDefinition,
   ProjectContext,
   ProjectControlDefinition,
-  SingleActiveSvgLayerRegistry
+  SingleActiveLayerRegistry
 } from '~/types/project'
 import {
   shortcuts,
   resolveContainer,
-  singleActiveSvgLayerManager,
-  singleActiveSvgLayerSetup
+  singleActiveLayerManager,
+  singleActiveLayerSetup
 } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
-import { drawGridCore } from './layers/grid1.js'
-import { drawGridGrowth } from './layers/grid2.js'
+import { draw as drawGridCore } from './layers/grid1.js'
+import { draw as drawGridGrowth } from './layers/grid2.js'
+import { draw as drawGridCanvas } from './layers/grid-canvas.js'
 import type { LayerDrawContext } from './layers/types'
 
-type GridAlmightyLayer = 'grid-core' | 'grid-growth'
+type GridAlmightyLayer = 'grid-core' | 'grid-growth-svg' | 'grid-growth-canvas'
 
-interface GridAlmightyLayerRuntimeExtras extends Omit<LayerDrawContext, 'svg' | 'frame' | 'controls'> {
+interface GridAlmightyLayerRuntimeExtras extends Omit<
+  LayerDrawContext,
+  'technique' | 'svg' | 'canvas' | 'ctx' | 'frame' | 'controls'
+> {
   getControls: () => ProjectContext['controls']
 }
 
-const LAYER_REGISTRY: SingleActiveSvgLayerRegistry<
+const LAYER_REGISTRY: SingleActiveLayerRegistry<
   GridAlmightyLayer,
+  GridAlmightyLayerRuntimeExtras,
   LayerDrawContext
 > = {
-  // Single-active layer runtime.
   'grid-core': {
     label: 'Grid Core',
+    technique: 'svg',
     canvas: { mode: 'full' },
-    draw: drawGridCore
+    draw: drawGridCore,
+    resolveRuntimeName: (id) => `grid-almighty-${id}`,
+    createContext: ({ technique, svg, canvas, ctx, frame, args }) => {
+      const { theme, utils, v, rnd, getControls } = args
+      return { technique, svg, canvas, ctx, frame, theme, utils, v, rnd, controls: getControls() }
+    }
   },
-  'grid-growth': {
-    label: 'Grid Growth',
+  'grid-growth-svg': {
+    label: 'Grid Growth (SVG)',
+    technique: 'svg',
     canvas: { mode: 'full' },
-    draw: drawGridGrowth
+    draw: drawGridGrowth,
+    resolveRuntimeName: (id) => `grid-almighty-${id}`,
+    createContext: ({ technique, svg, canvas, ctx, frame, args }) => {
+      const { theme, utils, v, rnd, getControls } = args
+      return { technique, svg, canvas, ctx, frame, theme, utils, v, rnd, controls: getControls() }
+    }
+  },
+  'grid-growth-canvas': {
+    label: 'Grid Growth (Canvas2D)',
+    technique: 'canvas2d',
+    canvas: { mode: 'full' },
+    draw: drawGridCanvas,
+    resolveRuntimeName: (id) => `grid-almighty-${id}`,
+    createContext: ({ technique, svg, canvas, ctx, frame, args }) => {
+      const { theme, utils, v, rnd, getControls } = args
+      return { technique, svg, canvas, ctx, frame, theme, utils, v, rnd, controls: getControls() }
+    }
   }
 }
 
-const LAYER_SETUP = singleActiveSvgLayerSetup<
+const LAYER_SETUP = singleActiveLayerSetup<
   GridAlmightyLayer,
   GridAlmightyLayerRuntimeExtras,
   LayerDrawContext
 >({
-  registry: LAYER_REGISTRY,
-  resolveRuntimeName: (id) => `grid-almighty-${id}`,
-  createContext: ({ svg, frame, args }) => {
-    const { theme, utils, v, rnd, getControls } = args
-    return { svg, frame, theme, utils, v, rnd, controls: getControls() }
-  }
+  registry: LAYER_REGISTRY
 })
 
+const LAYER_SELECT_CONTROLS: ProjectControlDefinition[] = LAYER_SETUP.options.length > 1
+  ? [{
+      type: 'group',
+      id: 'composition',
+      label: 'Composition',
+      collapsible: true,
+      defaultOpen: true,
+      controls: [
+        {
+          type: 'select',
+          label: 'Layer',
+          key: 'activeLayer',
+          hideLabel: true,
+          default: LAYER_SETUP.defaultLayerId,
+          options: LAYER_SETUP.options
+        }
+      ]
+    }]
+  : []
+
 export const controls: ProjectControlDefinition[] = [
-  {
-    type: 'group',
-    id: 'composition',
-    label: 'Composition',
-    collapsible: true,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'select',
-        label: 'Layer',
-        key: 'activeLayer',
-        hideLabel: true,
-        default: LAYER_SETUP.defaultLayerId,
-        options: LAYER_SETUP.options
-      }
-    ]
-  },
+  ...LAYER_SELECT_CONTROLS,
   {
     type: 'group',
     id: 'grid',
@@ -95,7 +122,7 @@ export const controls: ProjectControlDefinition[] = [
     collapsible: true,
     defaultOpen: true,
     visibleWhenSelectKey: 'activeLayer',
-    visibleWhenSelectValue: 'grid-growth',
+    visibleWhenSelectValues: ['grid-growth-svg', 'grid-growth-canvas'],
     controls: [
       {
         type: 'slider',
@@ -262,7 +289,44 @@ export const controls: ProjectControlDefinition[] = [
 ]
 
 export const actions: ProjectActionDefinition[] = [
-  { key: 'download-svg', label: 'Download SVG' }
+  {
+    key: 'download-svg',
+    label: 'Download SVG',
+    visibleWhenSelectKey: 'activeLayer',
+    visibleWhenSelectValues: ['grid-core', 'grid-growth-svg']
+  },
+  {
+    key: 'download-png',
+    label: 'Download PNG',
+    visibleWhenSelectKey: 'activeLayer',
+    visibleWhenSelectValue: 'grid-growth-canvas'
+  }
+]
+
+export const supportedTechniques = ['svg', 'canvas2d'] as const
+export const defaultTechnique = 'svg' as const
+export const layers: ProjectLayerDefinition[] = [
+  {
+    id: 'grid-core',
+    label: 'Grid Core',
+    technique: 'svg',
+    container: { mode: 'full' },
+    module: './layers/grid1.js'
+  },
+  {
+    id: 'grid-growth-svg',
+    label: 'Grid Growth (SVG)',
+    technique: 'svg',
+    container: { mode: 'full' },
+    module: './layers/grid2.js'
+  },
+  {
+    id: 'grid-growth-canvas',
+    label: 'Grid Growth (Canvas2D)',
+    technique: 'canvas2d',
+    container: { mode: 'full' },
+    module: './layers/grid-canvas.js'
+  }
 ]
 
 const ROOT_CANVAS_CONFIG = { mode: 'full' as const }
@@ -281,7 +345,7 @@ export async function init(
   } as ProjectContext['controls'] & { activeLayer: GridAlmightyLayer }
 
   const { el: baseContainer, width, height } = resolveContainer(container, ROOT_CANVAS_CONFIG)
-  const layerManager = singleActiveSvgLayerManager({
+  const layerManager = singleActiveLayerManager({
     parent: baseContainer,
     width,
     height,
@@ -309,7 +373,14 @@ export async function init(
   })
 
   registerAction('download-svg', () => {
-    layerManager.exportActiveSvg(utils.seed.current)
+    if (controlState.activeLayer === 'grid-core' || controlState.activeLayer === 'grid-growth-svg') {
+      layerManager.exportActiveSvg(utils.seed.current)
+    }
+  })
+  registerAction('download-png', () => {
+    if (controlState.activeLayer === 'grid-growth-canvas') {
+      layerManager.exportActivePng(utils.seed.current)
+    }
   })
 
   return () => {
