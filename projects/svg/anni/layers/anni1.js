@@ -1,7 +1,8 @@
 import { Grid, GridCell } from '~/types/project'
 
-export function drawAnni1(context) {
+export function draw(context) {
   const { svg, frame, theme, utils, rnd, v, controls } = context
+  if (!svg) return
 
   const anniColors = [
     '#fdf0d5', '#03071e', '#FF4400'

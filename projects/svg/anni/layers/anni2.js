@@ -1,7 +1,8 @@
 import { createFrameTransform, resolveInnerFrame } from '~/types/project'
 
-export function drawAnni2(context) {
+export function draw(context) {
   const { svg, frame, theme, utils, v } = context
+  if (!svg) return
   const settings = {
     grid: { cols: 6, rows: 9 },
     colors: { background: 0, primary: 1, accent: 3 },

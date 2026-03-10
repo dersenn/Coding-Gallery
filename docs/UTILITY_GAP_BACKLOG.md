@@ -147,18 +147,18 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Status: `deferred`
   - Need: Multi-layer sketches (one SVG per layer, toggleable) may need overlay positioning (`el.style.position = 'relative'` + absolute layer stages) when true stacked visibility is required.
   - Seen in: `projects/svg/anni/index.ts`
-  - Notes: `anni` now uses a single-active layer runtime helper (`utils/layerRuntime.ts`) instead of stacked DOM overlays. Keep this deferred until a sketch needs simultaneously mounted/toggleable layer stacks.
+  - Notes: `anni` now uses a single-active layer runtime helper (`runtime/layerRuntime.ts`) instead of stacked DOM overlays. Keep this deferred until a sketch needs simultaneously mounted/toggleable layer stacks.
 
 - ID: `layer-runtime-manager`
   - Status: `implemented`
   - Need: Small framework helper for layer lifecycle wiring (`mount/switch/draw/export`) so per-layer SVG composition is less sketch-specific boilerplate.
   - Seen in: `projects/svg/anni/index.ts` (single-active-layer flow), expectation from layered sketches like Vera-style composition.
-  - Notes: Implemented in `utils/layerRuntime.ts` and re-exported from `types/project.ts` as: `singleActiveSvgLayerManager(...)` and `singleActiveSvgLayerSetup(...)`. Sketches keep a concise `{ label, canvas, draw }` registry while setup generates runtime definitions from injected runtime context (`createContext`, `resolveRuntimeName`). Naming guidance used by this flow: `canvas` = sizing config, `container` = DOM host, `svg` = render surface, `frame` = drawable geometry.
+  - Notes: Implemented in `runtime/layerRuntime.ts` and re-exported from `types/project.ts` as: `singleActiveLayerManager(...)` and `singleActiveLayerSetup(...)`. Sketches keep a concise `{ label, canvas, draw }` registry while setup generates runtime definitions from injected runtime context (`createContext`, `resolveRuntimeName`). Naming guidance used by this flow: `canvas` = sizing config, `container` = DOM host, `svg` = render surface, `frame` = drawable geometry.
 
 - ID: `layer-runtime-type-naming-polish`
   - Status: `candidate`
   - Need: Optionally shorten verbose layer-runtime type names for local readability (for example `SingleActiveSvgLayerCreateArgs` -> `LayerCreateArgs`) while keeping runtime object vocabulary stable (`canvas`, `container`, `svg`, `frame`).
-  - Seen in: `utils/layerRuntime.ts`, `types/project.ts`, `projects/svg/anni/index.ts`
+  - Seen in: `runtime/layerRuntime.ts`, `types/project.ts`, `projects/svg/anni/index.ts`
   - Notes: prioritize zero-behavior-change aliasing/renames only; avoid API churn if utility is expected to expand beyond `anni`.
 
 - ID: `frame-padding-css-units`

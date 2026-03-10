@@ -51,10 +51,18 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   └── c4ta/                  # Migrated C4TA sketches (subdivided by medium)
 ├── types/
 │   └── project.ts             # TypeScript interfaces
+├── runtime/
+│   ├── projectBootstrap.ts    # Framework project/layer bootstrap orchestration
+│   └── layerRuntime.ts        # Technique-aware single-active layer runtime
 ├── plugins/
-│   └── keyboard-shortcuts.client.ts  # Global keyboard shortcut hook
+│   └── keyboard-shortcuts.client.ts  # Nuxt convention: global keyboard shortcut hook
+├── server/
+│   └── api/
+│       └── show-hidden.get.ts # Nuxt/Nitro convention: hidden project token API
+├── scripts/
+│   └── validate-projects.mjs  # Repo validation tooling
 └── utils/
-    ├── generative.ts          # Generative art utilities (noise, seed, math, Vec)
+    ├── generative.ts          # Sketch-facing primitives (noise, seed, math, Vec)
     ├── shortcuts.ts           # Shorthand functions for hand-coding
     ├── svg.ts                 # SVG engine (shapes, paths, bezier curves)
     ├── grid.ts                # Grid utility (uniform & recursive subdivision)

@@ -19,13 +19,14 @@ SVG-specific layer helpers.
 ## Current implementation status (v1 slice)
 
 - Canonical `Technique` and technique/layer contracts were added to `types/project.ts`.
-- Generalized runtime helpers were added in `utils/layerRuntime.ts`:
+- Generalized runtime helpers were added in `runtime/layerRuntime.ts`:
   - `singleActiveLayerSetup(...)`
   - `singleActiveLayerManager(...)`
 - `grid-almighty` was migrated as the pilot mixed-technique project (SVG + canvas2d).
 - Strict metadata validation is available through `npm run validate:projects`.
 - Canonical runtime loading now uses per-project `project.config.ts`.
 - `data/projects.json` is a thin index with canonical `entryFile` + `configFile`.
+- `grid-almighty` is now the thin-config A-mode reference project.
 
 ## Current constraints
 
@@ -40,7 +41,7 @@ Primary reference:
 
 ### Layer runtime helper is SVG-specific by design
 
-`utils/layerRuntime.ts` currently defines:
+`runtime/layerRuntime.ts` currently defines:
 
 - `SingleActiveSvgLayerRuntime`
 - `singleActiveSvgLayerSetup(...)`
@@ -52,7 +53,7 @@ assumptions in manager-level APIs.
 
 Primary reference:
 
-- `utils/layerRuntime.ts`
+- `runtime/layerRuntime.ts`
 
 ## Design goals
 

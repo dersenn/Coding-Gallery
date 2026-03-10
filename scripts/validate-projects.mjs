@@ -1,3 +1,5 @@
+// Repo validation script namespace.
+// Keep validation/migration automation under `scripts/` (for example, validate-* / migrate-*).
 import { readFile, access } from 'node:fs/promises'
 import { constants } from 'node:fs'
 import path from 'node:path'
@@ -70,8 +72,12 @@ const validateProjectIndexEntry = async (project) => {
     throw new Error(`Index/config drift for "${project.id}" on key "tags"`)
   }
 
-  if (!/init:\s*legacyModule\.init|init:\s*\w+/.test(configSource)) {
-    throw new Error(`Project config "${project.configFile}" must provide init in definition`)
+  const hasInit = /init:\s*legacyModule\.init|init:\s*\w+/.test(configSource)
+  const hasLayers = /layers:\s*\w+|layers:\s*\[/.test(configSource)
+  if (!hasInit && !hasLayers) {
+    throw new Error(
+      `Project config "${project.configFile}" must provide init or declarative layers in definition`
+    )
   }
 }
 

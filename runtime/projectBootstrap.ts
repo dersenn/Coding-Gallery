@@ -5,9 +5,10 @@ import type {
   ProjectLayerDefinition,
   Technique
 } from '~/types/project'
+import { shortcuts } from '~/utils/shortcuts'
 import { Canvas } from '~/utils/canvas'
 import { resolveContainer } from '~/utils/container'
-import { singleActiveLayerManager, type SingleActiveLayerDefinition } from '~/utils/layerRuntime'
+import { singleActiveLayerManager, type SingleActiveLayerDefinition } from '~/runtime/layerRuntime'
 import { SVG } from '~/utils/svg'
 
 interface InitFromProjectDefinitionArgs {
@@ -47,6 +48,7 @@ export async function initFromProjectDefinition(
   }
 
   const { controls, utils, theme, onControlChange, registerAction } = context
+  const { v, rnd } = shortcuts(utils)
   const controlState: ProjectContext['controls'] & { activeLayer: string } = {
     ...controls,
     activeLayer: (controls.activeLayer as string | undefined) ?? resolveDefaultLayerId(layers)
@@ -72,7 +74,9 @@ export async function initFromProjectDefinition(
           frame,
           theme,
           utils,
-          controls: controlState
+          controls: controlState,
+          v,
+          rnd
         })
       }
 

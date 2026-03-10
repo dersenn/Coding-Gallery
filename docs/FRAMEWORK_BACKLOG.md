@@ -107,9 +107,9 @@ Concrete design options (pick one or combine):
 ### Multi-technique project/layer runtime
 
 - ID: `multi-technique-runtime`
-- Status: `candidate`
+- Status: `implemented`
 - Priority: **medium**
-- Area: `types/project.ts`, `utils/layerRuntime.ts`, `components/ProjectViewer.vue`
+- Area: `types/project.ts`, `runtime/layerRuntime.ts`, `components/ProjectViewer.vue`
 
 **Problem**  
 Project metadata can already represent multiple libraries/techniques, but the
@@ -120,18 +120,28 @@ than necessary when adding canvas2d-first sketches.
 **Proposal doc**  
 See `MULTI_TECHNIQUE_RUNTIME_PLAN.md` for phased design and migration strategy.
 
-**Next step**  
-Implement Phase 1 only:
+**Current status**  
+- Generalized runtime helpers are active in `runtime/layerRuntime.ts`.
+- Metadata bootstrap is active in `runtime/projectBootstrap.ts`.
+- Canonical per-project config loading is active in `components/ProjectViewer.vue`.
+- `grid-almighty` is the reference mixed-tech pilot for current runtime shape.
 
-- Add canonical `Technique` type and optional module declarations
-  (`supportedTechniques`, `defaultTechnique`) in `types/project.ts`.
-- Finalize the Phase 1 checklist in `MULTI_TECHNIQUE_RUNTIME_PLAN.md`,
-  including decision on optional `data/projects.json` `techniques/layers`
-  metadata.
-- Define the metadata-first target shape where layers can declare
-  `technique`, `container.mode`, and module path, with runtime auto-injecting
-  layer selection UI when multiple layers are present.
-- Keep runtime behavior unchanged until pilot validation in Phase 2.
+**Follow-up**  
+Continue incremental project migrations to pure config-first authoring per
+`PROJECT_CONFIG_MIGRATION_PLAYBOOK.md`.
+
+### Runtime module specialization follow-up
+
+- ID: `runtime-module-specialization`
+- Status: `candidate`
+- Priority: **low**
+- Area: `runtime/`
+
+**Problem**  
+`runtime/projectBootstrap.ts` currently handles shared orchestration plus technique branches inline. As more p5-specific behavior is introduced, this file may become harder to maintain.
+
+**Next step**  
+If p5 migration introduces significant branching, split technique handlers into focused modules (for example `runtime/p5Runtime.ts`) while keeping bootstrap orchestration thin.
 
 ---
 
@@ -140,7 +150,7 @@ Implement Phase 1 only:
 ### Layer-scoped actions and defaults for multi-tech projects
 
 - ID: `layer-scoped-controls-actions`
-- Status: `candidate`
+- Status: `in-progress`
 - Priority: **high**
 - Area: `components/ControlPanel.vue`, `components/ProjectRouteView.vue`, `components/ProjectViewer.vue`, `composables/useControls.ts`
 
@@ -181,3 +191,36 @@ In multi-layer/multi-technique projects, controls and action buttons are current
 - `components/ControlPanel.vue` — action grouping/visibility by scope
 - `components/ProjectRouteView.vue` — keyboard/action dispatch semantics
 - `components/ProjectViewer.vue` — runtime capability plumbing for effective actions
+
+**Progress update**
+- Action visibility predicates (`visibleWhenSelect*`) are now honored in route-level
+  action presentation.
+- Defaults behavior now supports preserving active layer via scoped reset options.
+- Remaining work: formalize shared vs layer action grouping as first-class
+  contract and complete rollout across migrated projects.
+
+---
+
+## Metadata/index architecture
+
+### Generated projects index from config (single source of truth)
+
+- ID: `generated-projects-index`
+- Status: `candidate`
+- Priority: **high**
+- Area: `data/projects.json`, `scripts/`, `projects/**/project.config.ts`
+
+**Problem**  
+`data/projects.json` and per-project `project.config.ts` currently duplicate core
+metadata fields (`title`, `description`, `date`, `tags`, etc.), requiring
+manual synchronization.
+
+**Desired direction**
+- Treat `project.config.ts` as single authoring source.
+- Generate or refresh `data/projects.json` automatically from configs.
+- Keep validator checks for path/taxonomy integrity while reducing manual drift.
+
+**Possible implementation**
+- Add a script (for example `scripts/generate-project-index.mjs`) that scans
+  project configs and emits thin index entries.
+- Wire generation into a command and/or pre-validate workflow.

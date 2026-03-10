@@ -143,7 +143,7 @@ export interface ProjectDefinition extends ProjectMetadata {
    * Optional escape hatch for advanced/custom sketches.
    * Prefer metadata-driven layer/runtime bootstrap where possible.
    */
-  init: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
+  init?: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
   theme?: ThemeOverride
   supportedTechniques?: string[]
 }
@@ -206,7 +206,7 @@ export type {
 export {
   singleActiveLayerManager,
   singleActiveLayerSetup
-} from '~/utils/layerRuntime'
+} from '~/runtime/layerRuntime'
 export type {
   LayerCanvas,
   LayerTechniqueRuntime,
@@ -221,4 +221,4 @@ export type {
   SingleActiveLayerSetupArgs,
   SingleActiveLayerSelectOption,
   SingleActiveLayerSetup
-} from '~/utils/layerRuntime'
+} from '~/runtime/layerRuntime'

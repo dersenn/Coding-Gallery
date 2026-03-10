@@ -14,13 +14,20 @@ Use the generalized runtime utilities:
   - Output: derived select options, default layer ID, and manager-ready layer definitions.
 - `singleActiveLayerManager(...)`
   - Runtime lifecycle helper for technique-specific layer mount/switch/draw/export/destroy.
-The runtime helper is implemented in `utils/layerRuntime.ts` and re-exported from `types/project.ts`.
+The runtime helper is implemented in `runtime/layerRuntime.ts` and re-exported from `types/project.ts`.
 
 ## Why this exists
 
 - Keeps per-layer aspect and padding logic in `resolveContainer(...)`.
 - Removes sketch-local lifecycle boilerplate.
 - Makes adding layers mostly one-entry work in a registry.
+
+## Thin-config reference project
+
+- Use `projects/svg/grid-almighty/project.config.ts` as the reference for A-mode:
+  - declarative controls/actions/layers in config
+  - independent draw logic in `layers/*.js`
+  - minimal `index.ts` runtime pointer only
 
 ## Recommended shape
 

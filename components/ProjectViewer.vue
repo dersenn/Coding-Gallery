@@ -15,7 +15,7 @@ import type {
   ProjectDefinition,
   ProjectLayerDefinition
 } from '~/types/project'
-import { initFromProjectDefinition } from '~/utils/projectBootstrap'
+import { initFromProjectDefinition } from '~/runtime/projectBootstrap'
 import { resolveTheme } from '~/utils/theme'
 import { buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
 
