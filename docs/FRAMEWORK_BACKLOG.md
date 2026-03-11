@@ -150,7 +150,7 @@ If p5 migration introduces significant branching, split technique handlers into 
 ### Layer-scoped actions and defaults for multi-tech projects
 
 - ID: `layer-scoped-controls-actions`
-- Status: `in-progress`
+- Status: `implemented`
 - Priority: **high**
 - Area: `components/ControlPanel.vue`, `components/ProjectRouteView.vue`, `components/ProjectViewer.vue`, `composables/useControls.ts`
 
@@ -193,11 +193,13 @@ In multi-layer/multi-technique projects, controls and action buttons are current
 - `components/ProjectViewer.vue` — runtime capability plumbing for effective actions
 
 **Progress update**
-- Action visibility predicates (`visibleWhenSelect*`) are now honored in route-level
-  action presentation.
-- Defaults behavior now supports preserving active layer via scoped reset options.
-- Remaining work: formalize shared vs layer action grouping as first-class
-  contract and complete rollout across migrated projects.
+- Scoped controls/actions are now first-class:
+  - shared controls/actions at project level
+  - per-layer controls/actions in `layers[].controls` / `layers[].actions`
+- Effective panel controls/actions now resolve from active layer context.
+- Defaults are split into `Reset Layer` (shortcut `d`) and optional `Reset All`.
+- Layered projects can omit manual `activeLayer` control; viewer auto-generates it when multiple layers exist.
+- `projects/svg/grid-almighty` is migrated as the pilot for independent layer state.
 
 ---
 

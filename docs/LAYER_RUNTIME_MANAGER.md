@@ -109,18 +109,18 @@ Typical runtime boundary:
 1. `index.ts` resolves runtime extras once (`theme`, `utils`, shortcuts, controls getter).
 2. Manager creates the active layer runtime (`createRuntime(...)`).
 3. Layer module `draw(...)` receives runtime context and stays framework-light.
-
 This split keeps TypeScript where it helps most (wiring/contracts) while minimizing typing overhead inside creative draw code.
 
-## Per-layer controls with shared schema
+## First-class shared + layer controls
 
-You can still keep one shared `controls` export while scoping controls to specific layers:
+Layered config now supports independent state per layer with optional shared controls:
 
-- Namespace layer-specific keys (for example `anni1_*`, `anni2_*`).
-- Gate visibility with `visibleWhenSelectKey: 'activeLayer'` plus `visibleWhenSelectValue` (or `visibleWhenSelectValues`).
-- Pass current controls into layer draw/runtime context from `index.ts`.
+- Put shared controls in project-level `controls`.
+- Put layer-owned controls in `layers[].controls`.
+- Put shared actions in project-level `actions` and layer actions in `layers[].actions`.
+- If a project has multiple layers and no explicit `activeLayer` control, the viewer auto-generates one.
 
-This avoids separate control systems per layer and keeps control state deterministic across layer switches.
+At runtime, effective controls are resolved as `shared + activeLayer`, while query persistence keeps layer values isolated by layer-specific keys.
 
 ## Naming convention
 

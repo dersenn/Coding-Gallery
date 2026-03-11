@@ -108,7 +108,7 @@ const route = useRoute()
 const router = useRouter()
 const { getProjectById } = useProjectLoader()
 const { utils } = useGenerativeUtils()
-const { controlValues, resetControls } = useControls()
+const { controlValues, resetLayerControls, resetAllControls } = useControls()
 
 const project = computed(() => getProjectById(props.projectId))
 const basePageTitle = "Things I've Coded…"
@@ -147,7 +147,7 @@ const shortcutHints = computed(() => {
     { key: 'r', label: 'reload' }
   ]
   if (canShowControlsUI.value) {
-    hints.push({ key: 'd', label: 'default settings' })
+    hints.push({ key: 'd', label: 'reset layer' })
   }
   if (hasSvgDownloadAction.value) {
     hints.push({ key: 's', label: 'save SVG' })
@@ -211,8 +211,13 @@ const createSeed = () => {
 }
 
 const handleControlAction = async (key: string) => {
-  if (key === 'reset-controls') {
-    await resetControls(loadedControls.value, { preserveKeys: ['activeLayer'] })
+  if (key === 'reset-controls' || key === 'reset-layer-controls') {
+    await resetLayerControls({ preserveKeys: ['activeLayer'] })
+    return
+  }
+
+  if (key === 'reset-all-controls') {
+    await resetAllControls({ preserveKeys: ['activeLayer'] })
     return
   }
 
@@ -322,7 +327,7 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
 
   if (event.key.toLowerCase() === 'd') {
     event.preventDefault()
-    void handleControlAction('reset-controls')
+    void handleControlAction('reset-layer-controls')
     return
   }
 

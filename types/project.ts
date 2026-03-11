@@ -103,6 +103,22 @@ export interface ProjectActionDefinition extends ConditionalVisibilityDefinition
   layerId?: string
 }
 
+export interface ScopedProjectControls {
+  shared: ProjectControlDefinition[]
+  byLayer: Record<string, ProjectControlDefinition[]>
+  activeLayerControl?: SelectControlDefinition
+}
+
+export interface ScopedProjectActions {
+  shared: ProjectActionDefinition[]
+  byLayer: Record<string, ProjectActionDefinition[]>
+}
+
+export interface RuntimeActionCapabilities {
+  canDownloadSvg: boolean
+  canDownloadPng: boolean
+}
+
 export interface ProjectLayerDefinition {
   id: string
   label?: string

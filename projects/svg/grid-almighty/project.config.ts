@@ -5,87 +5,13 @@ import type {
   ProjectLayerDefinition
 } from '~/types/project'
 
-type GridAlmightyLayer = 'noisy-automata' | 'grid-growth-svg' | 'grid-growth-canvas'
-
-const GRID_ALMIGHTY_LAYERS: ProjectLayerDefinition[] = [
-  {
-    id: 'noisy-automata',
-    label: 'Noisy Automata',
-    technique: 'svg',
-    container: { mode: 'full' },
-    module: './layers/noisy-automata.js',
-    defaultActive: true
-  },
-  {
-    id: 'grid-growth-svg',
-    label: 'Grid Growth (SVG)',
-    technique: 'svg',
-    container: { mode: 'full' },
-    module: './layers/grid2.js'
-  },
-  {
-    id: 'grid-growth-canvas',
-    label: 'Grid Growth (Canvas2D)',
-    technique: 'canvas2d',
-    container: { mode: 'full' },
-    module: './layers/grid-canvas.js'
-  }
-]
-
-const GRID_ALMIGHTY_LAYER_OPTIONS = GRID_ALMIGHTY_LAYERS.map(({ id, label }) => ({
-  value: id,
-  label: label ?? id
-}))
-
-const GRID_ALMIGHTY_DEFAULT_LAYER: GridAlmightyLayer = 'noisy-automata'
-const GRID_ALMIGHTY_CONTAINER = { mode: 'full' as const }
-const GRID_ALMIGHTY_TECHNIQUES = ['svg', 'canvas2d'] as const
-const GRID_ALMIGHTY_DEFAULT_TECHNIQUE = 'svg' as const
-
-const GRID_ALMIGHTY_CONTROLS: ProjectControlDefinition[] = [
-  {
-    type: 'group',
-    id: 'composition',
-    label: 'Composition',
-    collapsible: true,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'select',
-        label: 'Layer',
-        key: 'activeLayer',
-        hideLabel: true,
-        default: GRID_ALMIGHTY_DEFAULT_LAYER,
-        options: GRID_ALMIGHTY_LAYER_OPTIONS
-      }
-    ]
-  },
-  {
-    type: 'group',
-    id: 'grid',
-    label: 'Grid',
-    collapsible: true,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'slider',
-        label: 'Short Side Divisions',
-        key: 'grid_short_side_divisions',
-        default: 60,
-        min: 12,
-        max: 90,
-        step: 1
-      }
-    ]
-  },
+const GROWTH_CONTROLS: ProjectControlDefinition[] = [
   {
     type: 'group',
     id: 'growth',
     label: 'Growth',
     collapsible: true,
     defaultOpen: true,
-    visibleWhenSelectKey: 'activeLayer',
-    visibleWhenSelectValues: ['grid-growth-svg', 'grid-growth-canvas'],
     controls: [
       {
         type: 'slider',
@@ -134,15 +60,16 @@ const GRID_ALMIGHTY_CONTROLS: ProjectControlDefinition[] = [
         step: 1
       }
     ]
-  },
+  }
+]
+
+const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
   {
     type: 'group',
     id: 'rules',
     label: 'Rules',
     collapsible: true,
     defaultOpen: true,
-    visibleWhenSelectKey: 'activeLayer',
-    visibleWhenSelectValue: 'noisy-automata',
     controls: [
       {
         type: 'select',
@@ -177,8 +104,6 @@ const GRID_ALMIGHTY_CONTROLS: ProjectControlDefinition[] = [
     label: 'Noise',
     collapsible: true,
     defaultOpen: false,
-    visibleWhenSelectKey: 'activeLayer',
-    visibleWhenSelectValue: 'noisy-automata',
     controls: [
       {
         type: 'slider',
@@ -251,20 +176,84 @@ const GRID_ALMIGHTY_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
-const GRID_ALMIGHTY_ACTIONS: ProjectActionDefinition[] = [
+const NOISY_AUTOMATA_ACTIONS: ProjectActionDefinition[] = [
   {
     key: 'download-svg',
-    label: 'Download SVG',
-    visibleWhenSelectKey: 'activeLayer',
-    visibleWhenSelectValues: ['noisy-automata', 'grid-growth-svg']
-  },
-  {
-    key: 'download-png',
-    label: 'Download PNG',
-    visibleWhenSelectKey: 'activeLayer',
-    visibleWhenSelectValue: 'grid-growth-canvas'
+    label: 'Download SVG'
   }
 ]
+
+const GROWTH_SVG_ACTIONS: ProjectActionDefinition[] = [
+  {
+    key: 'download-svg',
+    label: 'Download SVG'
+  }
+]
+
+const GROWTH_CANVAS_ACTIONS: ProjectActionDefinition[] = [
+  {
+    key: 'download-png',
+    label: 'Download PNG'
+  }
+]
+
+const LAYERS: ProjectLayerDefinition[] = [
+  {
+    id: 'noisy-automata',
+    label: 'Noisy Automata',
+    technique: 'svg',
+    container: { mode: 'full' },
+    module: './layers/noisy-automata.js',
+    controls: NOISY_AUTOMATA_CONTROLS,
+    actions: NOISY_AUTOMATA_ACTIONS,
+    defaultActive: true
+  },
+  {
+    id: 'grid-growth-svg',
+    label: 'Grid Growth (SVG)',
+    technique: 'svg',
+    container: { mode: 'full' },
+    module: './layers/grid2.js',
+    controls: GROWTH_CONTROLS,
+    actions: GROWTH_SVG_ACTIONS
+  },
+  {
+    id: 'grid-growth-canvas',
+    label: 'Grid Growth (Canvas2D)',
+    technique: 'canvas2d',
+    container: { mode: 'full' },
+    module: './layers/grid-canvas.js',
+    controls: GROWTH_CONTROLS,
+    actions: GROWTH_CANVAS_ACTIONS
+  }
+]
+
+const CONTAINER = { mode: 'full' as const }
+const TECHNIQUES = ['svg', 'canvas2d'] as const
+const DEFAULT_TECHNIQUE = 'svg' as const
+
+const CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'grid',
+    label: 'Grid',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Short Side Divisions',
+        key: 'grid_short_side_divisions',
+        default: 60,
+        min: 12,
+        max: 90,
+        step: 1
+      }
+    ]
+  }
+]
+
+const ACTIONS: ProjectActionDefinition[] = []
 
 const metadata = {
   "id": "grid-almighty",
@@ -280,13 +269,13 @@ const metadata = {
 
 const definition: ProjectDefinition = {
   ...metadata,
-  techniques: [...GRID_ALMIGHTY_TECHNIQUES],
-  defaultTechnique: GRID_ALMIGHTY_DEFAULT_TECHNIQUE,
+  techniques: [...TECHNIQUES],
+  defaultTechnique: DEFAULT_TECHNIQUE,
   libraries: [],
-  controls: GRID_ALMIGHTY_CONTROLS,
-  actions: GRID_ALMIGHTY_ACTIONS,
-  container: GRID_ALMIGHTY_CONTAINER,
-  layers: GRID_ALMIGHTY_LAYERS
+  controls: CONTROLS,
+  actions: ACTIONS,
+  container: CONTAINER,
+  layers: LAYERS
 }
 
 export default definition

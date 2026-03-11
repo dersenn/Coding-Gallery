@@ -13,9 +13,17 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition
+  ProjectLayerDefinition,
+  RuntimeActionCapabilities,
+  ScopedProjectActions,
+  ScopedProjectControls
 } from '~/types/project'
 import { initFromProjectDefinition } from '~/runtime/projectBootstrap'
+import {
+  normalizeScopedProjectConfig,
+  resolveEffectiveScopedActions,
+  resolveEffectiveScopedControls
+} from '~/runtime/scopedProjectConfig'
 import { resolveTheme } from '~/utils/theme'
 import { buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
 
@@ -28,7 +36,7 @@ const props = defineProps<{
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
-const { controlValues, initializeControls } = useControls()
+const { controlValues, initializeScopedControls } = useControls()
 const { utils } = useGenerativeUtils()
 const route = useRoute()
 
@@ -37,7 +45,16 @@ let controlCallbacks: Array<(values: any) => void> = []
 let actionHandlers: Record<string, () => void> = {}
 let isLoading = ref(true)
 let error = ref<string | null>(null)
-const activeProjectControls = ref<ProjectControlDefinition[]>([])
+const scopedProjectControls = ref<ScopedProjectControls>({
+  shared: [],
+  byLayer: {}
+})
+const scopedProjectActions = ref<ScopedProjectActions>({
+  shared: [],
+  byLayer: {}
+})
+const hasInjectedSvgAction = ref(false)
+const hasInjectedPngAction = ref(false)
 
 // Emit controls when module is loaded
 const emit = defineEmits<{
@@ -67,15 +84,49 @@ const DOWNLOAD_PNG_ACTION: ProjectActionDefinition = {
 
 const activeDefinition = ref<ProjectDefinition | null>(null)
 const hasSvgTechnique = computed(() => {
-  const techniques = activeDefinition.value?.techniques || []
-  return techniques.includes('svg')
+  const layers = activeDefinition.value?.layers ?? []
+  return layers.some((layer) => layer.technique === 'svg')
 })
 const hasCanvas2dTechnique = computed(() => {
-  const techniques = activeDefinition.value?.techniques || []
-  return techniques.includes('canvas2d')
+  const layers = activeDefinition.value?.layers ?? []
+  return layers.some((layer) => layer.technique === 'canvas2d')
 })
 const themePreference = computed(() => props.project.prefersTheme ?? 'dark')
 const viewerBackground = computed(() => resolveTheme(undefined, themePreference.value).background)
+const defaultLayerId = computed(() => {
+  const layers = activeDefinition.value?.layers ?? []
+  return layers.find((layer) => layer.defaultActive)?.id ?? layers[0]?.id
+})
+const activeLayerId = computed(() => {
+  const raw = controlValues.value.activeLayer
+  if (typeof raw === 'string' && raw.length > 0) return raw
+  return defaultLayerId.value
+})
+const runtimeCapabilities = computed<RuntimeActionCapabilities>(() => {
+  const activeLayer = (activeDefinition.value?.layers ?? []).find((layer) => layer.id === activeLayerId.value)
+  return {
+    canDownloadSvg: activeLayer?.technique === 'svg',
+    canDownloadPng: activeLayer?.technique === 'canvas2d'
+  }
+})
+
+const hasActionKey = (actions: ScopedProjectActions, actionKey: string) => {
+  if (actions.shared.some((action) => action.key === actionKey)) return true
+  return Object.values(actions.byLayer).some((layerActions) => {
+    return layerActions.some((action) => action.key === actionKey)
+  })
+}
+
+const emitEffectiveControlsAndActions = () => {
+  const effectiveControls = resolveEffectiveScopedControls(activeLayerId.value, scopedProjectControls.value)
+  emit('controlsLoaded', effectiveControls)
+  const effectiveActions = resolveEffectiveScopedActions({
+    activeLayerId: activeLayerId.value,
+    scopedActions: scopedProjectActions.value,
+    capabilities: runtimeCapabilities.value
+  })
+  emit('actionsLoaded', effectiveActions)
+}
 
 const createSvgDownloadFallback = () => {
   return () => {
@@ -168,23 +219,29 @@ const loadProject = async () => {
     const definition = configModule.default
     activeDefinition.value = definition
 
-    const controls = definition.controls || []
-    activeProjectControls.value = controls || []
-    if (controls.length) {
-      initializeControls(controls)
+    const scopedConfig = normalizeScopedProjectConfig(definition)
+    scopedProjectControls.value = scopedConfig.controls
+    scopedProjectActions.value = {
+      ...scopedConfig.actions,
+      shared: [...scopedConfig.actions.shared]
     }
-    emit('controlsLoaded', controls)
-    const moduleActions = definition.actions || []
-    const hasModuleSvgAction = moduleActions.some((action) => action.key === DOWNLOAD_SVG_ACTION_KEY)
-    const hasModulePngAction = moduleActions.some((action) => action.key === DOWNLOAD_PNG_ACTION_KEY)
-    const shouldInjectSvgAction = hasSvgTechnique.value && !hasModuleSvgAction
-    const shouldInjectPngAction = hasCanvas2dTechnique.value && !hasModulePngAction
-    const effectiveActions = [
-      ...moduleActions,
-      ...(shouldInjectSvgAction ? [DOWNLOAD_SVG_ACTION] : []),
-      ...(shouldInjectPngAction ? [DOWNLOAD_PNG_ACTION] : [])
-    ]
-    emit('actionsLoaded', effectiveActions)
+    const hasModuleSvgAction = hasActionKey(scopedProjectActions.value, DOWNLOAD_SVG_ACTION_KEY)
+    const hasModulePngAction = hasActionKey(scopedProjectActions.value, DOWNLOAD_PNG_ACTION_KEY)
+    hasInjectedSvgAction.value = hasSvgTechnique.value && !hasModuleSvgAction
+    hasInjectedPngAction.value = hasCanvas2dTechnique.value && !hasModulePngAction
+    if (hasInjectedSvgAction.value) {
+      scopedProjectActions.value.shared.push(DOWNLOAD_SVG_ACTION)
+    }
+    if (hasInjectedPngAction.value) {
+      scopedProjectActions.value.shared.push(DOWNLOAD_PNG_ACTION)
+    }
+    initializeScopedControls({
+      sharedControls: scopedProjectControls.value.shared,
+      layerControlsById: scopedProjectControls.value.byLayer
+    }, {
+      activeLayerId: defaultLayerId.value
+    })
+    emitEffectiveControlsAndActions()
 
     const theme = resolveTheme(definition.theme, themePreference.value)
     cleanup = await initFromProjectDefinition({
@@ -219,10 +276,10 @@ const loadProject = async () => {
       }
     })
 
-    if (shouldInjectSvgAction && !actionHandlers[DOWNLOAD_SVG_ACTION_KEY]) {
+    if (hasInjectedSvgAction.value && !actionHandlers[DOWNLOAD_SVG_ACTION_KEY]) {
       actionHandlers[DOWNLOAD_SVG_ACTION_KEY] = createSvgDownloadFallback()
     }
-    if (shouldInjectPngAction && !actionHandlers[DOWNLOAD_PNG_ACTION_KEY]) {
+    if (hasInjectedPngAction.value && !actionHandlers[DOWNLOAD_PNG_ACTION_KEY]) {
       actionHandlers[DOWNLOAD_PNG_ACTION_KEY] = createPngDownloadFallback()
     }
 
@@ -245,6 +302,13 @@ watch(controlValues, (newValues) => {
   }
 }, { deep: true })
 
+watch(
+  () => controlValues.value.activeLayer,
+  () => {
+    emitEffectiveControlsAndActions()
+  }
+)
+
 // Watch for project changes
 watch(() => props.project, () => {
   loadProject()
@@ -253,8 +317,14 @@ watch(() => props.project, () => {
 watch(
   () => route.query,
   () => {
-    if (!activeProjectControls.value.length) return
-    initializeControls(activeProjectControls.value)
+    if (!activeDefinition.value) return
+    initializeScopedControls({
+      sharedControls: scopedProjectControls.value.shared,
+      layerControlsById: scopedProjectControls.value.byLayer
+    }, {
+      activeLayerId: defaultLayerId.value
+    })
+    emitEffectiveControlsAndActions()
   }
 )
 

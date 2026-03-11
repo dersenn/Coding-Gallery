@@ -1,31 +1,13 @@
 <template>
   <div class="control-panel h-full flex flex-col p-4 font-medium text-sm">
-    <div class="mb-4 space-y-2">
+    <div v-if="showResetAll" class="mb-4">
       <button
         type="button"
-        class="control-btn-strong w-full px-3 py-2 rounded-md transition-colors font-semibold"
-        @click="emit('action', 'new-seed')"
+        class="control-btn w-full px-3 py-2 rounded-md transition-colors"
+        @click="emit('action', 'reset-all-controls')"
       >
-        New Seed
+        Reset All
       </button>
-      <div class="flex gap-2">
-        <button
-          type="button"
-          class="control-btn flex-1 px-3 py-2 rounded-md transition-colors"
-          @click="emit('action', 'reset-controls')"
-        >
-          Defaults
-        </button>
-        <button
-          v-for="action in contextActions"
-          :key="action.key"
-          type="button"
-          class="control-btn flex-1 px-3 py-2 rounded-md transition-colors"
-          @click="emit('action', action.key)"
-        >
-          {{ action.label }}
-        </button>
-      </div>
     </div>
 
     <div class="flex-1 min-h-0 overflow-y-auto space-y-4">
@@ -204,10 +186,11 @@ const props = defineProps<{
   controls: ProjectControlDefinition[]
   contextActions?: ProjectActionDefinition[]
   panelStateKey?: string
+  showResetAll?: boolean
 }>()
 
 const { controlValues, updateControl, commitControl } = useControls()
-const contextActions = computed(() => props.contextActions ?? [])
+const showResetAll = computed(() => props.showResetAll ?? false)
 const openSections = ref<Record<string, boolean>>({})
 const panelStateStorageKey = computed(() => {
   if (!props.panelStateKey) return null
