@@ -132,7 +132,7 @@ Minimal context fields to pass:
 
 - Add internal utility to produce an in-memory standalone package descriptor from active layer/project.
 - Start with `svg` and `canvas2d` layered projects.
-- Validate with `projects/svg/grid-almighty` as reference.
+- Validate with `projects/svg/growing-things` as reference.
 
 ### Phase B: Downloadable bundle
 
@@ -167,7 +167,7 @@ Minimal context fields to pass:
 
 ## Suggested first pilot
 
-- Project: `grid-almighty`
-- Layer: `grid-growth-svg` (`projects/svg/grid-almighty/layers/grid2.js`)
+- Project: `growing-things`
+- Layer: `grid-growth-canvas` (`projects/svg/growing-things/layers/grid-canvas.js`)
 - Mode: raw
 - Verification: same seed and same defaults produce comparable output inside and outside gallery runtime.

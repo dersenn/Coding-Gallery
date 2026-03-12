@@ -16,7 +16,7 @@ Use it together with `resolveContainer()` from `utils/container.ts` (or `~/types
 import { Canvas, createCanvas2D, draw } from '~/types/project'
 ```
 
-- `new Canvas({ parent, id, width, height, alpha?, defaults? })`
+- `new Canvas({ parent, id, width, height, alpha?, pixelRatio?, rectSnap?, defaults? })`
 - `createCanvas2D(config)` convenience constructor
 - `draw(target, callback)` context save/restore wrapper
 
@@ -30,8 +30,8 @@ import { Canvas, createCanvas2D, draw } from '~/types/project'
 - `stroke(color | null)`
 - `strokeWeight(weight)`
 - `line(a, b, stroke?, strokeW?)`
-- `rect(at, width, height, fill?, stroke?, strokeW?)`
-- `rectC(center, width, height, fill?, stroke?, strokeW?)`
+- `rect(at, width, height, fill?, stroke?, strokeW?, options?)`
+- `rectC(center, width, height, fill?, stroke?, strokeW?, options?)`
 - `circle(at, radius?, fill?, stroke?, strokeW?)`
 - `text(value, at, fill?, options?)`
 - `withContext((ctx) => ...)`
@@ -84,3 +84,6 @@ export async function init(container: HTMLElement, context: ProjectContext): Pro
 - p5 remains fully supported and is still a recommended option for rapid prototyping.
 - Point-based APIs expect `Vec` instances.
 - Template starter: `projects/_Templates/_canvas2d-template/`.
+- Rectangle drawing now defaults to device-pixel snapping (`rectSnap: 'device'`) to reduce hairline seams when tiled rects meet.
+- Override globally with `new Canvas({ ..., rectSnap: 'none' })` or per call with `rect(..., { snap: 'none' })` when fractional/soft edges are desired.
+- Snapping is applied only for axis-aligned transforms; when the active transform includes rotation or skew, rect drawing falls back to legacy behavior.

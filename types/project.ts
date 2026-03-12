@@ -207,7 +207,9 @@ export type {
   CanvasDefaultStyle,
   CanvasStyle,
   CanvasTextOptions,
-  CanvasExportOptions
+  CanvasExportOptions,
+  CanvasRectOptions,
+  CanvasRectSnapMode
 } from '~/utils/canvas'
 export { resolveContainer } from '~/utils/container'
 export { resolveInnerFrame } from '~/utils/container'

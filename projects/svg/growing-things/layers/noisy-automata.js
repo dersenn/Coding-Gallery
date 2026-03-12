@@ -1,15 +1,13 @@
-import { Grid, GridCell } from '~/types/project'
+import { Grid } from '~/types/project'
 
 /**
  * Grid Almighty layer skeleton:
  * keep the grid/cell runtime structure, but draw only a simple circle per cell.
  */
 export function draw(context) {
-  const { svg, frame, theme, utils, controls, v } = context
-  if (!svg) return
+  const { canvas, frame, theme, utils, controls } = context
+  if (!canvas) return
 
-  const rows = 8
-  const cols = rows
   const cellSizing = 'squareByShortSide'
   const fit = 'stretch'
   const shortSideDivisions = typeof controls?.grid_short_side_divisions === 'number'
@@ -27,11 +25,9 @@ export function draw(context) {
     : [theme.foreground]
   const zones = createZones(palette, utils, controls, theme.foreground)
 
-  svg.rect(v(frame.x, frame.y), frame.width, frame.height, theme.background, 'none', 0)
-
-  const grid = new GridCoreGrid({
-    cols,
-    rows,
+  const grid = new Grid({
+    cols: 8,
+    rows: 8,
     width: frame.width,
     height: frame.height,
     x: frame.x,
@@ -40,112 +36,89 @@ export function draw(context) {
     fit,
     shortSideDivisions,
     utils
-  }).init({
-    svg,
-    fallbackFill: theme.foreground,
-    zones,
-    noise: {
-      noiseScale,
-      stretchX,
-      stretchY,
-      amplitude,
-      octaves,
-      lacunarity,
-      persistence
-    }
   })
-
-  grid.forEach((cell) => cell.draw())
-}
-
-class GridCoreGrid extends Grid {
-  init(runtime) {
-    this.svg = runtime.svg
-    this.fallbackFill = runtime.fallbackFill
-    this.zones = runtime.zones
-    this.noise = runtime.noise
-    this.zoneIndexMap = this.buildZoneIndexMap()
-    this.zoneStates = this.buildZoneStates()
-    return this
+  const noise = {
+    noiseScale,
+    stretchX,
+    stretchY,
+    amplitude,
+    octaves,
+    lacunarity,
+    persistence
   }
+  const zoneIndexMap = buildZoneIndexMap(grid, zones, noise, utils)
+  const zoneStates = buildZoneStates({ rows: grid.rows, cols: grid.cols, zones, utils })
 
-  createCell(config) {
-    return new GridCoreCell(config)
-  }
-
-  buildZoneStates() {
-    if (!Array.isArray(this.zones) || this.zones.length === 0) return []
-
-    return this.zones.map((zone, zoneIndex) => {
-      const states = Array.from({ length: this.rows }, () => Array(this.cols).fill(false))
-      for (let col = 0; col < this.cols; col++) {
-        states[0][col] = this.randomSeedBit()
-      }
-
-      for (let row = 1; row < this.rows; row++) {
-        for (let col = 0; col < this.cols; col++) {
-          const left = col > 0 ? states[row - 1][col - 1] : false
-          const center = states[row - 1][col]
-          const right = col < this.cols - 1 ? states[row - 1][col + 1] : false
-          states[row][col] = applyWolframRule(zone.ruleBits, left, center, right)
-        }
-      }
-      return states
+  canvas.background(theme.background)
+  for (const cell of grid.cells) {
+    const fill = resolveFillColor({
+      row: cell.row,
+      col: cell.col,
+      zoneIndexMap,
+      zoneStates,
+      zones,
+      fallbackFill: theme.foreground
     })
-  }
-
-  randomSeedBit() {
-    const coinToss = this.utils?.seed?.coinToss
-    if (typeof coinToss === 'function') {
-      return coinToss(50)
-    }
-    return Math.random() >= 0.5
-  }
-
-  buildZoneIndexMap() {
-    const zoneCount = Array.isArray(this.zones) ? this.zones.length : 0
-    if (zoneCount <= 0) {
-      return Array.from({ length: this.rows }, () => Array(this.cols).fill(-1))
-    }
-
-    const map = Array.from({ length: this.rows }, () => Array(this.cols).fill(0))
-    for (let row = 0; row < this.rows; row++) {
-      for (let col = 0; col < this.cols; col++) {
-        const normalizedNoise = normalizeNoiseValue(resolveNoiseValueForCell(this, row, col))
-        map[row][col] = resolveZoneIndexFromNoise(normalizedNoise, zoneCount)
-      }
-    }
-    return map
+    if (!fill) continue
+    canvas.rect(cell.tl(), cell.width, cell.height, fill, 'transparent', 0)
   }
 }
 
-class GridCoreCell extends GridCell {
-  draw() {
-    const fill = this.resolveFillColor()
-    if (!fill) return
-    this.grid.svg.rect(this.tl(), this.width, this.height, fill, 'none', 0)
-  }
+function buildZoneStates({ rows, cols, zones, utils }) {
+  if (!Array.isArray(zones) || zones.length === 0) return []
 
-  resolveFillColor() {
-    const zones = this.grid.zones
-    if (!Array.isArray(zones) || zones.length === 0) {
-      return null
+  return zones.map((zone) => {
+    const states = Array.from({ length: rows }, () => Array(cols).fill(false))
+    for (let col = 0; col < cols; col++) {
+      states[0][col] = utils.seed.coinToss(50)
     }
 
-    const zoneIndex = this.grid.zoneIndexMap?.[this.row]?.[this.col]
-    if (typeof zoneIndex !== 'number' || zoneIndex < 0) return null
-    const zone = zones[zoneIndex]
-    if (!zone) return null
-    const isActive = this.grid.zoneStates?.[zoneIndex]?.[this.row]?.[this.col]
-    if (!isActive) return null
-    return zone.color ?? this.grid.fallbackFill
+    for (let row = 1; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const left = col > 0 ? states[row - 1][col - 1] : false
+        const center = states[row - 1][col]
+        const right = col < cols - 1 ? states[row - 1][col + 1] : false
+        states[row][col] = applyWolframRule(zone.ruleBits, left, center, right)
+      }
+    }
+    return states
+  })
+}
+
+function buildZoneIndexMap(grid, zones, noise, utils) {
+  const zoneCount = Array.isArray(zones) ? zones.length : 0
+  if (zoneCount <= 0) {
+    return Array.from({ length: grid.rows }, () => Array(grid.cols).fill(-1))
   }
+
+  const map = Array.from({ length: grid.rows }, () => Array(grid.cols).fill(0))
+  for (let row = 0; row < grid.rows; row++) {
+    for (let col = 0; col < grid.cols; col++) {
+      const normalizedNoise = normalizeNoiseValue(
+        resolveNoiseValueForCell({ noise, utils }, row, col),
+        utils
+      )
+      map[row][col] = resolveZoneIndexFromNoise(normalizedNoise, zoneCount, utils)
+    }
+  }
+  return map
+}
+
+function resolveFillColor({ row, col, zoneIndexMap, zoneStates, zones, fallbackFill }) {
+  if (!Array.isArray(zones) || zones.length === 0) return null
+  const zoneIndex = zoneIndexMap?.[row]?.[col]
+  if (typeof zoneIndex !== 'number' || zoneIndex < 0) return null
+  const zone = zones[zoneIndex]
+  if (!zone) return null
+  const isActive = zoneStates?.[zoneIndex]?.[row]?.[col]
+  if (!isActive) return null
+  return zone.color ?? fallbackFill
 }
 
 function createZones(palette, utils, controls, foregroundColor) {
   // Extend this list to add more noise zones.
   const baseRules = chooseRuleSet(utils, controls)
-  const shuffledRules = shuffleRules(baseRules, utils)
+  const shuffledRules = utils.array.shuffle(baseRules)
   const singleColor = controls?.rule_single_color === true
   const c0 = singleColor ? foregroundColor : palette[0]
   const c1 = singleColor ? foregroundColor : (palette[1] ?? palette[0])
@@ -192,14 +165,7 @@ function chooseRuleSet(utils, controls) {
     presets.sparse
   ]
 
-  const randomInt = utils?.seed?.randomInt
-  if (typeof randomInt !== 'function') {
-    const fallback = presets.balanced
-    if (controls?.rule_single_mode === true) {
-      return [fallback[0], fallback[0], fallback[0]]
-    }
-    return fallback
-  }
+  const randomInt = utils.seed.randomInt
 
   const index = randomInt(0, autoRuleSets.length - 1)
   const selected = autoRuleSets[index] ?? presets.balanced
@@ -219,29 +185,13 @@ function normalizePresetKey(value) {
   return 'auto'
 }
 
-function shuffleRules(rules, utils) {
-  const shuffled = [...rules]
-  const randomInt = utils?.seed?.randomInt
-  if (typeof randomInt !== 'function') return shuffled
-
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = randomInt(0, i)
-    const temp = shuffled[i]
-    shuffled[i] = shuffled[j]
-    shuffled[j] = temp
-  }
-
-  return shuffled
-}
-
 function parseRuleBits(rule) {
   const text = String(rule).trim()
   if (!/^[01]{8}$/.test(text)) return null
   return Array.from(text, (digit) => digit === '1')
 }
 
-function resolveNoiseValueForCell(grid, row, col) {
-  const noise = grid.noise
+function resolveNoiseValueForCell({ noise, utils }, row, col) {
   const baseScale = Math.max(0.001, noise.noiseScale)
   let currentFreqX = (1 / baseScale) * Math.max(0.001, noise.stretchX)
   let currentFreqY = (1 / baseScale) * Math.max(0.001, noise.stretchY)
@@ -250,7 +200,7 @@ function resolveNoiseValueForCell(grid, row, col) {
   let maxValue = 0
 
   for (let i = 0; i < noise.octaves; i++) {
-    total += grid.utils.noise.simplex2D(col * currentFreqX, row * currentFreqY) * currentAmp
+    total += utils.noise.simplex2D(col * currentFreqX, row * currentFreqY) * currentAmp
     maxValue += currentAmp
     currentFreqX *= noise.lacunarity
     currentFreqY *= noise.lacunarity
@@ -258,11 +208,11 @@ function resolveNoiseValueForCell(grid, row, col) {
   }
 
   const raw = maxValue > 0 ? (total / maxValue) * noise.amplitude : 0
-  return clamp(raw, -1, 1)
+  return utils.math.clamp(raw, -1, 1)
 }
 
-function normalizeNoiseValue(value) {
-  return clamp((value + 1) / 2, 0, 1)
+function normalizeNoiseValue(value, utils) {
+  return utils.math.clamp((value + 1) / 2, 0, 1)
 }
 
 function applyWolframRule(ruleBits, topLeft, top, topRight) {
@@ -271,15 +221,11 @@ function applyWolframRule(ruleBits, topLeft, top, topRight) {
   return ruleBits[7 - pattern]
 }
 
-function resolveZoneIndexFromNoise(normalizedNoise, zoneCount) {
+function resolveZoneIndexFromNoise(normalizedNoise, zoneCount, utils) {
   const safeCount = Math.max(1, zoneCount)
-  return Math.min(Math.floor(clamp(normalizedNoise, 0, 1) * safeCount), safeCount - 1)
+  return Math.min(Math.floor(utils.math.clamp(normalizedNoise, 0, 1) * safeCount), safeCount - 1)
 }
 
 function toBit(value) {
   return value ? 1 : 0
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value))
 }

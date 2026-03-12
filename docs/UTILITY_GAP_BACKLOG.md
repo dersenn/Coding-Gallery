@@ -137,7 +137,7 @@ Central list of reusable utility candidates discovered during sketch migrations.
 - ID: `dense-grid-raster-runtime`
   - Status: `candidate`
   - Need: Canvas-first rendering path for dense grid/cellular sketches where SVG node counts become a bottleneck (for example 60+ row CA/noise fields), while keeping deterministic seed behavior and an optional SVG export workflow.
-  - Seen in: `projects/svg/grid-almighty/index.ts`, `projects/svg/grid-almighty/layers/grid1.js`
+  - Seen in: `projects/svg/growing-things/index.ts`, `projects/svg/growing-things/layers/grid-noise-animated-canvas.js`
   - Notes:
     - Keep existing control/runtime contracts where possible (`ProjectContext`, seeded utils, redraw lifecycle).
     - Prefer a shared pattern/helper over sketch-local rewrites once at least 2 sketches need this.
@@ -184,7 +184,7 @@ Central list of reusable utility candidates discovered during sketch migrations.
 - ID: `control-panel-derived-value-display`
   - Status: `candidate`
   - Need: show effective/resolved values in the control panel when a control is in an automatic mode (for example selected auto rule preset -> actual preset/rules used this draw).
-  - Seen in: `projects/svg/grid-almighty/index.ts`, `projects/svg/grid-almighty/layers/grid1.js`
+  - Seen in: `projects/svg/growing-things/index.ts`, `projects/svg/growing-things/layers/noisy-automata.js`
   - Notes: Generic panel concern, not sketch-specific. Could support optional read-only "derived value" rows or inline annotations for controls that map to runtime-selected values.
 
 ### p5 migration helpers

@@ -8,6 +8,7 @@ export interface CanvasCreateConfig {
   height?: number
   alpha?: boolean
   pixelRatio?: number | 'auto'
+  rectSnap?: CanvasRectSnapMode
   defaults?: CanvasDefaultStyle
 }
 
@@ -32,6 +33,12 @@ export interface CanvasExportOptions {
   seed?: string | number
 }
 
+export type CanvasRectSnapMode = 'device' | 'none'
+
+export interface CanvasRectOptions {
+  snap?: CanvasRectSnapMode
+}
+
 export interface CanvasDefaultStyle extends CanvasStyle {
   background?: string
   text?: string
@@ -45,6 +52,13 @@ interface CanvasDefaults {
   lineJoin: CanvasLineJoin
   background: string
   text: string
+}
+
+interface RectBounds {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 const applyStyle = (ctx: CanvasRenderingContext2D, style: CanvasStyle): void => {
@@ -66,6 +80,16 @@ const applyStyle = (ctx: CanvasRenderingContext2D, style: CanvasStyle): void => 
 }
 
 const clampDimension = (value: number): number => Math.max(1, Math.round(value))
+const EDGE_SNAP_PRECISION = 1_000_000
+const AXIS_ALIGN_EPSILON = 1e-9
+const canonicalEdge = (value: number): number => Math.round(value * EDGE_SNAP_PRECISION) / EDGE_SNAP_PRECISION
+const isAxisAligned = (transform: DOMMatrix): boolean =>
+  Math.abs(transform.b) <= AXIS_ALIGN_EPSILON && Math.abs(transform.c) <= AXIS_ALIGN_EPSILON
+const normalizeRect = (x: number, y: number, width: number, height: number): RectBounds => {
+  const left = width >= 0 ? x : x + width
+  const top = height >= 0 ? y : y + height
+  return { x: left, y: top, width: Math.abs(width), height: Math.abs(height) }
+}
 
 const resolveCssColor = (value: string | null | undefined): string | undefined => {
   if (!value) return undefined
@@ -105,6 +129,7 @@ export class Canvas {
   el: HTMLCanvasElement
   ctx: CanvasRenderingContext2D
   def: CanvasDefaults
+  rectSnapDefault: CanvasRectSnapMode
 
   private resolvePixelRatio(value: CanvasCreateConfig['pixelRatio']): number {
     if (typeof value === 'number') {
@@ -122,6 +147,7 @@ export class Canvas {
     this.w = clampDimension(setup.width ?? this.parent.clientWidth)
     this.h = clampDimension(setup.height ?? this.parent.clientHeight)
     this.c = new Vec(this.w / 2, this.h / 2)
+    this.rectSnapDefault = setup.rectSnap ?? 'device'
 
     this.def = resolveCanvasDefaults(this.parent, setup.defaults)
 
@@ -135,6 +161,38 @@ export class Canvas {
     }
     this.ctx = ctx
     this.resize(this.w, this.h)
+  }
+
+  private resolveRectBounds(
+    at: Vec,
+    width: number,
+    height: number,
+    options?: CanvasRectOptions
+  ): RectBounds {
+    const snapMode = options?.snap ?? this.rectSnapDefault
+    if (snapMode === 'none') {
+      return { x: at.x, y: at.y, width, height }
+    }
+
+    const transform = this.ctx.getTransform()
+    if (!isAxisAligned(transform) || transform.a <= 0 || transform.d <= 0) {
+      return { x: at.x, y: at.y, width, height }
+    }
+
+    const normalized = normalizeRect(at.x, at.y, width, height)
+    const leftPx = Math.round(canonicalEdge(transform.a * normalized.x + transform.e))
+    const rightRaw = transform.a * (normalized.x + normalized.width) + transform.e
+    const rightPx = Math.max(leftPx + 1, Math.round(canonicalEdge(rightRaw)))
+    const topPx = Math.round(canonicalEdge(transform.d * normalized.y + transform.f))
+    const bottomRaw = transform.d * (normalized.y + normalized.height) + transform.f
+    const bottomPx = Math.max(topPx + 1, Math.round(canonicalEdge(bottomRaw)))
+
+    return {
+      x: (leftPx - transform.e) / transform.a,
+      y: (topPx - transform.f) / transform.d,
+      width: (rightPx - leftPx) / transform.a,
+      height: (bottomPx - topPx) / transform.d
+    }
   }
 
   resize(width: number, height: number): void {
@@ -212,15 +270,17 @@ export class Canvas {
     height: number,
     fill: string = this.def.fill,
     stroke: string = this.def.stroke,
-    strokeW: number = this.def.strokeW
+    strokeW: number = this.def.strokeW,
+    options: CanvasRectOptions = {}
   ): void {
+    const bounds = this.resolveRectBounds(at, width, height, options)
     this.ctx.save()
     applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     if (fill !== 'transparent') {
-      this.ctx.fillRect(at.x, at.y, width, height)
+      this.ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
     }
     if (stroke !== 'transparent' && strokeW > 0) {
-      this.ctx.strokeRect(at.x, at.y, width, height)
+      this.ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height)
     }
     this.ctx.restore()
   }
@@ -231,7 +291,8 @@ export class Canvas {
     height: number,
     fill: string = this.def.fill,
     stroke: string = this.def.stroke,
-    strokeW: number = this.def.strokeW
+    strokeW: number = this.def.strokeW,
+    options: CanvasRectOptions = {}
   ): void {
     this.rect(
       new Vec(center.x - width / 2, center.y - height / 2),
@@ -239,7 +300,8 @@ export class Canvas {
       height,
       fill,
       stroke,
-      strokeW
+      strokeW,
+      options
     )
   }
 

@@ -8,6 +8,24 @@ import type {
 const GROWTH_CONTROLS: ProjectControlDefinition[] = [
   {
     type: 'group',
+    id: 'grid',
+    label: 'Grid',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Short Side Divisions',
+        key: 'grid_short_side_divisions',
+        default: 60,
+        min: 12,
+        max: 90,
+        step: 1
+      }
+    ]
+  },
+  {
+    type: 'group',
     id: 'growth',
     label: 'Growth',
     collapsible: true,
@@ -64,6 +82,24 @@ const GROWTH_CONTROLS: ProjectControlDefinition[] = [
 ]
 
 const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'grid',
+    label: 'Grid',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Short Side Divisions',
+        key: 'grid_short_side_divisions',
+        default: 60,
+        min: 12,
+        max: 90,
+        step: 1
+      }
+    ]
+  },
   {
     type: 'group',
     id: 'rules',
@@ -178,15 +214,8 @@ const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
 
 const NOISY_AUTOMATA_ACTIONS: ProjectActionDefinition[] = [
   {
-    key: 'download-svg',
-    label: 'Download SVG'
-  }
-]
-
-const GROWTH_SVG_ACTIONS: ProjectActionDefinition[] = [
-  {
-    key: 'download-svg',
-    label: 'Download SVG'
+    key: 'download-png',
+    label: 'Download PNG'
   }
 ]
 
@@ -197,25 +226,82 @@ const GROWTH_CANVAS_ACTIONS: ProjectActionDefinition[] = [
   }
 ]
 
+const NOISE_ANIM_CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'noiseAnim',
+    label: 'Noise Animation',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Columns',
+        key: 'noise_anim_cols',
+        default: 64,
+        min: 8,
+        max: 180,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Rows',
+        key: 'noise_anim_rows',
+        default: 64,
+        min: 8,
+        max: 180,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Noise Scale',
+        key: 'noise_anim_scale',
+        default: 0.065,
+        min: 0.005,
+        max: 0.2,
+        step: 0.001
+      },
+      {
+        type: 'slider',
+        label: 'Time Scale',
+        key: 'noise_anim_time_scale',
+        default: 0.0006,
+        min: 0.00001,
+        max: 0.003,
+        step: 0.00001
+      },
+      {
+        type: 'slider',
+        label: 'Warp',
+        key: 'noise_anim_warp',
+        default: 0.18,
+        min: 0,
+        max: 0.6,
+        step: 0.01
+      },
+      {
+        type: 'slider',
+        label: 'Contrast',
+        key: 'noise_anim_contrast',
+        default: 1,
+        min: 0.2,
+        max: 3,
+        step: 0.05
+      }
+    ]
+  }
+]
+
 const LAYERS: ProjectLayerDefinition[] = [
   {
     id: 'noisy-automata',
     label: 'Noisy Automata',
-    technique: 'svg',
+    technique: 'canvas2d',
     container: { mode: 'full' },
     module: './layers/noisy-automata.js',
     controls: NOISY_AUTOMATA_CONTROLS,
     actions: NOISY_AUTOMATA_ACTIONS,
     defaultActive: true
-  },
-  {
-    id: 'grid-growth-svg',
-    label: 'Grid Growth (SVG)',
-    technique: 'svg',
-    container: { mode: 'full' },
-    module: './layers/grid2.js',
-    controls: GROWTH_CONTROLS,
-    actions: GROWTH_SVG_ACTIONS
   },
   {
     id: 'grid-growth-canvas',
@@ -225,44 +311,34 @@ const LAYERS: ProjectLayerDefinition[] = [
     module: './layers/grid-canvas.js',
     controls: GROWTH_CONTROLS,
     actions: GROWTH_CANVAS_ACTIONS
+  },
+  {
+    id: 'noise-grid-canvas-animated',
+    label: 'Noise Grid (Canvas2D Animated)',
+    technique: 'canvas2d',
+    container: { mode: 'full' },
+    module: './layers/grid-noise-animated-canvas.js',
+    controls: NOISE_ANIM_CONTROLS
   }
 ]
 
 const CONTAINER = { mode: 'full' as const }
-const TECHNIQUES = ['svg', 'canvas2d'] as const
-const DEFAULT_TECHNIQUE = 'svg' as const
+const TECHNIQUES = ['canvas2d'] as const
+const DEFAULT_TECHNIQUE = 'canvas2d' as const
 
-const CONTROLS: ProjectControlDefinition[] = [
-  {
-    type: 'group',
-    id: 'grid',
-    label: 'Grid',
-    collapsible: true,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'slider',
-        label: 'Short Side Divisions',
-        key: 'grid_short_side_divisions',
-        default: 60,
-        min: 12,
-        max: 90,
-        step: 1
-      }
-    ]
-  }
-]
+const CONTROLS: ProjectControlDefinition[] = []
 
 const ACTIONS: ProjectActionDefinition[] = []
 
 const metadata = {
-  "id": "grid-almighty",
-  "title": "Grid Almighty",
-  "description": "Single-layer full-canvas grid skeleton that draws circles per cell",
+  "id": "growing-things",
+  "title": "Growing Things",
+  "description": "Layered growth and noise playground across Canvas2D",
   "date": "2026-03",
   "tags": [
-    "svg",
-    "grid"
+    "canvas2d",
+    "grid",
+    "noise"
   ],
   "hidden": false
 } satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'layers' | 'techniques'>

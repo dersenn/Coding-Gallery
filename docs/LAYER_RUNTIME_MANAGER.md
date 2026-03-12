@@ -7,14 +7,31 @@ Use the generalized runtime utilities:
 - `singleActiveLayerSetup(...)`
 - `singleActiveLayerManager(...)`
 
+Technique runtime adapters are split by render surface:
+
+- `runtime/layerRuntime.svg.ts`
+- `runtime/layerRuntime.canvas2d.ts`
+- `runtime/layerRuntime.p5.ts`
+
 ## Utilities
 
 - `singleActiveLayerSetup(...)`
-  - Input: technique-aware registry (`label`, `technique`, `canvas`, `draw`, `createContext`).
+  - Input: technique-aware registry (`label`, `technique`, `canvas`) with:
+    - `draw + createContext` for `svg`/`canvas2d`
+    - `init` for `p5` (returns cleanup)
   - Output: derived select options, default layer ID, and manager-ready layer definitions.
 - `singleActiveLayerManager(...)`
   - Runtime lifecycle helper for technique-specific layer mount/switch/draw/export/destroy.
 The runtime helper is implemented in `runtime/layerRuntime.ts` and re-exported from `types/project.ts`.
+
+## p5 minimal contract
+
+For layered p5 integration, keep the same sketch form used by existing p5 projects:
+
+- Module exports `init(container, context)` and returns cleanup (`sketch.remove()`).
+- Manager `draw()` is mount-ensure/no-op for p5 layers (p5 owns animation loop).
+- Layer switch/unmount calls cleanup.
+- Seed/control wiring is handled by framework context; p5 internal logic remains unchanged.
 
 ## Why this exists
 
@@ -24,7 +41,7 @@ The runtime helper is implemented in `runtime/layerRuntime.ts` and re-exported f
 
 ## Thin-config reference project
 
-- Use `projects/svg/grid-almighty/project.config.ts` as the reference for A-mode:
+- Use `projects/svg/growing-things/project.config.ts` as the reference for A-mode:
   - declarative controls/actions/layers in config
   - independent draw logic in `layers/*.js`
   - minimal `index.ts` runtime pointer only

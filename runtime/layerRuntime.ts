@@ -1,8 +1,9 @@
 import { resolveContainer } from '~/utils/container'
 import type { ContainerConfig, ContainerMode } from '~/utils/container'
-import { Canvas } from '~/utils/canvas'
-import { SVG } from '~/utils/svg'
-import type { Technique } from '~/types/project'
+import type { CleanupFunction, Technique } from '~/types/project'
+import { createSvgLayerRuntime } from '~/runtime/layerRuntime.svg'
+import { createCanvas2dLayerRuntime } from '~/runtime/layerRuntime.canvas2d'
+import { createP5LayerRuntime } from '~/runtime/layerRuntime.p5'
 
 export type LayerCanvas = ContainerConfig | ContainerMode
 export type LayerTechniqueRuntime = Technique
@@ -54,25 +55,51 @@ export interface SingleActiveLayerManager<LayerId extends string> {
   destroy: () => void
 }
 
-export interface SingleActiveLayerRegistryEntry<
+interface SingleActiveLayerRegistryContextArgs<
+  LayerId extends string,
+  RuntimeArgs extends object
+> {
+  technique: LayerTechniqueRuntime
+  frame: SingleActiveLayerFrame
+  args: SingleActiveLayerCreateArgs<LayerId> & RuntimeArgs
+  svg?: import('~/utils/svg').SVG
+  canvas?: import('~/utils/canvas').Canvas
+  ctx?: CanvasRenderingContext2D
+}
+
+interface SingleActiveLayerRegistryDrawEntry<
   LayerId extends string,
   RuntimeArgs extends object,
   DrawContext extends object
 > {
   label: string
-  technique: LayerTechniqueRuntime
+  technique: Exclude<LayerTechniqueRuntime, 'p5'>
   canvas: LayerCanvas
   draw: (context: DrawContext) => void
-  createContext: (params: {
-    technique: LayerTechniqueRuntime
-    frame: SingleActiveLayerFrame
-    args: SingleActiveLayerCreateArgs<LayerId> & RuntimeArgs
-    svg?: SVG
-    canvas?: Canvas
-    ctx?: CanvasRenderingContext2D
-  }) => DrawContext
+  createContext: (params: SingleActiveLayerRegistryContextArgs<LayerId, RuntimeArgs>) => DrawContext
   resolveRuntimeName?: (id: LayerId) => string
 }
+
+interface SingleActiveLayerRegistryP5Entry<
+  LayerId extends string,
+  RuntimeArgs extends object
+> {
+  label: string
+  technique: 'p5'
+  canvas: LayerCanvas
+  init: (
+    args: SingleActiveLayerCreateArgs<LayerId> & RuntimeArgs
+  ) => Promise<CleanupFunction> | CleanupFunction
+  resolveRuntimeName?: (id: LayerId) => string
+}
+
+export type SingleActiveLayerRegistryEntry<
+  LayerId extends string,
+  RuntimeArgs extends object,
+  DrawContext extends object
+> =
+  | SingleActiveLayerRegistryDrawEntry<LayerId, RuntimeArgs, DrawContext>
+  | SingleActiveLayerRegistryP5Entry<LayerId, RuntimeArgs>
 
 export type SingleActiveLayerRegistry<
   LayerId extends string,
@@ -133,37 +160,29 @@ export function singleActiveLayerSetup<
           const frame: SingleActiveLayerFrame = { x: 0, y: 0, width: args.width, height: args.height }
 
           if (entry.technique === 'svg') {
-            const svg = new SVG({ parent: args.parent, id: runtimeName, width: args.width, height: args.height })
-            return {
-              technique: entry.technique,
-              draw: () => {
-                svg.stage.replaceChildren()
+            return createSvgLayerRuntime({
+              parent: args.parent,
+              width: args.width,
+              height: args.height,
+              runtimeName,
+              onDraw: (svg) => {
                 entry.draw(entry.createContext({
                   technique: entry.technique,
                   svg,
                   frame,
                   args
                 }))
-              },
-              exportSvg: (seed) => {
-                svg.save(String(seed), runtimeName)
-              },
-              destroy: () => {
-                svg.stage.remove()
               }
-            }
+            })
           }
 
           if (entry.technique === 'canvas2d') {
-            const canvas = new Canvas({
+            return createCanvas2dLayerRuntime({
               parent: args.parent,
-              id: runtimeName,
               width: args.width,
-              height: args.height
-            })
-            return {
-              technique: entry.technique,
-              draw: () => {
+              height: args.height,
+              runtimeName,
+              onDraw: (canvas) => {
                 entry.draw(entry.createContext({
                   technique: entry.technique,
                   canvas,
@@ -171,14 +190,15 @@ export function singleActiveLayerSetup<
                   frame,
                   args
                 }))
-              },
-              exportPng: (seed) => {
-                canvas.save({ seed, projectId: runtimeName })
-              },
-              destroy: () => {
-                canvas.el.remove()
               }
-            }
+            })
+          }
+
+          if (entry.technique === 'p5') {
+            return createP5LayerRuntime({
+              parent: args.parent,
+              init: (container) => entry.init({ ...args, parent: container })
+            })
           }
 
           throw new Error(

@@ -22,11 +22,11 @@ SVG-specific layer helpers.
 - Generalized runtime helpers were added in `runtime/layerRuntime.ts`:
   - `singleActiveLayerSetup(...)`
   - `singleActiveLayerManager(...)`
-- `grid-almighty` was migrated as the pilot mixed-technique project (SVG + canvas2d).
+- `growing-things` was migrated as the pilot mixed-technique project (canvas2d + p5).
 - Strict metadata validation is available through `npm run validate:projects`.
 - Canonical runtime loading now uses per-project `project.config.ts`.
 - `data/projects.json` is a thin index with canonical `entryFile` + `configFile`.
-- `grid-almighty` is now the thin-config A-mode reference project.
+- `growing-things` is now the thin-config A-mode reference project.
 
 ## Current constraints
 

@@ -124,7 +124,7 @@ See `MULTI_TECHNIQUE_RUNTIME_PLAN.md` for phased design and migration strategy.
 - Generalized runtime helpers are active in `runtime/layerRuntime.ts`.
 - Metadata bootstrap is active in `runtime/projectBootstrap.ts`.
 - Canonical per-project config loading is active in `components/ProjectViewer.vue`.
-- `grid-almighty` is the reference mixed-tech pilot for current runtime shape.
+- `growing-things` is the reference mixed-tech pilot for current runtime shape.
 
 **Follow-up**  
 Continue incremental project migrations to pure config-first authoring per
@@ -174,6 +174,33 @@ See `STANDALONE_EXPORT_SKETCH.md` for phased design, output package shape, and t
 
 **Next step**  
 If p5 migration introduces significant branching, split technique handlers into focused modules (for example `runtime/p5Runtime.ts`) while keeping bootstrap orchestration thin.
+
+### Inject shortcuts into runtime context
+
+- ID: `runtime-shortcuts-context`
+- Status: `candidate`
+- Priority: **medium**
+- Area: `types/project.ts`, `components/ProjectViewer.vue`, `runtime/projectBootstrap.ts`
+
+**Problem**  
+Most sketches still write `utils.*` chains repeatedly or recreate local aliases with `shortcuts(utils)` in each file. The shortcut API exists but is not a consistent runtime contract, so ergonomics vary by sketch style and module type (project `init` vs layer `draw`).
+
+**Desired behavior**
+- Expose a canonical shortcuts object from runtime context (for example `sc`) for both project and layer execution paths.
+- Keep `utils` as the canonical full API name (do not replace it with `u` at framework contract level).
+- Preserve backward compatibility for existing aliases already injected in layer draws (`v`, `rnd`).
+
+**Proposed direction**
+1. Add a typed shortcuts field (for example `sc`) to `ProjectContext`.
+2. In viewer/bootstrap context construction, instantiate once from `shortcuts(utils)` and pass through runtime.
+3. Include the same field in metadata layer draw context so layer modules and init modules have parity.
+4. Keep migration incremental: existing sketches continue to work, new sketches prefer `sc.*`.
+
+**Files likely affected**
+- `types/project.ts` — runtime context type expansion for shortcuts.
+- `components/ProjectViewer.vue` — context object passed to project init/bootstrap.
+- `runtime/projectBootstrap.ts` — layer draw-context payload standardization.
+- `projects/_Templates/` — examples updated to prefer runtime-provided shortcuts.
 
 ---
 
@@ -231,7 +258,7 @@ In multi-layer/multi-technique projects, controls and action buttons are current
 - Effective panel controls/actions now resolve from active layer context.
 - Defaults are split into `Reset Layer` (shortcut `d`) and optional `Reset All`.
 - Layered projects can omit manual `activeLayer` control; viewer auto-generates it when multiple layers exist.
-- `projects/svg/grid-almighty` is migrated as the pilot for independent layer state.
+- `projects/svg/growing-things` is migrated as the pilot for independent layer state.
 
 ---
 

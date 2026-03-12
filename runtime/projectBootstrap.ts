@@ -6,10 +6,11 @@ import type {
   Technique
 } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
-import { Canvas } from '~/utils/canvas'
 import { resolveContainer } from '~/utils/container'
 import { singleActiveLayerManager, type SingleActiveLayerDefinition } from '~/runtime/layerRuntime'
-import { SVG } from '~/utils/svg'
+import { createSvgLayerRuntime } from '~/runtime/layerRuntime.svg'
+import { createCanvas2dLayerRuntime } from '~/runtime/layerRuntime.canvas2d'
+import { createP5LayerRuntime } from '~/runtime/layerRuntime.p5'
 
 interface InitFromProjectDefinitionArgs {
   definition: ProjectDefinition
@@ -21,6 +22,12 @@ interface InitFromProjectDefinitionArgs {
 interface LayerModuleDraw {
   draw?: (context: Record<string, unknown>) => void
 }
+
+interface LayerModuleP5 {
+  init?: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction> | CleanupFunction
+}
+
+type LayerModule = LayerModuleDraw & LayerModuleP5
 
 const resolveDefaultLayerId = (layers: ProjectLayerDefinition[]): string => {
   return layers.find((layer) => layer.defaultActive)?.id ?? layers[0]!.id
@@ -48,7 +55,7 @@ export async function initFromProjectDefinition(
   }
 
   const { controls, utils, theme, onControlChange, registerAction } = context
-  const { v, rnd } = shortcuts(utils)
+  const { v, rnd, coin } = shortcuts(utils)
   const controlState: ProjectContext['controls'] & { activeLayer: string } = {
     ...controls,
     activeLayer: (controls.activeLayer as string | undefined) ?? resolveDefaultLayerId(layers)
@@ -56,7 +63,8 @@ export async function initFromProjectDefinition(
 
   const rootContainerMode = definition.container ?? 'full'
   const { el: baseContainer, width, height } = resolveContainer(container, rootContainerMode)
-  const loadedLayerModules = new Map<string, LayerModuleDraw>()
+  const loadedLayerModules = new Map<string, LayerModule>()
+  const layerById = new Map(layers.map((layer) => [layer.id, layer]))
 
   const layerDefinitions: SingleActiveLayerDefinition<string>[] = layers.map((layer) => ({
     id: layer.id,
@@ -64,7 +72,10 @@ export async function initFromProjectDefinition(
     canvas: layer.container ?? 'full',
     createRuntime: ({ parent, width: layerWidth, height: layerHeight }) => {
       const frame = { x: 0, y: 0, width: layerWidth, height: layerHeight }
-      const drawWithModule = () => {
+      const drawWithModule = (
+        svg?: import('~/utils/svg').SVG,
+        canvas?: import('~/utils/canvas').Canvas
+      ) => {
         const layerModule = loadedLayerModules.get(layer.id)
         layerModule?.draw?.({
           technique: layer.technique,
@@ -76,58 +87,67 @@ export async function initFromProjectDefinition(
           utils,
           controls: controlState,
           v,
-          rnd
+          rnd,
+          coin
         })
       }
 
-      let svg: SVG | undefined
-      let canvas: Canvas | undefined
       if (layer.technique === 'svg') {
-        svg = new SVG({
+        return createSvgLayerRuntime({
           parent,
-          id: `${definition.id}-${layer.id}`,
           width: layerWidth,
-          height: layerHeight
+          height: layerHeight,
+          runtimeName: `${definition.id}-${layer.id}`,
+          onDraw: (svg) => {
+            drawWithModule(svg)
+          }
         })
-      } else if (layer.technique === 'canvas2d') {
-        canvas = new Canvas({
-          parent,
-          id: `${definition.id}-${layer.id}`,
-          width: layerWidth,
-          height: layerHeight
-        })
-      } else {
-        throw new Error(
-          `Technique "${layer.technique}" is not supported by metadata bootstrap yet`
-        )
       }
 
-      return {
-        technique: layer.technique,
-        draw: () => {
-          if (svg) {
-            svg.stage.replaceChildren()
+      if (layer.technique === 'canvas2d') {
+        return createCanvas2dLayerRuntime({
+          parent,
+          width: layerWidth,
+          height: layerHeight,
+          runtimeName: `${definition.id}-${layer.id}`,
+          onDraw: (canvas) => {
+            drawWithModule(undefined, canvas)
           }
-          drawWithModule()
-        },
-        exportSvg: (seed) => {
-          if (!svg) return
-          svg.save(String(seed), `${definition.id}-${layer.id}`)
-        },
-        exportPng: (seed) => {
-          if (!canvas) return
-          canvas.save({ projectId: `${definition.id}-${layer.id}`, seed })
-        },
-        destroy: () => {
-          if (svg) svg.stage.remove()
-          if (canvas) canvas.el.remove()
-        }
+        })
       }
+
+      if (layer.technique === 'p5') {
+        const layerModule = loadedLayerModules.get(layer.id)
+        if (typeof layerModule?.init !== 'function') {
+          throw new Error(
+            `Layer "${layer.id}" uses technique "p5" but module is missing init(container, context)`
+          )
+        }
+
+        // Align p5 startup with seed-aware sketches by resetting once at mount.
+        utils.seed.reset()
+        return createP5LayerRuntime({
+          parent,
+          init: (layerContainer) => {
+            return layerModule.init!(layerContainer, {
+              controls: controlState,
+              utils,
+              theme,
+              onControlChange,
+              registerAction
+            })
+          }
+        })
+      }
+
+      throw new Error(
+        `Technique "${layer.technique}" is not supported by metadata bootstrap yet`
+      )
     }
   }))
 
   for (const layer of layers) {
-    const layerModule = await loadLayerModule(layer) as LayerModuleDraw
+    const layerModule = await loadLayerModule(layer) as LayerModule
     loadedLayerModules.set(layer.id, layerModule)
   }
 
@@ -140,8 +160,10 @@ export async function initFromProjectDefinition(
   })
 
   const draw = () => {
-    utils.seed.reset()
     layerManager.setActiveLayer(controlState.activeLayer)
+    if (layerById.get(controlState.activeLayer)?.technique !== 'p5') {
+      utils.seed.reset()
+    }
     layerManager.draw()
   }
 

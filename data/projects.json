@@ -208,17 +208,18 @@
     "entryFile": "/projects/svg/anni/index.ts"
   },
   {
-    "id": "grid-almighty",
-    "title": "Grid Almighty",
-    "description": "Single-layer full-canvas grid skeleton that draws circles per cell",
+    "id": "growing-things",
+    "title": "Growing Things",
+    "description": "Layered growth and noise playground across Canvas2D",
     "date": "2026-03",
     "tags": [
-      "svg",
-      "grid"
+      "canvas2d",
+      "grid",
+      "noise"
     ],
     "hidden": false,
-    "configFile": "/projects/svg/grid-almighty/project.config.ts",
-    "entryFile": "/projects/svg/grid-almighty/index.ts"
+    "configFile": "/projects/svg/growing-things/project.config.ts",
+    "entryFile": "/projects/svg/growing-things/index.ts"
   },
   {
     "id": "template",
