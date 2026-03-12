@@ -38,7 +38,7 @@ function resolveAnimatedNoiseControls(controls, utils) {
     ),
     contrast: utils.math.clamp(
       typeof controls?.noise_anim_contrast === 'number' ? controls.noise_anim_contrast : DEFAULTS.contrast,
-      0.2,
+      0.1,
       3
     )
   }

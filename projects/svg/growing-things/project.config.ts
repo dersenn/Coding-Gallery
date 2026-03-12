@@ -73,7 +73,7 @@ const GROWTH_CONTROLS: ProjectControlDefinition[] = [
         label: 'Target Fill',
         key: 'growth_target_fill',
         default: 100,
-        min: 10,
+        min: 1,
         max: 100,
         step: 1
       }
@@ -284,7 +284,7 @@ const NOISE_ANIM_CONTROLS: ProjectControlDefinition[] = [
         label: 'Contrast',
         key: 'noise_anim_contrast',
         default: 1,
-        min: 0.2,
+        min: 0.1,
         max: 3,
         step: 0.05
       }
@@ -301,7 +301,6 @@ const LAYERS: ProjectLayerDefinition[] = [
     module: './layers/noisy-automata.js',
     controls: NOISY_AUTOMATA_CONTROLS,
     actions: NOISY_AUTOMATA_ACTIONS,
-    defaultActive: true
   },
   {
     id: 'grid-growth-canvas',
@@ -318,7 +317,8 @@ const LAYERS: ProjectLayerDefinition[] = [
     technique: 'canvas2d',
     container: { mode: 'full' },
     module: './layers/grid-noise-animated-canvas.js',
-    controls: NOISE_ANIM_CONTROLS
+    controls: NOISE_ANIM_CONTROLS,
+    defaultActive: true
   }
 ]
 
