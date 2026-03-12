@@ -130,6 +130,38 @@ See `MULTI_TECHNIQUE_RUNTIME_PLAN.md` for phased design and migration strategy.
 Continue incremental project migrations to pure config-first authoring per
 `PROJECT_CONFIG_MIGRATION_PLAYBOOK.md`.
 
+### Standalone project/layer source export
+
+- ID: `standalone-project-layer-export`
+- Status: `candidate`
+- Priority: **high**
+- Area: `components/ProjectViewer.vue`, `runtime/`, `types/project.ts`, `utils/download.ts`
+
+**Problem**  
+Current export workflow focuses on rendered artifacts (`download-svg`, `download-png`). This is useful for final outputs, but it does not support the original portability goal of detaching a sketch from gallery/runtime UI and running it independently as source code.
+
+**Desired behavior**
+- Export active layer as a standalone runnable package (raw mode, no gallery controls by default).
+- Export full project as a standalone runnable package.
+- Keep deterministic seed behavior and default control values.
+- Avoid framework UI dependencies in exported output.
+
+**Proposal doc**  
+See `STANDALONE_EXPORT_SKETCH.md` for phased design, output package shape, and technique rollout.
+
+**Suggested phases**
+1. `svg` + `canvas2d` raw layer export prototype.
+2. Downloadable zip package generation.
+3. Optional lightweight controls scaffolding.
+4. `p5`-specific export adapter phase.
+
+**Files likely affected**
+- `components/ProjectViewer.vue` — expose export action dispatch + capability checks.
+- `runtime/projectBootstrap.ts` and/or `runtime/layerRuntime.ts` — standalone-capable runtime descriptors.
+- `types/project.ts` — optional standalone export capability contract.
+- `utils/download.ts` (or new `utils/standaloneExport.ts`) — package/file generation helpers.
+- `projects/_Templates/` — reusable standalone template skeleton(s).
+
 ### Runtime module specialization follow-up
 
 - ID: `runtime-module-specialization`
