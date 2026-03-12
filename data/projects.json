@@ -1,5 +1,19 @@
 [
   {
+    "id": "grid-almighty",
+    "title": "Grid Almighty",
+    "description": "Grid Almighty",
+    "date": "2026-03",
+    "tags": [
+      "canvas2d",
+      "grid",
+      "noise"
+    ],
+    "hidden": false,
+    "configFile": "/projects/svg/grid-almighty/project.config.ts",
+    "entryFile": "/projects/svg/grid-almighty/index.ts"
+  },
+  {
     "id": "pearlymats",
     "title": "Pearly Mats",
     "description": "Pearly Mats",
