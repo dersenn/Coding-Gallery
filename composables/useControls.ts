@@ -129,10 +129,20 @@ export const useControls = () => {
 
   const resolveScopedActiveLayer = (fallbackLayerId?: string): string | undefined => {
     const sharedLayer = scopedControlValues.value.shared.activeLayer
-    if (typeof sharedLayer === 'string' && sharedLayer.length > 0) return sharedLayer
     const direct = controlValues.value.activeLayer
-    if (typeof direct === 'string' && direct.length > 0) return direct
-    return fallbackLayerId
+    const layerIds = Object.keys(scopedControlSchema.value.layerControlsById ?? {})
+    const hasLayerScope = layerIds.length > 0
+    const isValidLayerId = (value: unknown): value is string => {
+      if (typeof value !== 'string' || value.length === 0) return false
+      if (!hasLayerScope) return true
+      return layerIds.includes(value)
+    }
+    const resolved = isValidLayerId(sharedLayer)
+      ? sharedLayer
+      : (isValidLayerId(direct)
+        ? direct
+        : (isValidLayerId(fallbackLayerId) ? fallbackLayerId : layerIds[0]))
+    return resolved
   }
 
   const buildScopedControlValuesFromQuery = (
