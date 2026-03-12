@@ -19,6 +19,7 @@ Use this folder for supporting docs while keeping the repository root focused on
 - Multi-technique runtime proposal (SVG + canvas2d): `MULTI_TECHNIQUE_RUNTIME_PLAN.md`
 - Standalone source export sketch (project/layer detachment): `STANDALONE_EXPORT_SKETCH.md`
 - Project config migration playbook: `PROJECT_CONFIG_MIGRATION_PLAYBOOK.md`
+- Initial control randomization reference: `INITIAL_CONTROL_RANDOMIZATION.md`
 - Framework backlog: `FRAMEWORK_BACKLOG.md` (viewer shell, controls UI, and runtime improvements)
 - Open backlog: add `validate:projects` metadata/file drift checker (see checklist in main `../README.md` and project rules)
 - Agent prompt preambles and naming guidance: `AGENT_PROMPT_PREAMBLES.md`
