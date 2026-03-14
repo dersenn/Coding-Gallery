@@ -7,7 +7,7 @@ const SET = {
     enabled: true,
     useCondition: true, // continue from here!
     maxLevel: 2,
-    chance: 20,
+    chance: 50,
     cols: 2,
     rows: 2
   }
@@ -26,7 +26,7 @@ class DotGrid extends Grid {
 class DotCell extends GridCell {
   constructor(config) {
     super(config)
-    this.subdivisionTag = (this.row + this.col) % 3 === 0 ? 'green' : 'base'
+    this.subdivisionTag = (this.row + this.col) % 5 === 0 ? 'green' : 'base'
   }
 
   draw(canvas, theme) {
@@ -58,7 +58,7 @@ class DotLeafCell extends Cell {
       : [theme.foreground]
     const r = Math.min(this.width, this.height) * 0.32
     const fill = this.subdivisionTag === 'green'
-      ? '#4caf50'
+      ? '#0000FF'
       : (palette[seed.randomInt(0, palette.length - 1)] ?? theme.foreground)
     canvas.circle(this.center(), r, fill, 'transparent', 0)
   }

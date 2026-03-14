@@ -6,8 +6,8 @@
     "date": "2026-03",
     "tags": ["canvas2d", "grid"],
     "hidden": false,
-    "configFile": "/projects/svg/grid-almighty/project.config.ts",
-    "entryFile": "/projects/svg/grid-almighty/index.ts"
+    "configFile": "/projects/sandbox/grid-almighty/project.config.ts",
+    "entryFile": "/projects/sandbox/grid-almighty/index.ts"
   },
   {
     "id": "all-that-noise",
@@ -19,8 +19,8 @@
       "noise"
     ],
     "hidden": false,
-    "configFile": "/projects/svg/all-that-noise/project.config.ts",
-    "entryFile": "/projects/svg/all-that-noise/index.ts"
+    "configFile": "/projects/sandbox/all-that-noise/project.config.ts",
+    "entryFile": "/projects/sandbox/all-that-noise/index.ts"
   },
   {
     "id": "pearlymats",
@@ -29,8 +29,8 @@
     "date": "2026-02",
     "tags": ["svg", "noise", "grid"],
     "hidden": false,
-    "configFile": "/projects/svg/pearlymats/project.config.ts",
-    "entryFile": "/projects/svg/pearlymats/index.ts"
+    "configFile": "/projects/sandbox/pearlymats/project.config.ts",
+    "entryFile": "/projects/sandbox/pearlymats/index.ts"
   },
   {
     "id": "ballooney",
@@ -39,8 +39,8 @@
     "date": "2024-03",
     "tags": ["svg", "legacy-migration", "bezier", "engine"],
     "hidden": false,
-    "configFile": "/projects/svg/ballooney/project.config.ts",
-    "entryFile": "/projects/svg/ballooney/index.ts"
+    "configFile": "/projects/sandbox/ballooney/project.config.ts",
+    "entryFile": "/projects/sandbox/ballooney/index.ts"
   },
   {
     "id": "lattice-drift",
@@ -49,8 +49,8 @@
     "date": "2024-07",
     "tags": ["svg", "legacy-migration", "grid", "subdivision", "spline"],
     "hidden": false,
-    "configFile": "/projects/svg/lattice-drift/project.config.ts",
-    "entryFile": "/projects/svg/lattice-drift/index.ts"
+    "configFile": "/projects/sandbox/lattice-drift/project.config.ts",
+    "entryFile": "/projects/sandbox/lattice-drift/index.ts"
   },
   {
     "id": "bezier-lab",
@@ -59,8 +59,8 @@
     "date": "2023-02",
     "tags": ["svg", "legacy-migration", "bezier", "spline"],
     "hidden": false,
-    "configFile": "/projects/svg/bezier-lab/project.config.ts",
-    "entryFile": "/projects/svg/bezier-lab/index.ts"
+    "configFile": "/projects/sandbox/bezier-lab/project.config.ts",
+    "entryFile": "/projects/sandbox/bezier-lab/index.ts"
   },
   {
     "id": "trails",
@@ -135,8 +135,8 @@
     "tags": ["svg", "voronoi", "delaunay"],
     "noControls": true,
     "hidden": false,
-    "configFile": "/projects/svg/voronoi/project.config.ts",
-    "entryFile": "/projects/svg/voronoi/index.ts"
+    "configFile": "/projects/sandbox/voronoi/project.config.ts",
+    "entryFile": "/projects/sandbox/voronoi/index.ts"
   },
   {
     "id": "vera",
@@ -157,8 +157,8 @@
     "tags": ["svg", "grid"],
     "prefersTheme": "light",
     "hidden": false,
-    "configFile": "/projects/svg/anni/project.config.ts",
-    "entryFile": "/projects/svg/anni/index.ts"
+    "configFile": "/projects/sandbox/anni/project.config.ts",
+    "entryFile": "/projects/sandbox/anni/index.ts"
   },
   {
     "id": "growing-things",
@@ -167,8 +167,8 @@
     "date": "2026-03",
     "tags": ["canvas2d", "grid", "noise"],
     "hidden": false,
-    "configFile": "/projects/svg/growing-things/project.config.ts",
-    "entryFile": "/projects/svg/growing-things/index.ts"
+    "configFile": "/projects/sandbox/growing-things/project.config.ts",
+    "entryFile": "/projects/sandbox/growing-things/index.ts"
   },
   {
     "id": "template",
