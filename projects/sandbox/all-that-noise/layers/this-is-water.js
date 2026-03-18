@@ -127,8 +127,8 @@ class NoiseCell extends GridCell {
     const showFoam = this.foamLife > settings.foamShow
     const showShadow = this.shadowLife > (settings.shadowLinked ? Math.max(0.05, settings.foamShow - 0.05) : settings.shadowShow)
 
-    let fill = theme.palette[2]
-    if (showShadow) fill = theme.black
+    let fill = theme.palette[4]
+    if (showShadow) fill = theme.palette[2]
     if (showFoam) fill = theme.white
 
     canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)

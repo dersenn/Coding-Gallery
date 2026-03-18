@@ -101,7 +101,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Time Scale',
         key: 'noise_anim_time_scale',
-        default: 0.00066,
+        default: 0.00045,
         min: 0.00001,
         max: 0.003,
         step: 0.00001
