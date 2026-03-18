@@ -279,7 +279,7 @@ const normalizedSections = computed<ControlSection[]>(() => {
       return
     }
 
-    ensureSection('default', hasExplicitGroups ? 'General' : null, false, true).controls.push(control)
+    ensureSection('default', hasExplicitGroups ? 'Layers' : null, false, true).controls.push(control)
   })
 
   return sections.filter((section) => section.controls.length > 0)

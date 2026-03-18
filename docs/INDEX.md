@@ -31,7 +31,9 @@ Use this folder for supporting docs while keeping the repository root focused on
 - Seed determinism rules: `SEED_SYSTEM.md`
 - Container sizing and layout: `CONTAINER_UTILITY.md`
 - Lightweight canvas drawing API: `CANVAS_DRAWING_UTILITY.md`
-- Utility families to check before reimplementing primitives:
+- Utility-first rule: check existing utilities before writing helper wrappers.
+- Grid/cell choice: use `Grid`/`GridCell` for topology + neighbors; use `Cell` for standalone positioned objects.
+- Utility families to check first:
   - `../utils/generative.ts` (seed/noise/math/vec/array)
   - `../utils/grid.ts` and `../utils/cell.ts` (grid topology and neighbors)
   - `../utils/shortcuts.ts` (sketch ergonomics)
