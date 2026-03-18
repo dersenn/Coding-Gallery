@@ -4,14 +4,33 @@ const LOOP_BY_CANVAS = new WeakMap()
 
 function getSettings(controls) {
   return {
-    cols: Math.floor(controls?.noise_anim_cols ?? 64),
-    rows: Math.floor(controls?.noise_anim_rows ?? 64),
+    cols: 1,
+    rows: 1,
+    shortSideDivisions: Math.floor(controls?.water_short_side_divisions ?? 90),
     noiseScale: controls?.noise_anim_scale ?? 0.065,
     timeScale: controls?.noise_anim_time_scale ?? 0.0006,
     warpScale: controls?.noise_anim_warp ?? 0.18,
     contrast: controls?.noise_anim_contrast ?? 1,
     useOsc: controls?.use_osc ?? true,
-    useContrastOsc: controls?.use_contrast_osc ?? true
+    useContrastOsc: controls?.use_contrast_osc ?? true,
+    foamMin: controls?.foam_min ?? 0.6,
+    foamMax: controls?.foam_max ?? 0.63,
+    foamBandPad: controls?.foam_band_pad ?? 0.07,
+    foamRise: controls?.foam_rise ?? 0.22,
+    foamFall: controls?.foam_fall ?? 0.05,
+    foamShow: controls?.foam_show ?? 0.35,
+    shadowOffsetX: controls?.shadow_offset_x ?? 8,
+    shadowOffsetY: controls?.shadow_offset_y ?? -8,
+    shadowLinked: controls?.shadow_linked ?? true,
+    shadowLinkedMinOffset: controls?.shadow_linked_min_offset ?? -0.15,
+    shadowLinkedMaxOffset: controls?.shadow_linked_max_offset ?? -0.05,
+    shadowLinkedPadBoost: controls?.shadow_linked_pad_boost ?? 0.03,
+    shadowMin: controls?.shadow_min ?? 0.45,
+    shadowMax: controls?.shadow_max ?? 0.58,
+    shadowBandPad: controls?.shadow_band_pad ?? 0.08,
+    shadowRise: controls?.shadow_rise ?? 0.16,
+    shadowFall: controls?.shadow_fall ?? 0.04,
+    shadowShow: controls?.shadow_show ?? 0.3
   }
 }
 
@@ -24,16 +43,18 @@ class NoiseCell extends GridCell {
     this.shadowLife = 0
   }
 
-  updateBandState(value, state, cfg) {
+  updateBandState(value, state, life, cfg) {
     const inEnter = cfg.enterMin < value && value < cfg.enterMax
     const inExit = cfg.exitMin < value && value < cfg.exitMax
     // Hysteresis: once on, use wider exit band
-    const nextOn = state ? inExit : inEnter
+    const isOn = state ? inExit : inEnter
     // Temporal persistence
     const rise = cfg.rise ?? 0.2
     const fall = cfg.fall ?? 0.06
-    const life = state ? 0 : 0 // placeholder to show signature usage
-    return { nextOn, rise, fall }
+    const nextLife = isOn
+      ? Math.min(1, life + rise)
+      : Math.max(0, life - fall)
+    return { isOn, life: nextLife }
   }
 
   sampleNormalized(settings, time, {offX = 0, offY = 0}) {
@@ -64,31 +85,47 @@ class NoiseCell extends GridCell {
   }
 
   draw(canvas, settings, time, theme) {
-    const { utils } = this.grid
     const foamN = this.sampleNormalized(settings, time, { offX: 0, offY: 0 })
-    const shadowN = this.sampleNormalized(settings, time, { offX: 8, offY: -8 })
+    const shadowN = this.sampleNormalized(settings, time, {
+      offX: settings.shadowOffsetX,
+      offY: settings.shadowOffsetY
+    })
 
-    // Hysteresis thresholds
-    const foamEnter = foamN > 0.60 && foamN < 0.63
-    const foamExit = foamN > 0.53 && foamN < 0.67
-    const shadowEnter = shadowN > 0.45 && shadowN < 0.58
-    const shadowExit = shadowN > 0.42 && shadowN < 0.61
+    const foamCfg = {
+      enterMin: settings.foamMin,
+      enterMax: settings.foamMax,
+      exitMin: settings.foamMin - settings.foamBandPad,
+      exitMax: settings.foamMax + settings.foamBandPad,
+      rise: settings.foamRise,
+      fall: settings.foamFall
+    }
+    const linkedShadowCfg = {
+      enterMin: settings.foamMin + settings.shadowLinkedMinOffset,
+      enterMax: settings.foamMax + settings.shadowLinkedMaxOffset,
+      exitMin: settings.foamMin + settings.shadowLinkedMinOffset - (settings.foamBandPad + settings.shadowLinkedPadBoost),
+      exitMax: settings.foamMax + settings.shadowLinkedMaxOffset + (settings.foamBandPad + settings.shadowLinkedPadBoost),
+      rise: settings.foamRise * 0.75,
+      fall: settings.foamFall * 0.8
+    }
+    const customShadowCfg = {
+      enterMin: settings.shadowMin,
+      enterMax: settings.shadowMax,
+      exitMin: settings.shadowMin - settings.shadowBandPad,
+      exitMax: settings.shadowMax + settings.shadowBandPad,
+      rise: settings.shadowRise,
+      fall: settings.shadowFall
+    }
+    const shadowCfg = settings.shadowLinked ? linkedShadowCfg : customShadowCfg
 
-    this.isfoam = this.isfoam ? foamExit : foamEnter
-    this.isshadow = this.isshadow ? shadowExit : shadowEnter
+    const nextFoam = this.updateBandState(foamN, this.isfoam, this.foamLife, foamCfg)
+    const nextShadow = this.updateBandState(shadowN, this.isshadow, this.shadowLife, shadowCfg)
+    this.isfoam = nextFoam.isOn
+    this.foamLife = nextFoam.life
+    this.isshadow = nextShadow.isOn
+    this.shadowLife = nextShadow.life
 
-    // Life smoothing
-    this.foamLife = this.isfoam
-      ? Math.min(1, this.foamLife + 0.22)
-      : Math.max(0, this.foamLife - 0.05)
-
-    this.shadowLife = this.isshadow
-      ? Math.min(1, this.shadowLife + 0.16)
-      : Math.max(0, this.shadowLife - 0.04)
-
-    // Render thresholds
-    const showFoam = this.foamLife > 0.35
-    const showShadow = this.shadowLife > 0.3
+    const showFoam = this.foamLife > settings.foamShow
+    const showShadow = this.shadowLife > (settings.shadowLinked ? Math.max(0.05, settings.foamShow - 0.05) : settings.shadowShow)
 
     let fill = theme.palette[2]
     if (showShadow) fill = theme.black
@@ -110,7 +147,8 @@ function createNoiseGrid(canvas, settings, utils) {
     rows: settings.rows,
     width: canvas.w,
     height: canvas.h,
-    cellSizing: 'stretch',
+    cellSizing: 'squareByShortSide',
+    shortSideDivisions: settings.shortSideDivisions,
     utils
   })
 }
@@ -130,7 +168,7 @@ export function draw(context) {
 
   // Rebuild grid only when dimensions or row/col topology change.
   const resolveGrid = (settings) => {
-    const nextSignature = `${canvas.w}x${canvas.h}:${settings.cols}x${settings.rows}`
+    const nextSignature = `${canvas.w}x${canvas.h}:${settings.shortSideDivisions}`
     if (!grid || gridSignature !== nextSignature) {
       grid = createNoiseGrid(canvas, settings, utils)
       gridSignature = nextSignature
