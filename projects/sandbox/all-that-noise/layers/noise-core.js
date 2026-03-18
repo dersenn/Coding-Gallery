@@ -39,11 +39,6 @@ class NoiseCell extends GridCell {
       theme.palette.length - 1
     )
     let fill = theme.palette[colorIndex]
-    if (0.5 < normalized && normalized < 0.6) {
-      fill = theme.white
-    } else {
-      fill = theme.palette[2]
-    }
     canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)
   }
 }

@@ -83,7 +83,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Columns',
         key: 'noise_anim_cols',
-        default: 64,
+        default: 150,
         min: 8,
         max: 180,
         step: 1
@@ -92,7 +92,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Rows',
         key: 'noise_anim_rows',
-        default: 64,
+        default: 90,
         min: 8,
         max: 180,
         step: 1
@@ -101,7 +101,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Noise Scale',
         key: 'noise_anim_scale',
-        default: 0.065,
+        default: 0.033,
         min: 0.005,
         max: 0.2,
         step: 0.001
@@ -110,7 +110,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Time Scale',
         key: 'noise_anim_time_scale',
-        default: 0.0006,
+        default: 0.00066,
         min: 0.00001,
         max: 0.003,
         step: 0.00001
@@ -119,7 +119,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Warp',
         key: 'noise_anim_warp',
-        default: 0.18,
+        default: 0.3,
         min: 0,
         max: 0.6,
         step: 0.01
@@ -132,6 +132,18 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         min: 0.1,
         max: 3,
         step: 0.05
+      },
+      {
+        type: 'toggle',
+        label: 'Use Osc',
+        key: 'use_osc',
+        default: true,
+      },
+      {
+        type: 'toggle',
+        label: 'Use Contrast Osc',
+        key: 'use_contrast_osc',
+        default: true,
       }
     ]
   }
