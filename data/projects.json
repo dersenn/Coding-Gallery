@@ -238,6 +238,7 @@
     "date": "2026-03",
     "tags": ["svg", "misc"],
     "hidden": false,
+    "prefersTheme": "light",
     "configFile": "/projects/sandbox/svg-misc/project.config.ts",
     "entryFile": "/projects/sandbox/svg-misc/index.ts"
   }
