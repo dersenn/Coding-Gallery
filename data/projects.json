@@ -230,5 +230,15 @@
     "hidden": true,
     "configFile": "/projects/_Templates/_svg-example/project.config.ts",
     "entryFile": "/projects/_Templates/_svg-example/index.ts"
+  },
+  {
+    "id": "svg-misc",
+    "title": "SVG Misc",
+    "description": "SVG Misc",
+    "date": "2026-03",
+    "tags": ["svg", "misc"],
+    "hidden": false,
+    "configFile": "/projects/sandbox/svg-misc/project.config.ts",
+    "entryFile": "/projects/sandbox/svg-misc/index.ts"
   }
 ]
