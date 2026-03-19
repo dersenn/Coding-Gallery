@@ -100,6 +100,15 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
       },
       {
         type: 'slider',
+        label: 'Sample Reference Divisions',
+        key: 'sample_reference_divisions',
+        default: 90,
+        min: 16,
+        max: 240,
+        step: 1
+      },
+      {
+        type: 'slider',
         label: 'Noise Scale',
         key: 'noise_anim_scale',
         default: 0.03,

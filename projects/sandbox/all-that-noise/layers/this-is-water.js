@@ -32,6 +32,8 @@ function getSettings(controls, theme) {
     shadowRise: controls?.shadow_rise ?? 0.16,
     shadowFall: controls?.shadow_fall ?? 0.04,
     shadowShow: controls?.shadow_show ?? 0.3,
+    // Keep field-space stable across grid resolution changes.
+    sampleReferenceDivisions: Math.floor(controls?.sample_reference_divisions ?? 90),
     palette: {
       pool: {
         water: theme.palette[4],
@@ -78,15 +80,21 @@ class NoiseCell extends GridCell {
 
   sampleNormalized(settings, time, {offX = 0, offY = 0}) {
     const { utils } = this.grid
-    // Start from cell-space coordinates. offX/offY create a correlated-but-shifted
-    // sample domain so foam and shadow can feel related without being identical.
-    const baseX = (this.col + offX) * settings.noiseScale
-    const baseY = (this.row + offY) * settings.noiseScale
+    // Sample from world/pixel space mapped into a fixed virtual unit size so
+    // shortSideDivisions only changes render resolution, not field character.
+    const shortSide = Math.max(1, Math.min(this.grid.width, this.grid.height))
+    const unit = shortSide / Math.max(1, settings.sampleReferenceDivisions)
+    const sampleCol = (this.x + this.width * 0.5 - this.grid.x) / unit
+    const sampleRow = (this.y + this.height * 0.5 - this.grid.y) / unit
+
+    // offX/offY remain in "virtual cell" units so existing controls still read naturally.
+    const baseX = (sampleCol + offX) * settings.noiseScale
+    const baseY = (sampleRow + offY) * settings.noiseScale
 
     // Phase fields for two directional wave components (sum-of-sines / Gerstner-like
     // orbital offset). row/col coefficients are wave-vector components.
-    const phi1 = time * 1.8 + this.row * 0.12 + this.col * 0.08
-    const phi2 = time * 1.15 + this.row * 0.07 - this.col * 0.11  // different angle
+    const phi1 = time * 1.8 + sampleRow * 0.12 + sampleCol * 0.08
+    const phi2 = time * 1.15 + sampleRow * 0.07 - sampleCol * 0.11  // different angle
 
     // 90-degree sin/cos pairing approximates circular particle orbits.
     const oscX = settings.useOsc
