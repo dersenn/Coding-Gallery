@@ -73,11 +73,21 @@ const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
 
 const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
   {
+    type: 'select',
+    label: 'Water Type',
+    key: 'water_type',
+    default: 'sea',
+    options: [
+      { label: 'Sea', value: 'sea' },
+      { label: 'Pool', value: 'pool' }
+    ]
+  },
+  {
     type: 'group',
     id: 'waterField',
     label: 'Field',
     collapsible: true,
-    defaultOpen: true,
+    defaultOpen: false,
     controls: [
       {
         type: 'slider',
@@ -92,7 +102,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Noise Scale',
         key: 'noise_anim_scale',
-        default: 0.033,
+        default: 0.03,
         min: 0.005,
         max: 0.2,
         step: 0.001
@@ -101,7 +111,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Time Scale',
         key: 'noise_anim_time_scale',
-        default: 0.00045,
+        default: 0.0006,
         min: 0.00001,
         max: 0.003,
         step: 0.00001
@@ -119,7 +129,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Contrast',
         key: 'noise_anim_contrast',
-        default: 1,
+        default: 0.9,
         min: 0.1,
         max: 3,
         step: 0.05
@@ -158,7 +168,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Foam Max',
         key: 'foam_max',
-        default: 0.63,
+        default: 0.72,
         min: 0,
         max: 1,
         step: 0.001
@@ -167,7 +177,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Foam Band Pad',
         key: 'foam_band_pad',
-        default: 0.07,
+        default: 0.045,
         min: 0,
         max: 0.3,
         step: 0.001
@@ -176,7 +186,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Foam Rise',
         key: 'foam_rise',
-        default: 0.22,
+        default: 0.15,
         min: 0.01,
         max: 1,
         step: 0.01
@@ -185,7 +195,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Foam Fall',
         key: 'foam_fall',
-        default: 0.05,
+        default: 0.14,
         min: 0.001,
         max: 1,
         step: 0.001
@@ -194,7 +204,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Foam Show Threshold',
         key: 'foam_show',
-        default: 0.35,
+        default: 0.15,
         min: 0,
         max: 1,
         step: 0.01
@@ -212,7 +222,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
     id: 'shadowOffsets',
     label: 'Shadow Offsets',
     collapsible: true,
-    defaultOpen: true,
+    defaultOpen: false,
     controls: [
       {
         type: 'slider',

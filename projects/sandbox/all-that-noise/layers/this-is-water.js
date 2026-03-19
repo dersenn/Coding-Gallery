@@ -1,8 +1,9 @@
 import { Grid, GridCell } from '~/types/project'
+import { Color } from '~/utils/color'
 
 const LOOP_BY_CANVAS = new WeakMap()
 
-function getSettings(controls) {
+function getSettings(controls, theme) {
   return {
     cols: 1,
     rows: 1,
@@ -30,10 +31,28 @@ function getSettings(controls) {
     shadowBandPad: controls?.shadow_band_pad ?? 0.08,
     shadowRise: controls?.shadow_rise ?? 0.16,
     shadowFall: controls?.shadow_fall ?? 0.04,
-    shadowShow: controls?.shadow_show ?? 0.3
+    shadowShow: controls?.shadow_show ?? 0.3,
+    palette: {
+      pool: {
+        water: theme.palette[4],
+        shadow: theme.palette[2],
+        foam: theme.white,
+        shadowAlpha: 0.3
+      },
+      sea: {
+        water: theme.palette[2],
+        shadow: theme.black,
+        foam: theme.white,
+        shadowAlpha: 0.6
+      }
+    },
+    type: controls?.water_type ?? 'sea'
   }
 }
 
+// Intent: generate "water bands" by sampling one evolving scalar field twice
+// (foam pass + shifted shadow pass), then using hysteresis/persistence to keep
+// temporal continuity and avoid single-frame flicker.
 class NoiseCell extends GridCell {
   constructor(config) {
     super(config)
@@ -59,24 +78,43 @@ class NoiseCell extends GridCell {
 
   sampleNormalized(settings, time, {offX = 0, offY = 0}) {
     const { utils } = this.grid
-    // Domain-warped fBm so blobs change topology (split/merge), not just drift.
+    // Start from cell-space coordinates. offX/offY create a correlated-but-shifted
+    // sample domain so foam and shadow can feel related without being identical.
     const baseX = (this.col + offX) * settings.noiseScale
     const baseY = (this.row + offY) * settings.noiseScale
 
-    const wave = Math.sin(time * 1.8 + this.row * 0.12 + this.col * 0.08)
-    const osc = settings.useOsc ? wave * 0.12 : 0
+    // Phase fields for two directional wave components (sum-of-sines / Gerstner-like
+    // orbital offset). row/col coefficients are wave-vector components.
+    const phi1 = time * 1.8 + this.row * 0.12 + this.col * 0.08
+    const phi2 = time * 1.15 + this.row * 0.07 - this.col * 0.11  // different angle
 
+    // 90-degree sin/cos pairing approximates circular particle orbits.
+    const oscX = settings.useOsc
+      ? (-Math.sin(phi1) * 0.10 + -Math.sin(phi2) * 0.06)
+      : 0
+    const oscY = settings.useOsc
+      ? (Math.cos(phi1) * 0.07 + Math.cos(phi2) * 0.04)
+      : 0
+
+    // Domain warping bends noise coordinates so structures split/merge over time
+    // instead of looking like rigidly translated blobs.
     const warpX = utils.noise.simplex2D(baseX * 0.7 - time * 0.8, baseY * 0.7 + time * 0.6) * settings.warpScale
     const warpY = utils.noise.simplex2D(baseX * 0.7 + 23.1 + time * 0.5, baseY * 0.7 - 11.7 - time * 0.7) * settings.warpScale
 
-    const x = baseX + warpX + osc
-    const y = baseY + warpY - osc * 0.7
+    const x = baseX + warpX + oscX
+    const y = baseY + warpY + oscY
+
+    // You can also sharpen the wave shape itself with the self-modulated trick if you want more character:
+    // const sharpened = Math.sin(phi1 + Math.sin(phi1 * 0.5) * 1.2)
+
+    // Three-octave fBm: low octave drives macro patches, higher octaves add texture.
     const n0 = utils.noise.simplex2D(x * 0.9 + time * 0.2, y * 0.9 - time * 0.15)
     const n1 = utils.noise.simplex2D(x * 1.8 - time * 0.35, y * 1.8 + time * 0.25)
     const n2 = utils.noise.simplex2D(x * 3.2 + time * 0.5, y * 3.2 - time * 0.4)
     const n = n0 * 0.62 + n1 * 0.28 + n2 * 0.1
 
     const normalized = utils.math.clamp((n + 1) * 0.5, 0, 1)
+    // Mild temporal contrast breathing prevents long static "plateaus" in thresholding.
     const contrast = settings.useContrastOsc
       ? utils.math.clamp(settings.contrast + Math.sin(time * 1.2) * 0.2, 0.4, 3)
       : settings.contrast
@@ -85,12 +123,16 @@ class NoiseCell extends GridCell {
   }
 
   draw(canvas, settings, time, theme) {
+    // Same generator, two nearby sample domains: foam + lagging/offset shadow.
     const foamN = this.sampleNormalized(settings, time, { offX: 0, offY: 0 })
     const shadowN = this.sampleNormalized(settings, time, {
       offX: settings.shadowOffsetX,
       offY: settings.shadowOffsetY
     })
 
+    const clrs = settings.palette[settings.type]
+
+    // Narrow enter band + padded exit band = sticky state (less twinkle).
     const foamCfg = {
       enterMin: settings.foamMin,
       enterMax: settings.foamMax,
@@ -117,6 +159,7 @@ class NoiseCell extends GridCell {
     }
     const shadowCfg = settings.shadowLinked ? linkedShadowCfg : customShadowCfg
 
+    // Life is a temporal low-pass over binary band membership.
     const nextFoam = this.updateBandState(foamN, this.isfoam, this.foamLife, foamCfg)
     const nextShadow = this.updateBandState(shadowN, this.isshadow, this.shadowLife, shadowCfg)
     this.isfoam = nextFoam.isOn
@@ -127,10 +170,11 @@ class NoiseCell extends GridCell {
     const showFoam = this.foamLife > settings.foamShow
     const showShadow = this.shadowLife > (settings.shadowLinked ? Math.max(0.05, settings.foamShow - 0.05) : settings.shadowShow)
 
-    let fill = theme.palette[4]
-    if (showShadow) fill = theme.palette[2]
-    if (showFoam) fill = theme.white
+    let fill = 'transparent'
+    if (showShadow) fill = Color.parse(clrs.shadow)?.withAlpha(clrs.shadowAlpha).toRgbaString() ?? 'rgba(255, 255, 255, 0.5)'
+    if (showFoam) fill = Color.parse(clrs.foam)?.toRgbaString() ?? 'rgba(255, 255, 255, 1)'
 
+    // Draw as tiled grid cells to preserve clean seams at any density.
     canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)
   }
 }
@@ -184,11 +228,12 @@ export function draw(context) {
       return
     }
 
-    const settings = getSettings(controls)
+    const settings = getSettings(controls, theme)
     const time = now * settings.timeScale
     const activeGrid = resolveGrid(settings)
 
-    canvas.background(theme.background)
+    // Per-frame repaint: topology can stay static while sampled values animate.
+    canvas.background(Color.parse(settings.palette[settings.type].water)?.toRgbaString() ?? 'rgba(255, 255, 255, 1)')
     activeGrid.forEach((cell) => {
       // Noise is dynamic per frame; grid topology is reused until signature changes.
       cell.draw(canvas, settings, time, theme)
