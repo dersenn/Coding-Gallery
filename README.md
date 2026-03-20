@@ -490,10 +490,10 @@ const dist = cell.distance(otherCell)    // Distance between centers
 const isEdge = cell.isEdge()             // Check if on grid boundary
 const isCorner = cell.isCorner()         // Check if corner cell
 
-// Recursive subdivision
+// Recursive subdivision (parent-preserving terminal nodes)
 const subdividedCells = grid.subdivide({
   maxLevel: 3,
-  chance: 50,                            // 50% chance to stop subdividing
+  chance: 50,                            // 50% chance to subdivide current node
   subdivisionCols: 2,                    // Split into 2x2 per level
   subdivisionRows: 2
 })
@@ -506,12 +506,15 @@ subdividedCells.forEach((cell) => {
   const topAncestor = cell.root()
 })
 
+// maxLevel 0 keeps root cells as terminal nodes
+const rootOnly = grid.subdivide({ maxLevel: 0, chance: 0 })
+
 // Or use custom condition
 const subdividedCells = grid.subdivide({
   maxLevel: 4,
   condition: (cell, level) => {
-    // Custom logic to determine if subdivision should stop
-    return level < 4 && Math.random() > 0.3
+    // Return true to subdivide deeper, false to keep current node
+    return level < 2 && Math.random() > 0.3
   }
 })
 

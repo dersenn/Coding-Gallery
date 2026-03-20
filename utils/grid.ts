@@ -34,13 +34,13 @@ export type GridAlign = 'start' | 'center' | 'end'
 export interface SubdivideConfig {
   /** Maximum recursive depth below each root cell. */
   maxLevel: number
-  /** Chance (0-100) to keep a generated child as a returned node at each step. */
+  /** Chance (0-100) to subdivide a visited node (when no custom condition is provided). */
   chance?: number
   /** Number of columns created for each recursive split. */
   subdivisionCols?: number
   /** Number of rows created for each recursive split. */
   subdivisionRows?: number
-  /** Optional custom stop condition; receives the current parent node and level. */
+  /** Optional custom subdivide condition; receives the current node and level. */
   condition?: (cell: GridCell, level: number) => boolean
 }
 
@@ -706,7 +706,14 @@ export class Grid {
   /**
    * Recursively subdivide the grid
    * 
-   * Returns a flat array of recursive `GridCell` instances with varying sizes.
+   * Returns a flat array of recursive terminal `GridCell` instances.
+   * A node is terminal when either:
+   * - `level >= maxLevel`, or
+   * - subdivide condition is not met (`condition(...) === false` or chance miss)
+   *
+   * This is parent-preserving: stop decisions keep the current node as-is, so
+   * returned levels can include `0..maxLevel`.
+   *
    * Each returned node includes:
    * - `level` (subdivision depth)
    * - `parent` (immediate ancestor)
@@ -716,11 +723,11 @@ export class Grid {
    * Use root-explicit APIs when global root topology is required.
    * 
    * @param config - Subdivision configuration
-   * @param config.maxLevel - Maximum recursion depth
-   * @param config.chance - Percentage chance (0-100) to stop subdividing and keep current node
-   * @param config.subdivisionCols - Number of columns for subdivision (defaults to grid cols)
-   * @param config.subdivisionRows - Number of rows for subdivision (defaults to grid rows)
-   * @param config.condition - Alternative to chance: custom function to determine if subdivision should stop
+   * @param config.maxLevel - Maximum recursion depth. `0` returns root cells.
+   * @param config.chance - Chance (0-100) to subdivide current node (used when no condition is provided).
+   * @param config.subdivisionCols - Columns per split; clamped to `>= 1`.
+   * @param config.subdivisionRows - Rows per split; clamped to `>= 1`.
+   * @param config.condition - Optional subdivide predicate. Return `true` to subdivide current node, `false` to keep it.
    */
   subdivide(config: SubdivideConfig): GridCell[] {
     const {
@@ -730,6 +737,10 @@ export class Grid {
       subdivisionRows = this.rows,
       condition
     } = config
+    const clampedMaxLevel = Math.max(0, Math.floor(maxLevel))
+    const clampedChance = Math.max(0, Math.min(100, chance))
+    const clampedSubdivisionCols = Math.max(1, Math.floor(subdivisionCols))
+    const clampedSubdivisionRows = Math.max(1, Math.floor(subdivisionRows))
 
     const resultCells: GridCell[] = []
 
@@ -737,10 +748,10 @@ export class Grid {
       this.subdivideRecursive(
         cell,
         0,
-        maxLevel,
-        chance,
-        subdivisionCols,
-        subdivisionRows,
+        clampedMaxLevel,
+        clampedChance,
+        clampedSubdivisionCols,
+        clampedSubdivisionRows,
         resultCells,
         condition
       )
@@ -751,6 +762,9 @@ export class Grid {
 
   /**
    * Recursive subdivision walker over one parent node.
+   *
+   * Stop checks run once per node before child generation. This keeps terminal
+   * nodes at their current level (parent-preserving semantics).
    */
   private subdivideRecursive(
     parentCell: GridCell,
@@ -762,32 +776,32 @@ export class Grid {
     resultCells: GridCell[],
     condition?: (cell: GridCell, level: number) => boolean
   ): void {
+    if (currentLevel >= maxLevel) {
+      resultCells.push(parentCell)
+      return
+    }
+
+    const shouldSubdivide = condition
+      ? condition(parentCell, currentLevel)
+      : this.utils.seed.coinToss(chance)
+
+    if (!shouldSubdivide) {
+      resultCells.push(parentCell)
+      return
+    }
+
     const children = this.createSubdivisionChildren(parentCell, currentLevel + 1, subdivisionCols, subdivisionRows)
-
     for (const childCell of children) {
-      if (currentLevel >= maxLevel) {
-        resultCells.push(childCell)
-        continue
-      }
-
-      const shouldStopSubdividing = condition
-        ? condition(parentCell, currentLevel)
-        : this.utils.seed.coinToss(chance)
-
-      if (shouldStopSubdividing) {
-        resultCells.push(childCell)
-      } else {
-        this.subdivideRecursive(
-          childCell,
-          currentLevel + 1,
-          maxLevel,
-          chance,
-          subdivisionCols,
-          subdivisionRows,
-          resultCells,
-          condition
-        )
-      }
+      this.subdivideRecursive(
+        childCell,
+        currentLevel + 1,
+        maxLevel,
+        chance,
+        subdivisionCols,
+        subdivisionRows,
+        resultCells,
+        condition
+      )
     }
   }
 

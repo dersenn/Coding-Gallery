@@ -569,10 +569,10 @@ export async function init(
         (cell as ShowcaseCell).draw(svg, theme, sw, v, rnd, 0, controlState.showLabels)
       )
     } else {
-      // Subdivision case — recursive nodes are built through createCell(), so the
-      // result already contains ShowcaseCell instances.
-      const leaves = grid.subdivide({ maxLevel: subs, chance: 55, subdivisionCols: 3, subdivisionRows: 3 })
-      for (const cell of leaves) {
+      // Subdivision case — returns terminal nodes from the recursive tree.
+      // Terminals are parent-preserving and can include level-0 root cells.
+      const terminals = grid.subdivide({ maxLevel: subs, chance: 55, subdivisionCols: 3, subdivisionRows: 3 })
+      for (const cell of terminals) {
         ;(cell as ShowcaseCell).draw(svg, theme, sw, v, rnd, 0, controlState.showLabels)
       }
     }

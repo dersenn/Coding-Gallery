@@ -35,7 +35,7 @@ export const controls: ProjectControlDefinition[] = [
       },
       {
         type: 'slider',
-        label: 'Branch Stop Chance',
+        label: 'Branch Subdivide Chance',
         key: 'branchStopChance',
         default: 50,
         min: 0,
@@ -83,7 +83,7 @@ export async function init(
   const { el, width, height } = resolveContainer(container, 'full')
 
   const sketch = new p5((p) => {
-    // Step 2: render a recursive 2x2 subdivision region as GridCells.
+    // Step 2: render recursive terminal nodes from a 2x2 subdivision tree.
     const drawRecursiveTiles = (x: number, y: number, w: number, h: number) => {
       const grid = new Grid({
         cols: rootCols,
@@ -95,16 +95,16 @@ export async function init(
         utils
       })
 
-      const cells = grid.subdivide({
+      const terminals = grid.subdivide({
         maxLevel: Math.max(1, Math.floor(controlState.levels)),
         chance: controlState.branchStopChance,
         subdivisionCols: rootCols,
         subdivisionRows: rootRows
       })
 
-      // Grid.subdivide() returns recursive GridCell nodes; draw each cell directly.
+      // Parent-preserving subdivide: terminals can be mixed levels (including root).
       p.noStroke()
-      for (const cell of cells) {
+      for (const cell of terminals) {
         p.fill(randomColor())
         p.rect(cell.x, cell.y, cell.width, cell.height)
       }

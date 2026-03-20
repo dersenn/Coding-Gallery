@@ -38,14 +38,19 @@ const grid = new MyGrid({ cols: 3, rows: 3, width: w, height: h, x: 0, y: 0, uti
 grid.cells.forEach(cell => (cell as MyCell).draw(svg))
 ```
 
-### 3. Draw recursive subdivision cells
+### 3. Draw recursive terminal subdivision cells
 
 ```typescript
-const leaves = grid.subdivide({ maxLevel: 2, chance: 50, subdivisionCols: 2, subdivisionRows: 2 })
-leaves.forEach(cell => (cell as MyCell).draw(svg))
+const terminals = grid.subdivide({ maxLevel: 2, chance: 50, subdivisionCols: 2, subdivisionRows: 2 })
+terminals.forEach(cell => (cell as MyCell).draw(svg))
 ```
 
-Each recursive node keeps:
+Subdivision is parent-preserving:
+- stop decisions keep the current node as terminal,
+- `maxLevel: 0` returns root cells,
+- returned terminals may be mixed levels.
+
+Each terminal node keeps:
 - `level` (depth),
 - `parent` (upward hierarchy),
 - local `row/col/index` for sibling context.

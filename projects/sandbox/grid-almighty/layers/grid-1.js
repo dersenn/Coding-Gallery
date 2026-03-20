@@ -8,7 +8,7 @@ const SET = {
   subdivision: {
     enabled: true,
     maxLevel: 2,
-    chance: 20,
+    chance: 80,
     cols: 2,
     rows: 2
   }
@@ -22,8 +22,9 @@ class DotGrid extends Grid {
 
 class DotCell extends GridCell {
   draw(canvas, theme) {
-    const r = Math.min(this.width, this.height) * 0.12
-    canvas.circle(this.center(), r, theme.foreground, 'transparent', 0)
+    const palette = theme.palette.length > 0 ? theme.palette : [theme.foreground]
+    const fill = palette[this.level % palette.length] ?? theme.foreground
+    canvas.rect(this.tl(), this.width, this.height, 'transparent', fill, 1)
   }
 }
 
@@ -49,13 +50,13 @@ export function draw(context) {
 
   const grid = createGrid(frame, utils)
   if (SET.subdivision.enabled) {
-    const leaves = grid.subdivide({
+    const terminals = grid.subdivide({
       maxLevel: SET.subdivision.maxLevel,
       chance: SET.subdivision.chance,
       subdivisionCols: SET.subdivision.cols,
       subdivisionRows: SET.subdivision.rows
     })
-    leaves.forEach((cell) => {
+    terminals.forEach((cell) => {
       cell.draw(canvas, theme)
     })
     return
