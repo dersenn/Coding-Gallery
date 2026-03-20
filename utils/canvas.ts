@@ -34,9 +34,26 @@ export interface CanvasExportOptions {
 }
 
 export type CanvasRectSnapMode = 'device' | 'none'
+export type CanvasStrokeAlign = 'center' | 'inside'
 
 export interface CanvasRectOptions {
   snap?: CanvasRectSnapMode
+  strokeAlign?: CanvasStrokeAlign
+}
+
+export interface CanvasGridLinesOptions extends CanvasRectOptions {
+  includeOuter?: boolean
+}
+
+export interface CanvasCellEdgesOptions extends CanvasRectOptions {
+  includeOuter?: boolean
+}
+
+export interface CanvasCellBoundsLike {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 export interface CanvasDefaultStyle extends CanvasStyle {
@@ -59,6 +76,14 @@ interface RectBounds {
   y: number
   width: number
   height: number
+}
+
+interface SegmentEdge {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  count: number
 }
 
 const applyStyle = (ctx: CanvasRenderingContext2D, style: CanvasStyle): void => {
@@ -274,13 +299,23 @@ export class Canvas {
     options: CanvasRectOptions = {}
   ): void {
     const bounds = this.resolveRectBounds(at, width, height, options)
+    const strokeAlign = options.strokeAlign ?? 'center'
     this.ctx.save()
     applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     if (fill !== 'transparent') {
       this.ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
     }
     if (stroke !== 'transparent' && strokeW > 0) {
-      this.ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height)
+      if (strokeAlign === 'inside') {
+        const inset = strokeW / 2
+        const strokeWidth = bounds.width - strokeW
+        const strokeHeight = bounds.height - strokeW
+        if (strokeWidth > 0 && strokeHeight > 0) {
+          this.ctx.strokeRect(bounds.x + inset, bounds.y + inset, strokeWidth, strokeHeight)
+        }
+      } else {
+        this.ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height)
+      }
     }
     this.ctx.restore()
   }
@@ -303,6 +338,168 @@ export class Canvas {
       strokeW,
       options
     )
+  }
+
+  /**
+   * Draw a uniform grid line overlay for a rectangular area.
+   *
+   * Useful when cell interiors are filled separately and grid lines should be
+   * rendered once per boundary (avoids doubled center seams from per-cell stroke).
+   */
+  gridLines(
+    at: Vec,
+    width: number,
+    height: number,
+    cols: number,
+    rows: number,
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW,
+    options: CanvasGridLinesOptions = {}
+  ): void {
+    if (stroke === 'transparent' || strokeW <= 0) return
+
+    const safeCols = Math.max(1, Math.floor(cols))
+    const safeRows = Math.max(1, Math.floor(rows))
+    const includeOuter = options.includeOuter ?? true
+    const strokeAlign = options.strokeAlign ?? 'inside'
+    const bounds = this.resolveRectBounds(at, width, height, options)
+    const colStep = bounds.width / safeCols
+    const rowStep = bounds.height / safeRows
+
+    this.ctx.save()
+    applyStyle(this.ctx, { fill: 'transparent', stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
+    this.ctx.beginPath()
+
+    const startCol = includeOuter ? 0 : 1
+    const endCol = includeOuter ? safeCols : safeCols - 1
+    for (let col = startCol; col <= endCol; col++) {
+      let x = bounds.x + col * colStep
+      if (strokeAlign === 'inside') {
+        if (col === 0) x += strokeW / 2
+        if (col === safeCols) x -= strokeW / 2
+      }
+      this.ctx.moveTo(x, bounds.y)
+      this.ctx.lineTo(x, bounds.y + bounds.height)
+    }
+
+    const startRow = includeOuter ? 0 : 1
+    const endRow = includeOuter ? safeRows : safeRows - 1
+    for (let row = startRow; row <= endRow; row++) {
+      let y = bounds.y + row * rowStep
+      if (strokeAlign === 'inside') {
+        if (row === 0) y += strokeW / 2
+        if (row === safeRows) y -= strokeW / 2
+      }
+      this.ctx.moveTo(bounds.x, y)
+      this.ctx.lineTo(bounds.x + bounds.width, y)
+    }
+
+    this.ctx.stroke()
+    this.ctx.restore()
+  }
+
+  /**
+   * Draw deduplicated edges for an arbitrary set of axis-aligned cell bounds.
+   *
+   * Designed for recursive/irregular subdivisions where a uniform cols/rows
+   * overlay is not sufficient. Shared cell boundaries are drawn once.
+   */
+  cellEdges(
+    cells: CanvasCellBoundsLike[],
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW,
+    options: CanvasCellEdgesOptions = {}
+  ): void {
+    if (stroke === 'transparent' || strokeW <= 0 || cells.length === 0) return
+
+    const includeOuter = options.includeOuter ?? true
+    const strokeAlign = options.strokeAlign ?? 'inside'
+    const edges = new Map<string, SegmentEdge>()
+
+    let minX = Number.POSITIVE_INFINITY
+    let maxX = Number.NEGATIVE_INFINITY
+    let minY = Number.POSITIVE_INFINITY
+    let maxY = Number.NEGATIVE_INFINITY
+
+    const registerEdge = (x1: number, y1: number, x2: number, y2: number) => {
+      const ax = canonicalEdge(x1)
+      const ay = canonicalEdge(y1)
+      const bx = canonicalEdge(x2)
+      const by = canonicalEdge(y2)
+      const forward = ax < bx || (ax === bx && ay <= by)
+      const sx = forward ? ax : bx
+      const sy = forward ? ay : by
+      const ex = forward ? bx : ax
+      const ey = forward ? by : ay
+      const key = `${sx},${sy}|${ex},${ey}`
+      const edge = edges.get(key)
+      if (edge) {
+        edge.count += 1
+      } else {
+        edges.set(key, { x1: sx, y1: sy, x2: ex, y2: ey, count: 1 })
+      }
+    }
+
+    for (const cell of cells) {
+      const bounds = this.resolveRectBounds(
+        new Vec(cell.x, cell.y),
+        cell.width,
+        cell.height,
+        options
+      )
+      const left = canonicalEdge(bounds.x)
+      const right = canonicalEdge(bounds.x + bounds.width)
+      const top = canonicalEdge(bounds.y)
+      const bottom = canonicalEdge(bounds.y + bounds.height)
+      minX = Math.min(minX, left)
+      maxX = Math.max(maxX, right)
+      minY = Math.min(minY, top)
+      maxY = Math.max(maxY, bottom)
+
+      registerEdge(left, top, right, top)
+      registerEdge(right, top, right, bottom)
+      registerEdge(left, bottom, right, bottom)
+      registerEdge(left, top, left, bottom)
+    }
+
+    this.ctx.save()
+    applyStyle(this.ctx, { fill: 'transparent', stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
+    this.ctx.beginPath()
+
+    for (const edge of edges.values()) {
+      const vertical = edge.x1 === edge.x2
+      const horizontal = edge.y1 === edge.y2
+      if (!vertical && !horizontal) continue
+
+      const isOuter = vertical
+        ? edge.x1 === minX || edge.x1 === maxX
+        : edge.y1 === minY || edge.y1 === maxY
+
+      if (!includeOuter && isOuter) continue
+
+      let { x1, y1, x2, y2 } = edge
+      if (strokeAlign === 'inside' && isOuter) {
+        if (vertical && edge.x1 === minX) {
+          x1 += strokeW / 2
+          x2 += strokeW / 2
+        } else if (vertical && edge.x1 === maxX) {
+          x1 -= strokeW / 2
+          x2 -= strokeW / 2
+        } else if (horizontal && edge.y1 === minY) {
+          y1 += strokeW / 2
+          y2 += strokeW / 2
+        } else if (horizontal && edge.y1 === maxY) {
+          y1 -= strokeW / 2
+          y2 -= strokeW / 2
+        }
+      }
+
+      this.ctx.moveTo(x1, y1)
+      this.ctx.lineTo(x2, y2)
+    }
+
+    this.ctx.stroke()
+    this.ctx.restore()
   }
 
   text(

@@ -490,6 +490,24 @@ const dist = cell.distance(otherCell)    // Distance between centers
 const isEdge = cell.isEdge()             // Check if on grid boundary
 const isCorner = cell.isCorner()         // Check if corner cell
 
+// Canvas grid overlay (single-pass lines, no doubled center seams)
+canvas.gridLines(
+  utils.vec.create(frame.x, frame.y),
+  frame.width,
+  frame.height,
+  grid.cols,
+  grid.rows,
+  theme.foreground,
+  2,
+  { strokeAlign: 'inside' }
+)
+
+// Recursive/irregular cell boundaries (e.g. grid.subdivide output)
+canvas.cellEdges(subdividedCells, theme.foreground, 2, {
+  strokeAlign: 'inside',
+  includeOuter: false
+})
+
 // Recursive subdivision (parent-preserving terminal nodes)
 const subdividedCells = grid.subdivide({
   maxLevel: 3,

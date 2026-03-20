@@ -209,7 +209,11 @@ export type {
   CanvasTextOptions,
   CanvasExportOptions,
   CanvasRectOptions,
-  CanvasRectSnapMode
+  CanvasRectSnapMode,
+  CanvasStrokeAlign,
+  CanvasGridLinesOptions,
+  CanvasCellEdgesOptions,
+  CanvasCellBoundsLike
 } from '~/utils/canvas'
 export { resolveContainer } from '~/utils/container'
 export { resolveInnerFrame } from '~/utils/container'

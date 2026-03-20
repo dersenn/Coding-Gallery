@@ -29,7 +29,7 @@ const LAYERS: ProjectLayerDefinition[] = [
     id: 'grid-1',
     label: 'Grid 1',
     technique: 'canvas2d',
-    container: { mode: 'full' },
+    container: { mode: '1:1', padding: '9vmin' },
     module: './layers/grid-1.js',
   }
 ]
