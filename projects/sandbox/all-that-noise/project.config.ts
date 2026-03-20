@@ -177,7 +177,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Foam Max',
         key: 'foam_max',
-        default: 0.72,
+        default: 0.65,
         min: 0,
         max: 1,
         step: 0.001
@@ -204,7 +204,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Foam Fall',
         key: 'foam_fall',
-        default: 0.14,
+        default: 0.39,
         min: 0.001,
         max: 1,
         step: 0.001
@@ -275,7 +275,7 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Linked Shadow Max Offset',
         key: 'shadow_linked_max_offset',
-        default: -0.05,
+        default: -0.0,
         min: -0.4,
         max: 0.4,
         step: 0.001
@@ -284,8 +284,8 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Linked Shadow Pad Boost',
         key: 'shadow_linked_pad_boost',
-        default: 0.03,
-        min: 0,
+        default: 0.0,
+        min: -0.1,
         max: 0.25,
         step: 0.001
       }

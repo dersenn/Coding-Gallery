@@ -45,6 +45,7 @@ export interface SingleActiveLayerManagerArgs<LayerId extends string> {
   height: number
   initialLayerId: LayerId
   layers: ReadonlyArray<SingleActiveLayerDefinition<LayerId>>
+  onResizeRedraw?: () => void
 }
 
 export interface SingleActiveLayerManager<LayerId extends string> {
@@ -215,9 +216,13 @@ export function singleActiveLayerManager<LayerId extends string>(
 ): SingleActiveLayerManager<LayerId> {
   const { parent, width, height, layers } = args
 
+  const clampDimension = (value: number): number => Math.max(1, Math.round(value))
+  let containerWidth = clampDimension(width)
+  let containerHeight = clampDimension(height)
+
   const layerContainer = document.createElement('div')
-  layerContainer.style.width = `${width}px`
-  layerContainer.style.height = `${height}px`
+  layerContainer.style.width = `${containerWidth}px`
+  layerContainer.style.height = `${containerHeight}px`
   parent.appendChild(layerContainer)
 
   const layerById = new Map<LayerId, SingleActiveLayerDefinition<LayerId>>(
@@ -236,8 +241,8 @@ export function singleActiveLayerManager<LayerId extends string>(
   let mountedLayerId: LayerId | null = null
   let activeRuntime: SingleActiveLayerRuntime | null = null
 
-  const mountActiveIfNeeded = () => {
-    if (activeRuntime && mountedLayerId === activeLayerId) {
+  const mountActiveIfNeeded = (forceRemount = false) => {
+    if (!forceRemount && activeRuntime && mountedLayerId === activeLayerId) {
       return
     }
 
@@ -258,6 +263,51 @@ export function singleActiveLayerManager<LayerId extends string>(
     mountedLayerId = layer.id
   }
 
+  const updateContainerSize = (nextWidth: number, nextHeight: number): boolean => {
+    const clampedWidth = clampDimension(nextWidth)
+    const clampedHeight = clampDimension(nextHeight)
+    if (clampedWidth === containerWidth && clampedHeight === containerHeight) {
+      return false
+    }
+    containerWidth = clampedWidth
+    containerHeight = clampedHeight
+    layerContainer.style.width = `${containerWidth}px`
+    layerContainer.style.height = `${containerHeight}px`
+    return true
+  }
+
+  let resizeRafId: number | null = null
+  let resizeObserver: ResizeObserver | null = null
+  const hasWindow = typeof window !== 'undefined'
+
+  const handleResize = () => {
+    if (resizeRafId !== null) return
+    if (!hasWindow) return
+    resizeRafId = window.requestAnimationFrame(() => {
+      resizeRafId = null
+      if (!layerContainer.isConnected) return
+      const sizeChanged = updateContainerSize(parent.clientWidth, parent.clientHeight)
+      if (!sizeChanged) return
+      const technique = getLayer(activeLayerId).technique
+      if (technique !== 'canvas2d' && technique !== 'svg') return
+      mountActiveIfNeeded(true)
+      if (args.onResizeRedraw) {
+        args.onResizeRedraw()
+      } else {
+        activeRuntime?.draw()
+      }
+    })
+  }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver(() => {
+      handleResize()
+    })
+    resizeObserver.observe(parent)
+  } else if (hasWindow) {
+    window.addEventListener('resize', handleResize)
+  }
+
   return {
     setActiveLayer: (id) => {
       activeLayerId = id
@@ -273,6 +323,14 @@ export function singleActiveLayerManager<LayerId extends string>(
       activeRuntime?.exportPng?.(seed)
     },
     destroy: () => {
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      } else if (hasWindow) {
+        window.removeEventListener('resize', handleResize)
+      }
+      if (hasWindow && resizeRafId !== null) {
+        window.cancelAnimationFrame(resizeRafId)
+      }
       activeRuntime?.destroy()
       layerContainer.remove()
     }

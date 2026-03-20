@@ -6,7 +6,7 @@ import type {
   Technique
 } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
-import { resolveContainer } from '~/utils/container'
+import { resolveContainer, resolveInnerFrame } from '~/utils/container'
 import { singleActiveLayerManager, type SingleActiveLayerDefinition } from '~/runtime/layerRuntime'
 import { createSvgLayerRuntime } from '~/runtime/layerRuntime.svg'
 import { createCanvas2dLayerRuntime } from '~/runtime/layerRuntime.canvas2d'
@@ -151,21 +151,39 @@ export async function initFromProjectDefinition(
     loadedLayerModules.set(layer.id, layerModule)
   }
 
-  const layerManager = singleActiveLayerManager({
+  let layerManager: ReturnType<typeof singleActiveLayerManager<string>> | null = null
+  let drawViaBootstrap: (() => void) | null = null
+
+  layerManager = singleActiveLayerManager({
     parent: baseContainer,
     width,
     height,
     initialLayerId: controlState.activeLayer,
-    layers: layerDefinitions
+    layers: layerDefinitions,
+    onResizeRedraw: () => {
+      drawViaBootstrap?.()
+    }
   })
 
+  let rootResizeObserver: ResizeObserver | null = null
+  if (typeof ResizeObserver !== 'undefined' && baseContainer !== container) {
+    rootResizeObserver = new ResizeObserver(() => {
+      const frame = resolveInnerFrame(container.clientWidth, container.clientHeight, rootContainerMode)
+      baseContainer.style.width = `${frame.width}px`
+      baseContainer.style.height = `${frame.height}px`
+    })
+    rootResizeObserver.observe(container)
+  }
+
   const draw = () => {
+    if (!layerManager) return
     layerManager.setActiveLayer(controlState.activeLayer)
     if (layerById.get(controlState.activeLayer)?.technique !== 'p5') {
       utils.seed.reset()
     }
     layerManager.draw()
   }
+  drawViaBootstrap = draw
 
   draw()
 
@@ -182,6 +200,7 @@ export async function initFromProjectDefinition(
   })
 
   return () => {
+    rootResizeObserver?.disconnect()
     layerManager.destroy()
   }
 }
