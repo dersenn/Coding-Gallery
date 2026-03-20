@@ -498,6 +498,14 @@ const subdividedCells = grid.subdivide({
   subdivisionRows: 2
 })
 
+// Subdivision returns GridCell[] nodes (same class as root cells)
+subdividedCells.forEach((cell) => {
+  // local-context APIs (default): getNeighbor / getNeighbors4 / getNeighbors / isEdge / isCorner
+  // root-context APIs (explicit): getRootNeighbor / getRootNeighbors4 / getRootNeighbors / isRootEdge / isRootCorner
+  const depth = cell.level
+  const topAncestor = cell.root()
+})
+
 // Or use custom condition
 const subdividedCells = grid.subdivide({
   maxLevel: 4,

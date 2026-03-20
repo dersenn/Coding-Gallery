@@ -17,14 +17,14 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Priority: **essential**
   - Need: `Grid` hardcoded `new GridCell()` in a `private` method with no extension hook, making `GridCell` subclassing a dead end — the subclass was never used by `Grid` even when explicitly defined.
   - Seen in: design discussion — `_svg-example` showcase, general intent to use `class MyCell extends GridCell` per sketch.
-  - Notes: fixed by adding `protected createCell(config: GridCellConfig): GridCell` and `protected createLeafCell(config: CellConfig): Cell` factory methods to `Grid`. `initializeCells()` now calls `this.createCell(...)`, `subdivideRecursive()` now calls `this.createLeafCell(...)`. Default implementations return `new GridCell()` / `new Cell()` — fully backward-compatible. Subclass `Grid` and override either factory to inject custom types. See `docs/GRID_CELL_EXTENSION.md`.
+  - Notes: fixed by adding a single `protected createCell(config: GridCellConfig): GridCell` factory hook that powers both `initializeCells()` and recursive `subdivideRecursive()` construction. `subdivide()` now returns recursive `GridCell[]` nodes with `parent`/`level` and local sibling indexing. Root-explicit APIs (`getRootNeighbor`, `getRootNeighbors4`, `getRootNeighbors`, `isRootEdge`, `isRootCorner`) were added to avoid ambiguity. See `docs/GRID_CELL_EXTENSION.md`.
 
 - ID: `gridcell-cell-split`
   - Status: `implemented`
   - Priority: **high**
   - Need: Split `Cell` into a pure positioned agent (`Cell`) and a grid-aware subclass (`GridCell extends Cell`). Grid-specific methods (`isEdge`, `isCorner`, `getNeighbor`, `getNeighbors4/8`) move to `GridCell`. `Grid` creates `GridCell` instances internally; standalone sketch use stays with `Cell` or sketch-local subclasses.
   - Seen in: design discussion — vera standalone tile cells carry unused grid methods; Grid cells lack proper typing for neighbor returns.
-  - Notes: `GridCell` co-located in `utils/grid.ts`, exported from `types/project.ts`. `Grid.cells`, `at()`, `forEach()`, `map()`, `filter()`, `randomCell()` all return `GridCell`. `pearlymats` updated: `PearlyCell extends GridCell`. `subdivide()` still returns plain `Cell[]` (subdivision cells are positional only). See `docs/GRIDCELL_REFACTOR_PLAN.md`.
+  - Notes: `GridCell` co-located in `utils/grid.ts`, exported from `types/project.ts`. `Grid.cells`, `at()`, `forEach()`, `map()`, `filter()`, `randomCell()` all return `GridCell`. `subdivide()` now also returns recursive `GridCell[]` nodes (with parent chain and local sibling context), while explicit root-scoped neighbor/edge methods are available when needed.
 
 ### Path building and bezier
 

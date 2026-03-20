@@ -1,5 +1,5 @@
 import type { CleanupFunction, ProjectContext, ProjectControlDefinition } from '~/types/project'
-import { Grid, Cell, shortcuts, resolveContainer } from '~/types/project'
+import { Grid, shortcuts, resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
@@ -83,7 +83,7 @@ export async function init(
   const { el, width, height } = resolveContainer(container, 'full')
 
   const sketch = new p5((p) => {
-    // Step 2: render a recursive 2x2 subdivision region as leaf Cells.
+    // Step 2: render a recursive 2x2 subdivision region as GridCells.
     const drawRecursiveTiles = (x: number, y: number, w: number, h: number) => {
       const grid = new Grid({
         cols: rootCols,
@@ -102,9 +102,9 @@ export async function init(
         subdivisionRows: rootRows
       })
 
-      // Grid.subdivide() returns Cell leaves; draw each cell directly.
+      // Grid.subdivide() returns recursive GridCell nodes; draw each cell directly.
       p.noStroke()
-      for (const cell of cells as Cell[]) {
+      for (const cell of cells) {
         p.fill(randomColor())
         p.rect(cell.x, cell.y, cell.width, cell.height)
       }

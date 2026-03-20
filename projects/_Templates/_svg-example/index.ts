@@ -569,22 +569,11 @@ export async function init(
         (cell as ShowcaseCell).draw(svg, theme, sw, v, rnd, 0, controlState.showLabels)
       )
     } else {
-      // Subdivision case — grid.subdivide() returns plain Cell[] (not ShowcaseCell[]).
-      // We wrap each leaf into a ShowcaseCell manually, passing the root ShowcaseGrid
-      // as the `grid` context. This means lazy resolution in the cell's `resolved`
-      // getter reads from the same ShowcaseGrid as the flat case — noise coordinates,
-      // palette, and noiseScale are all consistent across both paths.
-      //
-      // Leaf cells have row/col/index = -1 (positional only, no grid topology).
-      // That's fine here because resolved only uses x/y for noise lookups.
+      // Subdivision case — recursive nodes are built through createCell(), so the
+      // result already contains ShowcaseCell instances.
       const leaves = grid.subdivide({ maxLevel: subs, chance: 55, subdivisionCols: 3, subdivisionRows: 3 })
       for (const cell of leaves) {
-        const sc = new ShowcaseCell({
-          x: cell.x, y: cell.y, width: cell.width, height: cell.height,
-          row: cell.row, col: cell.col, index: cell.index, level: cell.level,
-          grid  // ShowcaseGrid — enables lazy resolution via (this.grid as ShowcaseGrid)
-        })
-        sc.draw(svg, theme, sw, v, rnd, 0, controlState.showLabels)
+        ;(cell as ShowcaseCell).draw(svg, theme, sw, v, rnd, 0, controlState.showLabels)
       }
     }
   }

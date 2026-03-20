@@ -1,4 +1,4 @@
-import { Cell, type CellConfig } from './cell'
+import { Cell } from './cell'
 import type { GenerativeUtils } from './generative'
 
 export type NeighborDirection = 
@@ -32,27 +32,51 @@ export type GridFit = 'contain' | 'cover' | 'stretch'
 export type GridAlign = 'start' | 'center' | 'end'
 
 export interface SubdivideConfig {
+  /** Maximum recursive depth below each root cell. */
   maxLevel: number
+  /** Chance (0-100) to keep a generated child as a returned node at each step. */
   chance?: number
+  /** Number of columns created for each recursive split. */
   subdivisionCols?: number
+  /** Number of rows created for each recursive split. */
   subdivisionRows?: number
-  condition?: (cell: Cell, level: number) => boolean
+  /** Optional custom stop condition; receives the current parent node and level. */
+  condition?: (cell: GridCell, level: number) => boolean
+}
+
+interface GridNeighborContext {
+  cols: number
+  rows: number
+  at: (row: number, col: number) => GridCell | null
 }
 
 export interface GridCellConfig extends CellConfig {
   grid: Grid
+  neighborContext?: GridNeighborContext
 }
 
 /**
- * GridCell — a Cell created and owned by a Grid.
+ * GridCell — hierarchical cell node created by `Grid`.
  *
- * Extends `Cell` with a required `grid` reference and grid-specific methods:
- * edge/corner detection and neighbor lookup in all 8 directions.
+ * Extends `Cell` with:
+ * - a required root-grid reference (`grid`)
+ * - context-aware neighbor and edge/corner methods
+ * - parent/level hierarchy traversal helpers
  *
- * GridCell instances are created by `Grid` via its protected `createCell()`
- * factory method. To use a custom subclass, subclass `Grid` and override
- * `createCell()` — do NOT instantiate the subclass directly and expect `Grid`
- * to use it:
+ * Construction model:
+ * - Root grid initialization (`initializeCells`) creates level-0 nodes.
+ * - Recursive subdivision (`subdivide`) creates deeper nodes.
+ * - Both paths use `Grid.createCell()`, so custom subclasses apply uniformly.
+ *
+ * Context model:
+ * - Default APIs (`getNeighbor`, `getNeighbors*`, `isEdge`, `isCorner`) operate
+ *   in the cell's active context:
+ *   - root cells => root grid context
+ *   - recursive cells => sibling-local subdivision context
+ * - Root-explicit APIs (`getRootNeighbor`, `isRootEdge`, etc.) always resolve
+ *   against the root grid coordinates.
+ *
+ * To use a custom subclass, subclass `Grid` and override `createCell()`:
  *
  * ```typescript
  * class MyCell extends GridCell {
@@ -69,20 +93,53 @@ export interface GridCellConfig extends CellConfig {
  * grid.cells.forEach(cell => (cell as MyCell).draw(svg))
  * ```
  *
- * For standalone sketch use without a grid, extend `Cell` directly instead.
+ * For standalone sketch use without a grid, extend `Cell` directly.
  */
 export class GridCell extends Cell {
   grid: Grid
+  private neighborContext?: GridNeighborContext
 
   constructor(config: GridCellConfig) {
     super(config)
     this.grid = config.grid
+    this.neighborContext = config.neighborContext
   }
 
   /**
-   * Check if this cell is on the edge of the grid
+   * Check if this cell is on the edge of its active context.
+   *
+   * For root cells, this matches root-grid edge checks.
+   * For recursive subdivision cells, this checks sibling-local bounds.
    */
   isEdge(): boolean {
+    const context = this.resolveNeighborContext()
+    return (
+      this.row === 0 ||
+      this.row === context.rows - 1 ||
+      this.col === 0 ||
+      this.col === context.cols - 1
+    )
+  }
+
+  /**
+   * Check if this cell is a corner in its active context.
+   */
+  isCorner(): boolean {
+    const context = this.resolveNeighborContext()
+    return (
+      (this.row === 0 && this.col === 0) ||
+      (this.row === 0 && this.col === context.cols - 1) ||
+      (this.row === context.rows - 1 && this.col === 0) ||
+      (this.row === context.rows - 1 && this.col === context.cols - 1)
+    )
+  }
+
+  /**
+   * Check if this cell is on the edge of the root grid.
+   *
+   * Useful when working with recursive nodes but wanting root-topology checks.
+   */
+  isRootEdge(): boolean {
     return (
       this.row === 0 ||
       this.row === this.grid.rows - 1 ||
@@ -92,9 +149,9 @@ export class GridCell extends Cell {
   }
 
   /**
-   * Check if this cell is a corner cell
+   * Check if this cell is a corner in the root grid.
    */
-  isCorner(): boolean {
+  isRootCorner(): boolean {
     return (
       (this.row === 0 && this.col === 0) ||
       (this.row === 0 && this.col === this.grid.cols - 1) ||
@@ -104,9 +161,61 @@ export class GridCell extends Cell {
   }
 
   /**
-   * Get a specific neighbor by direction
+   * Get a specific neighbor by direction in the active context.
+   *
+   * - Root cell => resolves through `grid.at(...)`
+   * - Recursive cell => resolves within the local sibling subdivision set
    */
   getNeighbor(direction: NeighborDirection): GridCell | null {
+    const { row, col } = this
+    const context = this.resolveNeighborContext()
+    const { rows, cols } = context
+
+    let targetRow = row
+    let targetCol = col
+
+    switch (direction) {
+      case 'top':
+        targetRow = row - 1
+        break
+      case 'topRight':
+        targetRow = row - 1
+        targetCol = col + 1
+        break
+      case 'right':
+        targetCol = col + 1
+        break
+      case 'bottomRight':
+        targetRow = row + 1
+        targetCol = col + 1
+        break
+      case 'bottom':
+        targetRow = row + 1
+        break
+      case 'bottomLeft':
+        targetRow = row + 1
+        targetCol = col - 1
+        break
+      case 'left':
+        targetCol = col - 1
+        break
+      case 'topLeft':
+        targetRow = row - 1
+        targetCol = col - 1
+        break
+    }
+
+    if (targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols) {
+      return null
+    }
+
+    return context.at(targetRow, targetCol)
+  }
+
+  /**
+   * Get a specific neighbor by direction in the root grid context.
+   */
+  getRootNeighbor(direction: NeighborDirection): GridCell | null {
     const { row, col } = this
     const { rows, cols } = this.grid
 
@@ -152,7 +261,7 @@ export class GridCell extends Cell {
   }
 
   /**
-   * Get all 4 cardinal neighbors (top, right, bottom, left)
+   * Get all 4 cardinal neighbors (top, right, bottom, left) in active context.
    */
   getNeighbors4(): GridCell[] {
     const neighbors: GridCell[] = []
@@ -167,7 +276,7 @@ export class GridCell extends Cell {
   }
 
   /**
-   * Get all 8 neighbors (including diagonals)
+   * Get all 8 neighbors (including diagonals) in active context.
    */
   getNeighbors(): GridCell[] {
     const neighbors: GridCell[] = []
@@ -191,6 +300,105 @@ export class GridCell extends Cell {
   }
 
   /**
+   * Get all 4 cardinal neighbors (top, right, bottom, left) in root-grid context.
+   */
+  getRootNeighbors4(): GridCell[] {
+    const neighbors: GridCell[] = []
+    const directions: NeighborDirection[] = ['top', 'right', 'bottom', 'left']
+
+    for (const direction of directions) {
+      const neighbor = this.getRootNeighbor(direction)
+      if (neighbor) neighbors.push(neighbor)
+    }
+
+    return neighbors
+  }
+
+  /**
+   * Get all 8 neighbors (including diagonals) in root-grid context.
+   */
+  getRootNeighbors(): GridCell[] {
+    const neighbors: GridCell[] = []
+    const directions: NeighborDirection[] = [
+      'top',
+      'topRight',
+      'right',
+      'bottomRight',
+      'bottom',
+      'bottomLeft',
+      'left',
+      'topLeft'
+    ]
+
+    for (const direction of directions) {
+      const neighbor = this.getRootNeighbor(direction)
+      if (neighbor) neighbors.push(neighbor)
+    }
+
+    return neighbors
+  }
+
+  /**
+   * Return this cell's ancestry in nearest-to-farthest order.
+   *
+   * By default excludes `this`; pass `includeSelf = true` to include it.
+   */
+  ancestors(includeSelf: boolean = false): GridCell[] {
+    const result: GridCell[] = []
+    let cursor: Cell | undefined = includeSelf ? this : this.parent
+    while (cursor) {
+      if (cursor instanceof GridCell) {
+        result.push(cursor)
+      }
+      cursor = cursor.parent
+    }
+    return result
+  }
+
+  /**
+   * Return the highest ancestor in this hierarchy (or `this` if already root).
+   */
+  root(): GridCell {
+    let cursor: GridCell = this
+    while (cursor.parent instanceof GridCell) {
+      cursor = cursor.parent
+    }
+    return cursor
+  }
+
+  /**
+   * Find the first ancestor matching a predicate.
+   *
+   * Traversal is nearest-to-farthest.
+   */
+  findAncestor(predicate: (cell: GridCell) => boolean, includeSelf: boolean = false): GridCell | null {
+    let cursor: Cell | undefined = includeSelf ? this : this.parent
+    while (cursor) {
+      if (cursor instanceof GridCell && predicate(cursor)) {
+        return cursor
+      }
+      cursor = cursor.parent
+    }
+    return null
+  }
+
+  /**
+   * Resolve the effective neighbor context for active-context APIs.
+   *
+   * Root cells have no local override, so this falls back to root grid bounds.
+   */
+  private resolveNeighborContext(): GridNeighborContext {
+    if (this.neighborContext) {
+      return this.neighborContext
+    }
+    return {
+      cols: this.grid.cols,
+      rows: this.grid.rows,
+      at: (row, col) => this.grid.at(row, col)
+    }
+  }
+
+  /**
    * Euclidean distance in grid-coordinate space (col/row steps).
    *
    * Mirrors `Cell.distance()` but operates on col/row indices rather than
@@ -210,11 +418,19 @@ export class GridCell extends Cell {
 }
 
 /**
- * Grid - Base class for creating uniform and subdivided grids
- * 
- * Provides 2D and 1D cell access, neighbor lookup, iteration methods,
- * and recursive subdivision support.
- * 
+ * Grid — root grid container with recursive subdivision support.
+ *
+ * Provides:
+ * - root indexed access (`at`, `cellAt`, `forEach`, `map`, `filter`)
+ * - root cell construction via `createCell()`
+ * - recursive subdivision that also uses `createCell()`
+ *
+ * Subdivision notes:
+ * - `subdivide()` returns recursive `GridCell[]` nodes (not plain `Cell[]`).
+ * - Returned nodes include `parent` and `level`.
+ * - Returned nodes are *not* inserted into `grid.cells/grid2D`; those remain
+ *   the root level only.
+ *
  * Usage:
  * ```typescript
  * const grid = new Grid({ cols: 10, rows: 10, width: 500, height: 500, utils })
@@ -270,11 +486,16 @@ export class Grid {
   }
 
   /**
-   * Factory method for primary grid cells.
+   * Factory method for all `GridCell` creation.
    *
    * Override in a `Grid` subclass to produce custom `GridCell` instances.
-   * This method is called once per cell during construction — the returned
-   * instance is what appears in `grid.cells`, `grid.at()`, `grid.forEach()`, etc.
+   *
+   * Called by:
+   * - root initialization (`initializeCells`)
+   * - recursive subdivision (`subdivideRecursive` via `createSubdivisionChildren`)
+   *
+   * For root initialization, returned nodes populate `grid.cells` and `grid2D`.
+   * For recursive subdivision, returned nodes are transient hierarchy results.
    *
    * ```typescript
    * class MyGrid extends Grid {
@@ -289,28 +510,10 @@ export class Grid {
   }
 
   /**
-   * Factory method for subdivision leaf cells.
-   *
-   * Override alongside `createCell` when you also need custom types from
-   * `grid.subdivide()`. Leaf cells have `row/col/index = -1` since they are
-   * positional only and not part of the primary grid topology.
-   *
-   * ```typescript
-   * class MyGrid extends Grid {
-   *   protected createLeafCell(config: CellConfig): Cell {
-   *     return new MyLeafCell(config)
-   *   }
-   * }
-   * ```
-   */
-  protected createLeafCell(config: CellConfig): Cell {
-    return new Cell(config)
-  }
-
-  /**
    * Initialize the grid cells via the `createCell` factory.
-   * Called once from the constructor — override `createCell` to inject
-   * custom cell types rather than overriding this method.
+   *
+   * Called once from the constructor. Override `createCell` rather than this
+   * method to customize cell classes.
    */
   private initializeCells(): void {
     const layout = this.resolveLayout()
@@ -435,7 +638,7 @@ export class Grid {
   }
 
   /**
-   * Get a cell by row and column (2D access)
+   * Get a root-level cell by row and column (2D access).
    */
   at(row: number, col: number): GridCell | null {
     if (row < 0 || row >= this.rows || col < 0 || col >= this.cols) {
@@ -445,7 +648,7 @@ export class Grid {
   }
 
   /**
-   * Get a cell by 1D index
+   * Get a root-level cell by 1D index.
    */
   cellAt(index: number): GridCell | null {
     if (index < 0 || index >= this.cells.length) {
@@ -471,7 +674,7 @@ export class Grid {
   }
 
   /**
-   * Iterate over all cells
+   * Iterate root-level cells in row-major order.
    */
   forEach(callback: (cell: GridCell, row: number, col: number) => void): void {
     for (let row = 0; row < this.rows; row++) {
@@ -483,7 +686,7 @@ export class Grid {
   }
 
   /**
-   * Map over all cells and return a new array
+   * Map root-level cells in row-major order.
    */
   map<T>(callback: (cell: GridCell, row: number, col: number) => T): T[] {
     const results: T[] = []
@@ -494,7 +697,7 @@ export class Grid {
   }
 
   /**
-   * Filter cells based on a condition
+   * Filter root-level cells.
    */
   filter(callback: (cell: GridCell) => boolean): GridCell[] {
     return this.cells.filter(callback)
@@ -503,19 +706,23 @@ export class Grid {
   /**
    * Recursively subdivide the grid
    * 
-   * Returns a flat array of plain `Cell` instances with varying sizes based on
-   * subdivision. Each cell has a `level` property indicating its subdivision
-   * depth. Subdivision cells are positional only (row/col/index = -1); for
-   * grid-indexed neighbor access use the primary `Grid.cells` array instead.
+   * Returns a flat array of recursive `GridCell` instances with varying sizes.
+   * Each returned node includes:
+   * - `level` (subdivision depth)
+   * - `parent` (immediate ancestor)
+   * - local `row/col/index` in its sibling subdivision set
+   *
+   * Default neighbor/edge APIs on returned nodes are local-context aware.
+   * Use root-explicit APIs when global root topology is required.
    * 
    * @param config - Subdivision configuration
    * @param config.maxLevel - Maximum recursion depth
-   * @param config.chance - Percentage chance (0-100) to stop subdividing and create leaf cell
+   * @param config.chance - Percentage chance (0-100) to stop subdividing and keep current node
    * @param config.subdivisionCols - Number of columns for subdivision (defaults to grid cols)
    * @param config.subdivisionRows - Number of rows for subdivision (defaults to grid rows)
    * @param config.condition - Alternative to chance: custom function to determine if subdivision should stop
    */
-  subdivide(config: SubdivideConfig): Cell[] {
+  subdivide(config: SubdivideConfig): GridCell[] {
     const {
       maxLevel,
       chance = 50,
@@ -524,7 +731,7 @@ export class Grid {
       condition
     } = config
 
-    const resultCells: Cell[] = []
+    const resultCells: GridCell[] = []
 
     this.forEach((cell) => {
       this.subdivideRecursive(
@@ -543,105 +750,118 @@ export class Grid {
   }
 
   /**
-   * Recursive helper for subdivision — uses `createLeafCell` factory for all
-   * leaf and intermediate cell instances.
+   * Recursive subdivision walker over one parent node.
    */
   private subdivideRecursive(
-    parentCell: Cell,
+    parentCell: GridCell,
     currentLevel: number,
     maxLevel: number,
     chance: number,
     subdivisionCols: number,
     subdivisionRows: number,
-    resultCells: Cell[],
-    condition?: (cell: Cell, level: number) => boolean
+    resultCells: GridCell[],
+    condition?: (cell: GridCell, level: number) => boolean
   ): void {
-    const cellW = parentCell.width / subdivisionCols
-    const cellH = parentCell.height / subdivisionRows
+    const children = this.createSubdivisionChildren(parentCell, currentLevel + 1, subdivisionCols, subdivisionRows)
 
-    for (let col = 0; col < subdivisionCols; col++) {
-      for (let row = 0; row < subdivisionRows; row++) {
-        const x = parentCell.x + col * cellW
-        const y = parentCell.y + row * cellH
+    for (const childCell of children) {
+      if (currentLevel >= maxLevel) {
+        resultCells.push(childCell)
+        continue
+      }
 
-        if (currentLevel < maxLevel) {
-          const shouldStopSubdividing = condition
-            ? condition(parentCell, currentLevel)
-            : this.utils.seed.coinToss(chance)
+      const shouldStopSubdividing = condition
+        ? condition(parentCell, currentLevel)
+        : this.utils.seed.coinToss(chance)
 
-          if (shouldStopSubdividing) {
-            resultCells.push(
-              this.createLeafCell({
-                x,
-                y,
-                width: cellW,
-                height: cellH,
-                row: -1,
-                col: -1,
-                index: -1,
-                level: currentLevel + 1,
-                parent: parentCell
-              })
-            )
-          } else {
-            const childCell = this.createLeafCell({
-              x,
-              y,
-              width: cellW,
-              height: cellH,
-              row: -1,
-              col: -1,
-              index: -1,
-              level: currentLevel + 1,
-              parent: parentCell
-            })
-
-            this.subdivideRecursive(
-              childCell,
-              currentLevel + 1,
-              maxLevel,
-              chance,
-              subdivisionCols,
-              subdivisionRows,
-              resultCells,
-              condition
-            )
-          }
-        } else {
-          resultCells.push(
-            this.createLeafCell({
-              x,
-              y,
-              width: cellW,
-              height: cellH,
-              row: -1,
-              col: -1,
-              index: -1,
-              level: currentLevel + 1,
-              parent: parentCell
-            })
-          )
-        }
+      if (shouldStopSubdividing) {
+        resultCells.push(childCell)
+      } else {
+        this.subdivideRecursive(
+          childCell,
+          currentLevel + 1,
+          maxLevel,
+          chance,
+          subdivisionCols,
+          subdivisionRows,
+          resultCells,
+          condition
+        )
       }
     }
   }
 
   /**
-   * Get all cells on the edge of the grid
+   * Build one subdivision generation for a parent node.
+   *
+   * Children share a local neighbor context so active-context neighbor lookups
+   * resolve within sibling bounds at this level.
+   */
+  private createSubdivisionChildren(
+    parentCell: GridCell,
+    level: number,
+    subdivisionCols: number,
+    subdivisionRows: number
+  ): GridCell[] {
+    const cellW = parentCell.width / subdivisionCols
+    const cellH = parentCell.height / subdivisionRows
+    const childGrid: GridCell[][] = Array.from(
+      { length: subdivisionRows },
+      () => Array.from({ length: subdivisionCols })
+    )
+    const context: GridNeighborContext = {
+      cols: subdivisionCols,
+      rows: subdivisionRows,
+      at: (row, col) => {
+        if (row < 0 || row >= subdivisionRows || col < 0 || col >= subdivisionCols) {
+          return null
+        }
+        return childGrid[row]![col] ?? null
+      }
+    }
+    const result: GridCell[] = []
+
+    for (let row = 0; row < subdivisionRows; row++) {
+      for (let col = 0; col < subdivisionCols; col++) {
+        const x = parentCell.x + col * cellW
+        const y = parentCell.y + row * cellH
+        const child = this.createCell({
+          x,
+          y,
+          width: cellW,
+          height: cellH,
+          row,
+          col,
+          index: row * subdivisionCols + col,
+          level,
+          parent: parentCell,
+          grid: this,
+          neighborContext: context
+        })
+        childGrid[row]![col] = child
+        result.push(child)
+      }
+    }
+
+    return result
+  }
+
+  /**
+   * Get root-level edge cells.
    */
   getEdgeCells(): GridCell[] {
     return this.filter(cell => cell.isEdge())
   }
 
   /**
-   * Get all corner cells
+   * Get root-level corner cells.
    */
   getCornerCells(): GridCell[] {
     return this.filter(cell => cell.isCorner())
   }
 
   /**
-   * Get a random cell from the grid
+   * Get a random root-level cell.
    */
   randomCell(): GridCell {
     const index = this.utils.seed.randomInt(0, this.cells.length - 1)

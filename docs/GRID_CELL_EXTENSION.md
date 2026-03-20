@@ -1,57 +1,27 @@
-# Extending GridCell — Factory Method Pattern
+# Extending GridCell — Unified Recursive Model
 
-## The gap (now fixed)
+## Current model
 
-The intent of `GridCell` is to be extended per sketch:
-
-```typescript
-class MyCell extends GridCell {
-  draw(svg: SVG) { /* ... */ }
-}
-```
-
-This works syntactically, but before the fix `Grid` always created plain `GridCell` instances internally — via `new GridCell()` hardcoded in a `private` method. The subclass was never used. `grid.cells` always contained `GridCell`, never `MyCell`.
-
-## The fix
-
-Two `protected` factory methods were added to `Grid` in `utils/grid.ts`:
+`Grid` now uses one factory method for both root and recursive subdivision nodes:
 
 ```typescript
-// Primary cells — called once per cell during Grid construction
 protected createCell(config: GridCellConfig): GridCell {
   return new GridCell(config)
 }
-
-// Subdivision leaf cells — called by grid.subdivide()
-protected createLeafCell(config: CellConfig): Cell {
-  return new Cell(config)
-}
 ```
 
-`initializeCells()` now calls `this.createCell(...)` and `subdivideRecursive()` now calls `this.createLeafCell(...)`. The defaults return the same types as before — fully backward-compatible.
+`initializeCells()` and `subdivideRecursive()` both call `createCell(...)`, so custom subclasses flow through both normal grid creation and subdivision.
 
 ## How to use
 
-### 1. Subclass both Grid and GridCell
+### 1. Subclass both `Grid` and `GridCell`
 
 ```typescript
 import { Grid, GridCell } from '~/types/project'
 import type { GridCellConfig } from '~/utils/grid'
 
 class MyCell extends GridCell {
-  variant: number
-
-  constructor(config: GridCellConfig) {
-    super(config)
-    this.variant = Math.floor(utils.noise.cell(this.x, this.y) * 8)
-  }
-
-  draw(svg: SVG, theme: ThemeTokens, sw: number) {
-    switch (this.variant) {
-      case 0: svg.circle(this.center(), this.width * 0.3, theme.foreground); break
-      // ...
-    }
-  }
+  draw(svg: SVG) { /* ... */ }
 }
 
 class MyGrid extends Grid {
@@ -61,37 +31,41 @@ class MyGrid extends Grid {
 }
 ```
 
-### 2. Construct and draw
+### 2. Draw root cells
 
 ```typescript
-const grid = new MyGrid({ cols: 3, rows: 3, width: svg.w, height: svg.h, x: 0, y: 0, utils })
-
-// grid.cells contains MyCell instances
-grid.cells.forEach(cell => (cell as MyCell).draw(svg, theme, sw))
+const grid = new MyGrid({ cols: 3, rows: 3, width: w, height: h, x: 0, y: 0, utils })
+grid.cells.forEach(cell => (cell as MyCell).draw(svg))
 ```
 
-The cast `(cell as MyCell)` is needed because `grid.cells` is typed as `GridCell[]`. If avoiding casts matters, a generic `Grid<T extends GridCell>` could be added as a follow-up.
-
-### 3. With subdivision
-
-If you also need custom types from `grid.subdivide()`, override `createLeafCell` alongside `createCell`:
+### 3. Draw recursive subdivision cells
 
 ```typescript
-class MyGrid extends Grid {
-  protected createCell(config: GridCellConfig): GridCell {
-    return new MyCell(config)
-  }
-
-  protected createLeafCell(config: CellConfig): Cell {
-    return new MyLeafCell(config)
-  }
-}
-
-const leaves = grid.subdivide({ maxLevel: 2, chance: 50 })
-leaves.forEach(cell => (cell as MyLeafCell).draw(svg))
+const leaves = grid.subdivide({ maxLevel: 2, chance: 50, subdivisionCols: 2, subdivisionRows: 2 })
+leaves.forEach(cell => (cell as MyCell).draw(svg))
 ```
 
-Note: subdivision leaf cells have `row = col = index = -1` since they are positional only and not part of the primary grid topology.
+Each recursive node keeps:
+- `level` (depth),
+- `parent` (upward hierarchy),
+- local `row/col/index` for sibling context.
+
+## Neighbor semantics
+
+Default/simple methods stay local to the active context:
+- `getNeighbor`, `getNeighbors4`, `getNeighbors`
+- `isEdge`, `isCorner`
+
+For explicit root-grid behavior, use:
+- `getRootNeighbor`, `getRootNeighbors4`, `getRootNeighbors`
+- `isRootEdge`, `isRootCorner`
+
+## Tree traversal helpers
+
+`GridCell` now includes:
+- `ancestors(includeSelf?)`
+- `root()`
+- `findAncestor(predicate, includeSelf?)`
 
 ## Grid sizing modes (add-on)
 
@@ -162,6 +136,5 @@ tile.draw(svg)
 
 ## Summary of changed files
 
-- `utils/grid.ts` — added `createCell()` and `createLeafCell()` protected methods; updated `initializeCells()` and `subdivideRecursive()` call sites; updated `GridCell` JSDoc.
-- `docs/UTILITY_GAP_BACKLOG.md` — added `grid-cell-factory` entry (implemented).
-- `.cursor/rules/utility-first-sketches.mdc` — updated grid/cell guidance to document the `Grid` subclass requirement.
+- `utils/grid.ts` — unified subdivision on `createCell()`, added root-explicit neighbor/edge APIs, and added ancestry helpers.
+- `docs/UTILITY_GAP_BACKLOG.md` — updated architecture notes to reflect unified recursive `GridCell` nodes.

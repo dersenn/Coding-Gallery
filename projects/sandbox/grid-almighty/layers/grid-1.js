@@ -1,4 +1,4 @@
-import { Cell, Grid, GridCell } from '~/types/project'
+import { Grid, GridCell } from '~/types/project'
 
 const SET = {
   cols: 8,
@@ -18,20 +18,9 @@ class DotGrid extends Grid {
   createCell(config) {
     return new DotCell(config)
   }
-
-  createLeafCell(config) {
-    return new DotLeafCell(config)
-  }
 }
 
 class DotCell extends GridCell {
-  draw(canvas, theme) {
-    const r = Math.min(this.width, this.height) * 0.12
-    canvas.circle(this.center(), r, theme.foreground, 'transparent', 0)
-  }
-}
-
-class DotLeafCell extends Cell {
   draw(canvas, theme) {
     const r = Math.min(this.width, this.height) * 0.12
     canvas.circle(this.center(), r, theme.foreground, 'transparent', 0)
