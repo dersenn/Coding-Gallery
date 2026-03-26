@@ -45,6 +45,26 @@ const terminals = grid.subdivide({ maxLevel: 2, chance: 50, subdivisionCols: 2, 
 terminals.forEach(cell => (cell as MyCell).draw(svg))
 ```
 
+### 4. Per-node subdivision dimensions (rule)
+
+If you want subdivision dimensions to vary per node (for example choosing 2×2 or 4×4 at different points in the recursion), pass a `rule`.
+
+When `rule` is provided it takes precedence over `chance`, `condition`, and `subdivisionCols/subdivisionRows`.
+
+```typescript
+const terminals = grid.subdivide({
+  maxLevel: 3,
+  rule: (cell, level) => {
+    // Stop some branches early
+    if (level === 0 && utils.seed.coinToss(40) === false) return false
+
+    // Choose per-node split dimensions
+    const div = utils.seed.coinToss(50) ? 2 : 4
+    return { cols: div, rows: div }
+  }
+})
+```
+
 Subdivision is parent-preserving:
 - stop decisions keep the current node as terminal,
 - `maxLevel: 0` returns root cells,

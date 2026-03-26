@@ -42,6 +42,16 @@ export interface SubdivideConfig {
   subdivisionRows?: number
   /** Optional custom subdivide condition; receives the current node and level. */
   condition?: (cell: GridCell, level: number) => boolean
+  /**
+   * Optional per-node subdivision rule.
+   *
+   * When provided, this takes precedence over `chance`, `condition`, and
+   * `subdivisionCols/subdivisionRows`.
+   *
+   * Return `false` to stop (keep the current node as a terminal).
+   * Return `{ cols, rows }` to subdivide this node using those dimensions.
+   */
+  rule?: (cell: GridCell, level: number) => false | { cols: number; rows: number }
 }
 
 interface GridNeighborContext {
@@ -735,7 +745,8 @@ export class Grid {
       chance = 50,
       subdivisionCols = this.cols,
       subdivisionRows = this.rows,
-      condition
+      condition,
+      rule
     } = config
     const clampedMaxLevel = Math.max(0, Math.floor(maxLevel))
     const clampedChance = Math.max(0, Math.min(100, chance))
@@ -753,7 +764,8 @@ export class Grid {
         clampedSubdivisionCols,
         clampedSubdivisionRows,
         resultCells,
-        condition
+        condition,
+        rule
       )
     })
 
@@ -774,33 +786,48 @@ export class Grid {
     subdivisionCols: number,
     subdivisionRows: number,
     resultCells: GridCell[],
-    condition?: (cell: GridCell, level: number) => boolean
+    condition?: (cell: GridCell, level: number) => boolean,
+    rule?: (cell: GridCell, level: number) => false | { cols: number; rows: number }
   ): void {
     if (currentLevel >= maxLevel) {
       resultCells.push(parentCell)
       return
     }
 
-    const shouldSubdivide = condition
-      ? condition(parentCell, currentLevel)
-      : this.utils.seed.coinToss(chance)
+    let nextSubdivisionCols = subdivisionCols
+    let nextSubdivisionRows = subdivisionRows
 
-    if (!shouldSubdivide) {
-      resultCells.push(parentCell)
-      return
+    if (rule) {
+      const decision = rule(parentCell, currentLevel)
+      if (decision === false) {
+        resultCells.push(parentCell)
+        return
+      }
+      nextSubdivisionCols = Math.max(1, Math.floor(decision.cols))
+      nextSubdivisionRows = Math.max(1, Math.floor(decision.rows))
+    } else {
+      const shouldSubdivide = condition
+        ? condition(parentCell, currentLevel)
+        : this.utils.seed.coinToss(chance)
+
+      if (!shouldSubdivide) {
+        resultCells.push(parentCell)
+        return
+      }
     }
 
-    const children = this.createSubdivisionChildren(parentCell, currentLevel + 1, subdivisionCols, subdivisionRows)
+    const children = this.createSubdivisionChildren(parentCell, currentLevel + 1, nextSubdivisionCols, nextSubdivisionRows)
     for (const childCell of children) {
       this.subdivideRecursive(
         childCell,
         currentLevel + 1,
         maxLevel,
         chance,
-        subdivisionCols,
-        subdivisionRows,
+        nextSubdivisionCols,
+        nextSubdivisionRows,
         resultCells,
-        condition
+        condition,
+        rule
       )
     }
   }
