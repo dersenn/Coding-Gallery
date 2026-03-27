@@ -225,7 +225,9 @@ export interface GenerativeUtils {
   }
   array: {
     shuffle: <T>(array: T[]) => T[]
-      // Legacy alias: prefer utils.math.divLength
+    pick: <T>(items: readonly T[]) => T | undefined
+    pickMany: <T>(items: readonly T[], count: number) => T[]
+    // Legacy alias: prefer utils.math.divLength
     divLength: {
       (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean): Vec[]
       (a: Vec, b: Vec, nSeg: number, options?: DivLengthOptions): Vec[]
@@ -512,6 +514,17 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
   // preventing periodic patterns and axis-aligned artifacts.
   const CELL_SCALES = [0.173, 0.097, 0.211, 0.139, 0.251, 0.163, 0.229, 0.181]
 
+  const shuffleCopy = <T>(iA: T[]): T[] => {
+    const oA = Array.from(iA)
+    for (let i = oA.length - 1; i > 0; i--) {
+      const j = Math.floor(currentHash!.random() * (i + 1))
+      const temp = oA[i]
+      oA[i] = oA[j]!
+      oA[j] = temp!
+    }
+    return oA
+  }
+
   // Create utils object for Grid/Cell constructors
   const utils: GenerativeUtils = {
     seed: {
@@ -612,15 +625,14 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
       },
     },
     array: {
-      shuffle: <T>(iA: T[]): T[] => {
-        const oA = Array.from(iA)
-        for (let i = oA.length - 1; i > 0; i--) {
-          const j = Math.floor(currentHash!.random() * (i + 1))
-          const temp = oA[i]
-          oA[i] = oA[j]!
-          oA[j] = temp!
-        }
-        return oA
+      shuffle: shuffleCopy,
+      pick: <T>(items: readonly T[]) =>
+        items.length === 0
+          ? undefined
+          : items[currentHash!.randomInt(0, items.length - 1)],
+      pickMany: <T>(items: readonly T[], count: number): T[] => {
+        if (count <= 0 || items.length === 0) return []
+        return shuffleCopy(Array.from(items)).slice(0, Math.min(count, items.length))
       },
       // Legacy alias for backwards compatibility
       divLength,

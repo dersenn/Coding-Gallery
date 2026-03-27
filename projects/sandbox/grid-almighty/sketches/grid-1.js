@@ -20,7 +20,8 @@ function resolveSettings(utils, controls) {
     rows: SET.rows,
     subdivision: {
       enabled: SET.subdivision.enabled,
-      maxLevel: 3, // utils.seed.randomInt(0, 3),
+      maxLevel: SET.subdivision.maxLevel, // utils.seed.randomInt(0, 3),
+      useRule: SET.subdivision.useRule,
       chance: SET.subdivision.chance,
       subdivisionCols: SET.subdivision.subdivisionCols,
       subdivisionRows: SET.subdivision.subdivisionRows,
@@ -79,8 +80,8 @@ export function draw(context) {
         ? {
             maxLevel: settings.subdivision.maxLevel,
             rule: (cell, level) => {
-              if (level === 0 && utils.seed.coinToss(settings.subdivision.chance) === false) return false
-              const div = utils.seed.coinToss(50) ? 2 : 4
+              if (!subdivideCondition(cell, level, settings, utils)) return false
+              const div = utils.seed.coinToss(settings.subdivision.subdivisionChance) ? 2 : 4   // e.g. mostly 2, sometimes 4
               return { cols: div, rows: div }
             }
           }
