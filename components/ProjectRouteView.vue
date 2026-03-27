@@ -41,6 +41,14 @@
         >
           <h1 class="project-overlay-type text-2xl leading-tight">{{ project.title }}</h1>
           <UButton
+            v-if="pauseEnabled"
+            :icon="paused ? 'i-heroicons-play' : 'i-heroicons-pause'"
+            @click="togglePause()"
+            size="xl"
+            color="neutral"
+            variant="ghost"
+          />
+          <UButton
             v-if="canShowControlsUI"
             :icon="showControls ? 'i-heroicons-eye-slash' : 'i-heroicons-adjustments-horizontal'"
             @click="showControls = !showControls"
@@ -109,6 +117,7 @@ const router = useRouter()
 const { getProjectById } = useProjectLoader()
 const { utils } = useGenerativeUtils()
 const { controlValues, resetLayerControls, resetAllControls } = useControls()
+const { paused, pauseEnabled, togglePause } = usePlayback()
 
 const project = computed(() => getProjectById(props.projectId))
 const basePageTitle = "Things I've Coded…"
@@ -146,6 +155,9 @@ const shortcutHints = computed(() => {
     { key: 'n', label: 'new seed' },
     { key: 'r', label: 'reload' }
   ]
+  if (pauseEnabled.value) {
+    hints.push({ key: 'space', label: paused.value ? 'play' : 'pause' })
+  }
   if (canShowControlsUI.value) {
     hints.push({ key: 'd', label: 'reset layer' })
   }
@@ -301,6 +313,12 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
     event.target instanceof HTMLSelectElement ||
     (event.target instanceof HTMLElement && event.target.isContentEditable)
   ) {
+    return
+  }
+
+  if (pauseEnabled.value && event.code === 'Space') {
+    event.preventDefault()
+    togglePause()
     return
   }
 

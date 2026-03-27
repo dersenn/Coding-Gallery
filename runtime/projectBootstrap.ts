@@ -54,7 +54,7 @@ export async function initFromProjectDefinition(
     )
   }
 
-  const { controls, utils, theme, onControlChange, registerAction } = context
+  const { controls, utils, theme, onControlChange, registerAction, runtime } = context
   const { v, rnd, coin } = shortcuts(utils)
   const controlState: ProjectContext['controls'] & { activeLayer: string } = {
     ...controls,
@@ -86,6 +86,7 @@ export async function initFromProjectDefinition(
           theme,
           utils,
           controls: controlState,
+          runtime,
           v,
           rnd,
           coin
@@ -134,7 +135,8 @@ export async function initFromProjectDefinition(
               utils,
               theme,
               onControlChange,
-              registerAction
+              registerAction,
+              runtime
             })
           }
         })

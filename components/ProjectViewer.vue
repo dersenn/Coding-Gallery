@@ -37,6 +37,7 @@ const props = defineProps<{
 
 const containerRef = ref<HTMLElement | null>(null)
 const { controlValues, initializeScopedControls } = useControls()
+const { paused, togglePause, setPaused, setPauseEnabled } = usePlayback()
 const { utils } = useGenerativeUtils()
 const route = useRoute()
 
@@ -128,6 +129,15 @@ const emitEffectiveControlsAndActions = () => {
   emit('actionsLoaded', effectiveActions)
 }
 
+const pauseCallbacks = new Set<(paused: boolean) => void>()
+watch(paused, (nextPaused) => {
+  pauseCallbacks.forEach((callback) => callback(nextPaused))
+})
+
+watch(activeLayerId, () => {
+  setPauseEnabled(false)
+})
+
 const createSvgDownloadFallback = () => {
   return () => {
     const svgElement = containerRef.value?.querySelector('svg')
@@ -205,6 +215,10 @@ const loadProject = async () => {
       actionHandlers = {}
     }
 
+    // Default to playing when a new project instance mounts.
+    setPaused(false)
+    setPauseEnabled(false)
+
     // Clear container
     containerRef.value.innerHTML = ''
     actionHandlers = {}
@@ -272,6 +286,22 @@ const loadProject = async () => {
         },
         registerAction: (key, handler) => {
           actionHandlers[key] = handler
+        },
+        runtime: {
+          get paused() {
+            return paused.value
+          },
+          enablePause: () => {
+            setPauseEnabled(true)
+          },
+          togglePause,
+          onPauseChange: (callback) => {
+            setPauseEnabled(true)
+            pauseCallbacks.add(callback)
+            return () => {
+              pauseCallbacks.delete(callback)
+            }
+          }
         }
       }
     })

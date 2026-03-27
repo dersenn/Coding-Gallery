@@ -188,6 +188,12 @@ export interface ProjectContext {
   theme: ThemeTokens
   onControlChange: (callback: (controls: ControlValues) => void) => void
   registerAction: (key: string, handler: () => void) => void
+  runtime?: {
+    paused: boolean
+    enablePause?: () => void
+    togglePause: () => void
+    onPauseChange: (callback: (paused: boolean) => void) => CleanupFunction
+  }
 }
 
 export type CleanupFunction = () => void
