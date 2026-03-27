@@ -49,13 +49,17 @@ const LAYERS: ProjectLayerDefinition[] = [
   }
 ]
 
+const metadata = {
+  "id": "canvas2d-layer-template",
+  "title": "Canvas2D Layer Template",
+  "description": "Canonical layer-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
+  "date": "2026-03",
+  "tags": ["canvas2d", "template"],
+  "hidden": true
+} satisfies Omit<ProjectDefinition, "init" | "techniques" | "defaultTechnique" | "libraries" | "controls" | "actions" | "theme" | "container" | "supportedTechniques" | "layers">
+
 const definition: ProjectDefinition = {
-  id: 'canvas2d-layer-template',
-  title: 'Canvas2D Layer Template',
-  description: 'Canonical canvas2d template with layer-based draw() pattern and RAF loop',
-  date: '2026-03',
-  tags: ['canvas2d', 'template'],
-  hidden: true,
+  ...metadata,
   techniques: ['canvas2d'],
   defaultTechnique: 'canvas2d',
   libraries: [],
