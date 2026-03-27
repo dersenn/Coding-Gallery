@@ -79,7 +79,8 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
     default: 'sea',
     options: [
       { label: 'Sea', value: 'sea' },
-      { label: 'Pool', value: 'pool' }
+      { label: 'Pool', value: 'pool' },
+      { label: 'Poison', value: 'poison' }
     ]
   },
   {

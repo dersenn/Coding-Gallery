@@ -47,6 +47,12 @@ function getSettings(controls, theme) {
         shadow: theme.black,
         foam: theme.white,
         shadowAlpha: 0.6
+      },
+      poison: {
+        water: Color.parse(theme.foreground).withAlpha(0.9).toRgbaString(),
+        shadow: theme.black,
+        foam: Color.parse(theme.white).withAlpha(0.5).toRgbaString(),
+        shadowAlpha: 0.6
       }
     },
     type: controls?.water_type ?? 'sea'
