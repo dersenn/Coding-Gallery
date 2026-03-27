@@ -31,6 +31,13 @@ const SKETCHES: ProjectSketchDefinition[] = [
     technique: 'canvas2d',
     container: { mode: '1:1', padding: '9vmin' },
     module: './sketches/grid-1.js',
+  },
+  {
+    id: 'grid-2',
+    label: 'Grid 2',
+    technique: 'canvas2d',
+    container: { mode: '1:1', padding: '9vmin' },
+    module: './sketches/grid-2.js',
   }
 ]
 
