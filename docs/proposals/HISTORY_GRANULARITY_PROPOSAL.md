@@ -1,5 +1,8 @@
 # Browser History Granularity Proposal
 
+> **Status: PROPOSAL — not yet implemented.**
+> Design is complete but no code has been written. See `Implementation Outline (Future)` section below.
+
 ## Context
 
 Browser Back/Forward now navigates within a sketch by tracking control and seed URL changes.  

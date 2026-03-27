@@ -1,5 +1,8 @@
 # GridCell Refactor Plan
 
+> **Status: ARCHIVE — implemented.**
+> `GridCell` lives in `utils/grid.ts`, exported from `types/project.ts`. Kept for design-decision reference.
+
 Split `Cell` into a pure base class and a grid-aware subclass.
 
 ## Motivation
