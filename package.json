@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "validate:projects": "node scripts/validate-projects.mjs",
+    "generate:projects": "node scripts/generate-project-index.mjs",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {

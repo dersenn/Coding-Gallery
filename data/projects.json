@@ -1,15 +1,5 @@
 [
   {
-    "id": "grid-almighty",
-    "title": "Grid Almighty",
-    "description": "Grid Almighty",
-    "date": "2026-03",
-    "tags": ["canvas2d", "grid"],
-    "hidden": false,
-    "configFile": "/projects/sandbox/grid-almighty/project.config.ts",
-    "entryFile": "/projects/sandbox/grid-almighty/index.ts"
-  },
-  {
     "id": "all-that-noise",
     "title": "All That Noise",
     "description": "All That Noise",
@@ -23,233 +13,343 @@
     "entryFile": "/projects/sandbox/all-that-noise/index.ts"
   },
   {
-    "id": "pearlymats",
-    "title": "Pearly Mats",
-    "description": "Pearly Mats",
-    "date": "2026-02",
-    "tags": ["svg", "noise", "grid"],
-    "hidden": false,
-    "configFile": "/projects/sandbox/pearlymats/project.config.ts",
-    "entryFile": "/projects/sandbox/pearlymats/index.ts"
-  },
-  {
-    "id": "ballooney",
-    "title": "Ballooney",
-    "description": "Initial standalone SVG engine sketch ported to framework utilities",
-    "date": "2024-03",
-    "tags": ["svg", "legacy-migration", "bezier", "engine"],
-    "hidden": false,
-    "configFile": "/projects/sandbox/ballooney/project.config.ts",
-    "entryFile": "/projects/sandbox/ballooney/index.ts"
-  },
-  {
-    "id": "lattice-drift",
-    "title": "Lattice Drift",
-    "description": "Warped lattice strand study migrated from mesh-01 with utility-driven subdivision controls",
-    "date": "2024-07",
-    "tags": ["svg", "legacy-migration", "grid", "subdivision", "spline"],
-    "hidden": false,
-    "configFile": "/projects/sandbox/lattice-drift/project.config.ts",
-    "entryFile": "/projects/sandbox/lattice-drift/index.ts"
-  },
-  {
-    "id": "bezier-lab",
-    "title": "Bezier Lab",
-    "description": "V2/V3 bezier experiments migrated with in-sketch variant selection",
-    "date": "2023-02",
-    "tags": ["svg", "legacy-migration", "bezier", "spline"],
-    "hidden": false,
-    "configFile": "/projects/sandbox/bezier-lab/project.config.ts",
-    "entryFile": "/projects/sandbox/bezier-lab/index.ts"
-  },
-  {
-    "id": "trails",
-    "title": "Trails",
-    "description": "Trail circles following cursor history (migrated from C4TA p5)",
-    "date": "2021-10",
-    "tags": ["p5js", "legacy-migration", "trail", "c4ta"],
-    "noControls": true,
-    "hidden": false,
-    "configFile": "/projects/c4ta/p5/trails/project.config.ts",
-    "entryFile": "/projects/c4ta/p5/trails/index.ts"
-  },
-  {
-    "id": "clicky-polygon",
-    "title": "Clicky Polygon",
-    "description": "Bouncing node polygon with click-to-add interaction (migrated from C4TA p5)",
-    "date": "2021-11",
-    "tags": ["p5js", "legacy-migration", "interaction", "geometry", "c4ta"],
-    "noControls": true,
-    "hidden": false,
-    "configFile": "/projects/c4ta/p5/clicky-polygon/project.config.ts",
-    "entryFile": "/projects/c4ta/p5/clicky-polygon/index.ts"
-  },
-  {
-    "id": "grid-division-pixels",
-    "title": "Grid Division Pixels",
-    "description": "Recursive grid pixel divisions with moving container, mapped to theme palette",
-    "date": "2021-10",
-    "tags": ["p5js", "legacy-migration", "grid", "recursion", "c4ta"],
-    "noControls": true,
-    "hidden": false,
-    "configFile": "/projects/c4ta/p5/grid-division-pixels/project.config.ts",
-    "entryFile": "/projects/c4ta/p5/grid-division-pixels/index.ts"
-  },
-  {
-    "id": "wall-of-cubes",
-    "title": "Wall Of Cubes",
-    "description": "WEBGL cube grid with noise-driven elevation and moving red/green point lights (migrated from C4TA p5)",
-    "date": "2022-01",
-    "tags": ["p5js", "legacy-migration", "webgl", "3d", "noise", "c4ta"],
-    "hidden": false,
-    "configFile": "/projects/c4ta/p5/wall-of-cubes/project.config.ts",
-    "entryFile": "/projects/c4ta/p5/wall-of-cubes/index.ts"
-  },
-  {
-    "id": "dandelion",
-    "title": "Dandelion",
-    "description": "Rotating WEBGL dandelion of sphere-distributed points with animated radial lerp (migrated from C4TA p5)",
-    "date": "2022-01",
-    "tags": ["p5js", "legacy-migration", "webgl", "3d", "sphere", "c4ta"],
-    "noControls": true,
-    "hidden": false,
-    "configFile": "/projects/c4ta/p5/dandelion/project.config.ts",
-    "entryFile": "/projects/c4ta/p5/dandelion/index.ts"
-  },
-  {
-    "id": "type-in-space",
-    "title": "Type In Space",
-    "description": "WEBGL glyph point-chunks rendered at depth with orbiting camera (migrated from C4TA p5)",
-    "date": "2022-02",
-    "tags": ["p5js", "legacy-migration", "webgl", "3d", "typography", "c4ta"],
-    "noControls": true,
-    "hidden": true,
-    "configFile": "/projects/c4ta/p5/type-in-space/project.config.ts",
-    "entryFile": "/projects/c4ta/p5/type-in-space/index.ts"
-  },
-  {
-    "id": "voronoi",
-    "title": "Voronoi",
-    "description": "Brute-force Delaunay triangulation study ported to framework SVG",
-    "date": "2024-10",
-    "tags": ["svg", "voronoi", "delaunay"],
-    "noControls": true,
-    "hidden": false,
-    "configFile": "/projects/sandbox/voronoi/project.config.ts",
-    "entryFile": "/projects/sandbox/voronoi/index.ts"
-  },
-  {
-    "id": "vera",
-    "title": "Vera",
-    "description": "Overlapping tile-line composition with switchable Vera 1 and Vera 2 variants (migrated from C4TA SVG)",
-    "date": "2021-11",
-    "tags": ["svg", "legacy-migration", "geometry", "c4ta"],
-    "prefersTheme": "light",
-    "hidden": false,
-    "configFile": "/projects/c4ta/svg/vera/project.config.ts",
-    "entryFile": "/projects/c4ta/svg/vera/index.ts"
-  },
-  {
     "id": "anni",
     "title": "Anni",
     "description": "Multi-layer geometric sketch with toggleable Anni studies",
     "date": "2026-03",
-    "tags": ["svg", "grid"],
-    "prefersTheme": "light",
+    "tags": [
+      "svg",
+      "grid"
+    ],
     "hidden": false,
+    "prefersTheme": "light",
     "configFile": "/projects/sandbox/anni/project.config.ts",
     "entryFile": "/projects/sandbox/anni/index.ts"
+  },
+  {
+    "id": "grid-almighty",
+    "title": "Grid Almighty",
+    "description": "Grid Almighty",
+    "date": "2026-03",
+    "tags": [
+      "canvas2d",
+      "grid"
+    ],
+    "hidden": false,
+    "configFile": "/projects/sandbox/grid-almighty/project.config.ts",
+    "entryFile": "/projects/sandbox/grid-almighty/index.ts"
   },
   {
     "id": "growing-things",
     "title": "Growing Things",
     "description": "Layered growth and noise playground across Canvas2D",
     "date": "2026-03",
-    "tags": ["canvas2d", "grid", "noise"],
+    "tags": [
+      "canvas2d",
+      "noise"
+    ],
     "hidden": false,
     "configFile": "/projects/sandbox/growing-things/project.config.ts",
     "entryFile": "/projects/sandbox/growing-things/index.ts"
   },
   {
-    "id": "template",
-    "title": "P5 Template",
-    "description": "Template",
-    "date": "2026-02",
-    "tags": ["template"],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_template/project.config.ts",
-    "entryFile": "/projects/_Templates/_template/index.ts"
+    "id": "svg-misc",
+    "title": "SVG Misc",
+    "description": "SVG Misc",
+    "date": "2026-03",
+    "tags": [
+      "svg",
+      "misc"
+    ],
+    "hidden": false,
+    "configFile": "/projects/sandbox/svg-misc/project.config.ts",
+    "entryFile": "/projects/sandbox/svg-misc/index.ts"
   },
   {
-    "id": "canvas2d-template",
-    "title": "Canvas2D Template",
-    "description": "Simple init-pattern canvas2d template for static or single-draw sketches",
-    "date": "2026-03",
-    "tags": ["canvas2d", "template"],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_canvas2d-template/project.config.ts",
-    "entryFile": "/projects/_Templates/_canvas2d-template/index.ts"
+    "id": "pearlymats",
+    "title": "Pearly Mats",
+    "description": "Pearly Mats",
+    "date": "2026-02",
+    "tags": [
+      "svg",
+      "noise",
+      "grid"
+    ],
+    "hidden": false,
+    "configFile": "/projects/sandbox/pearlymats/project.config.ts",
+    "entryFile": "/projects/sandbox/pearlymats/index.ts"
+  },
+  {
+    "id": "voronoi",
+    "title": "Voronoi",
+    "description": "Brute-force Delaunay triangulation study ported to framework SVG",
+    "date": "2024-10",
+    "tags": [
+      "svg",
+      "voronoi",
+      "delaunay"
+    ],
+    "hidden": false,
+    "noControls": true,
+    "configFile": "/projects/sandbox/voronoi/project.config.ts",
+    "entryFile": "/projects/sandbox/voronoi/index.ts"
+  },
+  {
+    "id": "lattice-drift",
+    "title": "Lattice Drift",
+    "description": "Warped lattice strand study migrated from mesh-01 with utility-driven subdivision controls",
+    "date": "2024-07",
+    "tags": [
+      "svg",
+      "legacy-migration",
+      "grid",
+      "subdivision",
+      "spline"
+    ],
+    "hidden": false,
+    "configFile": "/projects/sandbox/lattice-drift/project.config.ts",
+    "entryFile": "/projects/sandbox/lattice-drift/index.ts"
+  },
+  {
+    "id": "ballooney",
+    "title": "Ballooney",
+    "description": "Initial standalone SVG engine sketch ported to framework utilities",
+    "date": "2024-03",
+    "tags": [
+      "svg",
+      "legacy-migration",
+      "bezier",
+      "engine"
+    ],
+    "hidden": false,
+    "configFile": "/projects/sandbox/ballooney/project.config.ts",
+    "entryFile": "/projects/sandbox/ballooney/index.ts"
+  },
+  {
+    "id": "bezier-lab",
+    "title": "Bezier Lab",
+    "description": "V2/V3 bezier experiments migrated with in-sketch variant selection",
+    "date": "2023-02",
+    "tags": [
+      "svg",
+      "legacy-migration",
+      "bezier",
+      "spline"
+    ],
+    "hidden": false,
+    "configFile": "/projects/sandbox/bezier-lab/project.config.ts",
+    "entryFile": "/projects/sandbox/bezier-lab/index.ts"
+  },
+  {
+    "id": "dandelion",
+    "title": "Dandelion",
+    "description": "Rotating WEBGL dandelion of sphere-distributed points with animated radial lerp (migrated from C4TA p5)",
+    "date": "2022-01",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "webgl",
+      "3d",
+      "sphere",
+      "c4ta"
+    ],
+    "hidden": false,
+    "noControls": true,
+    "configFile": "/projects/c4ta/p5/dandelion/project.config.ts",
+    "entryFile": "/projects/c4ta/p5/dandelion/index.ts"
+  },
+  {
+    "id": "wall-of-cubes",
+    "title": "Wall Of Cubes",
+    "description": "WEBGL cube grid with noise-driven elevation and moving red/green point lights (migrated from C4TA p5)",
+    "date": "2022-01",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "webgl",
+      "3d",
+      "noise",
+      "c4ta"
+    ],
+    "hidden": false,
+    "configFile": "/projects/c4ta/p5/wall-of-cubes/project.config.ts",
+    "entryFile": "/projects/c4ta/p5/wall-of-cubes/index.ts"
+  },
+  {
+    "id": "clicky-polygon",
+    "title": "Clicky Polygon",
+    "description": "Bouncing node polygon with click-to-add interaction (migrated from C4TA p5)",
+    "date": "2021-11",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "interaction",
+      "geometry",
+      "c4ta"
+    ],
+    "hidden": false,
+    "noControls": true,
+    "configFile": "/projects/c4ta/p5/clicky-polygon/project.config.ts",
+    "entryFile": "/projects/c4ta/p5/clicky-polygon/index.ts"
+  },
+  {
+    "id": "vera",
+    "title": "Vera",
+    "description": "Overlapping tile-line composition with switchable Vera 1 and Vera 2 variants (migrated from C4TA SVG)",
+    "date": "2021-11",
+    "tags": [
+      "svg",
+      "legacy-migration",
+      "geometry",
+      "c4ta"
+    ],
+    "hidden": false,
+    "prefersTheme": "light",
+    "configFile": "/projects/c4ta/svg/vera/project.config.ts",
+    "entryFile": "/projects/c4ta/svg/vera/index.ts"
+  },
+  {
+    "id": "grid-division-pixels",
+    "title": "Grid Division Pixels",
+    "description": "Recursive grid pixel divisions with moving container, mapped to theme palette",
+    "date": "2021-10",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "grid",
+      "recursion",
+      "c4ta"
+    ],
+    "hidden": false,
+    "noControls": true,
+    "configFile": "/projects/c4ta/p5/grid-division-pixels/project.config.ts",
+    "entryFile": "/projects/c4ta/p5/grid-division-pixels/index.ts"
+  },
+  {
+    "id": "trails",
+    "title": "Trails",
+    "description": "Trail circles following cursor history (migrated from C4TA p5)",
+    "date": "2021-10",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "trail",
+      "c4ta"
+    ],
+    "hidden": false,
+    "noControls": true,
+    "configFile": "/projects/c4ta/p5/trails/project.config.ts",
+    "entryFile": "/projects/c4ta/p5/trails/index.ts"
   },
   {
     "id": "canvas2d-layer-template",
     "title": "Canvas2D Layer Template",
     "description": "Canonical layer-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
     "date": "2026-03",
-    "tags": ["canvas2d", "template"],
+    "tags": [
+      "canvas2d",
+      "template"
+    ],
     "hidden": true,
     "configFile": "/projects/_Templates/_canvas2d-layer-template/project.config.ts",
     "entryFile": "/projects/_Templates/_canvas2d-layer-template/index.ts"
   },
   {
-    "id": "svg-template",
-    "title": "SVG Template",
-    "description": "SVG Template",
-    "date": "2026-02",
-    "tags": ["svg", "template"],
+    "id": "canvas2d-template",
+    "title": "Canvas2D Template",
+    "description": "Template",
+    "date": "2026-03",
+    "tags": [
+      "canvas2d",
+      "template"
+    ],
     "hidden": true,
-    "configFile": "/projects/_Templates/_svg-template/project.config.ts",
-    "entryFile": "/projects/_Templates/_svg-template/index.ts"
+    "configFile": "/projects/_Templates/_canvas2d-template/project.config.ts",
+    "entryFile": "/projects/_Templates/_canvas2d-template/index.ts"
   },
   {
     "id": "svg-animated-template",
     "title": "SVG Animated Template",
     "description": "SVG Animated Template",
     "date": "2026-02",
-    "tags": ["svg", "template"],
+    "tags": [
+      "svg",
+      "template"
+    ],
     "hidden": true,
     "configFile": "/projects/_Templates/_svg-animated-template/project.config.ts",
     "entryFile": "/projects/_Templates/_svg-animated-template/index.ts"
-  },
-  {
-    "id": "noise-field",
-    "title": "Perlin Noise Field",
-    "description": "Flow field visualization using Perlin noise",
-    "date": "2024-03",
-    "tags": ["p5js", "generative", "noise"],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_noise-field/project.config.ts",
-    "entryFile": "/projects/_Templates/_noise-field/index.ts"
   },
   {
     "id": "svg-example",
     "title": "SVG Showcase",
     "description": "One cell per SVG primitive and path mode — a live reference for the engine",
     "date": "2026-02",
-    "tags": ["svg", "grid", "reference"],
-    "prefersTheme": "light",
+    "tags": [
+      "svg",
+      "grid",
+      "reference"
+    ],
     "hidden": true,
+    "prefersTheme": "light",
     "configFile": "/projects/_Templates/_svg-example/project.config.ts",
     "entryFile": "/projects/_Templates/_svg-example/index.ts"
   },
   {
-    "id": "svg-misc",
-    "title": "Mascara Lines",
-    "description": "SVG line studies — mascara-style stroked line compositions",
-    "date": "2026-03",
-    "tags": ["svg", "lines"],
-    "hidden": false,
-    "prefersTheme": "light",
-    "configFile": "/projects/sandbox/svg-misc/project.config.ts",
-    "entryFile": "/projects/sandbox/svg-misc/index.ts"
+    "id": "svg-template",
+    "title": "SVG Template",
+    "description": "SVG Template",
+    "date": "2026-02",
+    "tags": [
+      "svg",
+      "template"
+    ],
+    "hidden": true,
+    "configFile": "/projects/_Templates/_svg-template/project.config.ts",
+    "entryFile": "/projects/_Templates/_svg-template/index.ts"
+  },
+  {
+    "id": "template",
+    "title": "P5 Template",
+    "description": "Template",
+    "date": "2026-02",
+    "tags": [
+      "template"
+    ],
+    "hidden": true,
+    "configFile": "/projects/_Templates/_template/project.config.ts",
+    "entryFile": "/projects/_Templates/_template/index.ts"
+  },
+  {
+    "id": "noise-field",
+    "title": "Perlin Noise Field",
+    "description": "Flow field visualization using Perlin noise",
+    "date": "2024-03",
+    "tags": [
+      "p5js",
+      "generative",
+      "noise"
+    ],
+    "hidden": true,
+    "configFile": "/projects/_Templates/_noise-field/project.config.ts",
+    "entryFile": "/projects/_Templates/_noise-field/index.ts"
+  },
+  {
+    "id": "type-in-space",
+    "title": "Type In Space",
+    "description": "WEBGL glyph point-chunks rendered at depth with orbiting camera (migrated from C4TA p5)",
+    "date": "2022-02",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "webgl",
+      "3d",
+      "typography",
+      "c4ta"
+    ],
+    "hidden": true,
+    "noControls": true,
+    "configFile": "/projects/c4ta/p5/type-in-space/project.config.ts",
+    "entryFile": "/projects/c4ta/p5/type-in-space/index.ts"
   }
 ]

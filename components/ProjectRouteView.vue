@@ -76,12 +76,15 @@
       v-if="project"
       class="absolute inset-x-0 bottom-0 z-10 flex justify-center pb-3 pointer-events-none"
     >
-      <div class="project-shortcut-pill flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 py-1.5 rounded-full backdrop-blur-sm text-[11px]">
+      <div class="project-shortcut-pill pointer-events-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-3 py-1.5 rounded-full backdrop-blur-sm text-[11px]">
         <template v-for="hint in shortcutHints" :key="hint.key">
-          <span class="whitespace-nowrap">
+          <button
+            class="whitespace-nowrap bg-transparent border-none p-0 text-inherit font-inherit leading-none cursor-pointer hover:opacity-70 transition-opacity"
+            @click="hint.action()"
+          >
             <span class="font-mono project-text-muted">[{{ hint.key }}]</span>
             {{ hint.label }}
-          </span>
+          </button>
         </template>
         <span class="whitespace-nowrap">
           <span class="project-text-muted">seed: </span>
@@ -150,21 +153,34 @@ const hasSvgDownloadAction = computed(() => {
 const hasPngDownloadAction = computed(() => {
   return visibleActions.value.some((action) => action.key === 'download-png')
 })
+const doReload = async () => {
+  const randomReloadSelection = getPearlymatsReloadColorSelection()
+  if (randomReloadSelection) {
+    await router.push({
+      query: {
+        ...route.query,
+        selectedPaletteIndices: randomReloadSelection
+      }
+    })
+  }
+  viewerInstanceKey.value += 1
+}
+
 const shortcutHints = computed(() => {
-  const hints: Array<{ key: string; label: string }> = [
-    { key: 'n', label: 'new seed' },
-    { key: 'r', label: 'reload' }
+  const hints: Array<{ key: string; label: string; action: () => void }> = [
+    { key: 'n', label: 'new seed', action: () => { void handleControlAction('new-seed') } },
+    { key: 'r', label: 'reload', action: () => { void doReload() } }
   ]
   if (pauseEnabled.value) {
-    hints.push({ key: 'space', label: paused.value ? 'play' : 'pause' })
+    hints.push({ key: 'space', label: paused.value ? 'play' : 'pause', action: togglePause })
   }
   if (canShowControlsUI.value) {
-    hints.push({ key: 'd', label: 'reset layer' })
+    hints.push({ key: 'd', label: 'reset layer', action: () => { void handleControlAction('reset-layer-controls') } })
   }
   if (hasSvgDownloadAction.value) {
-    hints.push({ key: 's', label: 'save SVG' })
+    hints.push({ key: 's', label: 'save SVG', action: () => { void handleControlAction('download-svg') } })
   } else if (hasPngDownloadAction.value) {
-    hints.push({ key: 's', label: 'save PNG' })
+    hints.push({ key: 's', label: 'save PNG', action: () => { void handleControlAction('download-png') } })
   }
   return hints
 })
@@ -324,16 +340,7 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
 
   if (event.key.toLowerCase() === 'r') {
     event.preventDefault()
-    const randomReloadSelection = getPearlymatsReloadColorSelection()
-    if (randomReloadSelection) {
-      await router.push({
-        query: {
-          ...route.query,
-          selectedPaletteIndices: randomReloadSelection
-        }
-      })
-    }
-    viewerInstanceKey.value += 1
+    void doReload()
     return
   }
 
