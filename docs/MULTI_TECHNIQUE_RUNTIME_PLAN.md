@@ -1,5 +1,11 @@
 # Multi-Technique Runtime Plan
 
+> **Status: PARTIALLY IMPLEMENTED**
+> - **Phase 1 (contracts)** — done: `Technique` type and `ProjectModule.layers[]` in `types/project.ts`.
+> - **Phase 2 (generalized runtime pilot)** — done: `singleActiveLayerSetup/Manager` in `runtime/layerRuntime.ts`; `growing-things` is the reference multi-technique project.
+> - **Phase 3 (incremental adoption)** — pending: migrate more SVG-layer projects to generalized runtime.
+> - **Phase 4 (consolidation)** — pending: reassess/retire SVG-specific helper.
+
 Plan for supporting multiple rendering techniques (initially SVG, p5js and 2D canvas)
 within the same project architecture, while preserving existing sketches and
 avoiding a disruptive all-at-once migration.
@@ -266,48 +272,48 @@ Notes:
 
 ## Implementation checklist
 
-### Phase 1 checklist (contracts + metadata, no behavior change)
+### Phase 1 checklist (contracts + metadata, no behavior change) ✅
 
-- [ ] Add canonical `Technique` type in `types/project.ts`.
-- [ ] Add optional `ProjectModule` fields:
-  - [ ] `supportedTechniques?: Technique[]`
-  - [ ] `defaultTechnique?: Technique`
-- [ ] Define a technique-aware layer definition type for upcoming runtime work.
-- [ ] Decide whether to add optional `techniques` and `layers` to
+- [x] Add canonical `Technique` type in `types/project.ts`.
+- [x] Add optional `ProjectModule` fields:
+  - [x] `supportedTechniques?: Technique[]`
+  - [x] `defaultTechnique?: Technique`
+- [x] Define a technique-aware layer definition type for upcoming runtime work.
+- [x] Decide whether to add optional `techniques` and `layers` to
       `data/projects.json` in this phase or defer to Phase 2.
-- [ ] Keep all existing projects functioning unchanged when new fields are
+- [x] Keep all existing projects functioning unchanged when new fields are
       absent.
 
-### Phase 2 checklist (generalized runtime pilot)
+### Phase 2 checklist (generalized runtime pilot) ✅
 
-- [ ] Introduce a technique-agnostic single-active layer runtime helper
-      alongside the SVG-specific one.
-- [ ] Add runtime capability flags/handlers for export actions by technique.
-- [ ] Pilot with one project that has at least two layers using different
-      techniques.
-- [ ] Auto-inject a layer select control when `layers.length > 1`.
-- [ ] Keep layer select out of UI when only one layer exists.
+- [x] Introduce a technique-agnostic single-active layer runtime helper
+      alongside the SVG-specific one. (`singleActiveLayerSetup/Manager` in `runtime/layerRuntime.ts`)
+- [x] Add runtime capability flags/handlers for export actions by technique.
+- [x] Pilot with one project that has at least two layers using different
+      techniques. (`growing-things`: canvas2d + p5)
+- [x] Auto-inject a layer select control when `layers.length > 1`.
+- [x] Keep layer select out of UI when only one layer exists.
 
-### Layer module contract checklist
+### Layer module contract checklist ✅
 
-- [ ] Standardize layer module export to `draw(...)` for all techniques.
-- [ ] Replace technique-specific names like `drawGridCore` in metadata-driven
+- [x] Standardize layer module export to `draw(...)` for all techniques.
+- [x] Replace technique-specific names like `drawGridCore` in metadata-driven
       paths with `draw` as canonical entry.
-- [ ] Define per-technique draw context injection:
-  - [ ] SVG layers receive `svg`, `frame`, shared utilities.
-  - [ ] Canvas2d layers receive `canvas`, `ctx`/wrapper helpers, `frame`,
+- [x] Define per-technique draw context injection:
+  - [x] SVG layers receive `svg`, `frame`, shared utilities.
+  - [x] Canvas2d layers receive `canvas`, `ctx`/wrapper helpers, `frame`,
         shared utilities.
-  - [ ] p5 layers receive p5 instance/context plus shared utilities.
-- [ ] Ensure draw signature is deterministic and seed-safe across techniques.
+  - [x] p5 layers receive p5 instance/context plus shared utilities.
+- [x] Ensure draw signature is deterministic and seed-safe across techniques.
 
-### Minimal project `index.ts` checklist
+### Minimal project `index.ts` checklist ✅
 
-- [ ] Introduce metadata-driven bootstrap utility that reads project/layer
-      definitions and mounts runtime automatically.
-- [ ] Keep project `index.ts` focused on:
-  - [ ] optional controls/actions/theme overrides
-  - [ ] delegating to generic bootstrap (`initFromProjectDefinition(...)`)
-- [ ] Preserve manual setup escape hatch for advanced/custom sketches.
+- [x] Introduce metadata-driven bootstrap utility that reads project/layer
+      definitions and mounts runtime automatically. (`project.config.ts` + `runtime/projectBootstrap.ts`)
+- [x] Keep project `index.ts` focused on:
+  - [x] optional controls/actions/theme overrides
+  - [x] delegating to generic bootstrap (`initFromProjectDefinition(...)`)
+- [x] Preserve manual setup escape hatch for advanced/custom sketches.
 
 ## Proposed TypeScript contract sketch
 

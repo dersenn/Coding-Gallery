@@ -1,5 +1,8 @@
 # Standalone Export Sketch (Project and Layer)
 
+> **Status: PROPOSAL — not yet implemented.**
+> Design is fleshed out (phases A–D), but no framework code has been written. Open decisions remain unresolved.
+
 Design sketch for exporting a gallery project (or a single layer) into a runnable standalone package outside this Nuxt sandbox.
 
 ## Goal
