@@ -150,7 +150,7 @@ export async function init(
     }
 
     onControlChange((newControls) => {
-      // Step 5: apply control updates and redraw the base layer deterministically.
+      // Step 5: apply control updates and redraw the base sketch deterministically.
       const prevFps = controlState.fps
       syncControlState(controlState, newControls)
 

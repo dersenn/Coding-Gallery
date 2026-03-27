@@ -16,11 +16,11 @@ Status labels: `[IMPLEMENTED]` — current behaviour; `[PARTIAL]` — phases 1+2
 - SVG engine details: `SVG_IMPLEMENTATION.md` `[IMPLEMENTED]`
 - Grid and Cell utilities: See main `../README.md` (Grid and Cell Utilities section) `[IMPLEMENTED]`
 - Extending GridCell per sketch (factory pattern): `GRID_CELL_EXTENSION.md` `[IMPLEMENTED]`
-- Layer runtime helper pattern (single-active layer, multi-technique): `LAYER_RUNTIME_MANAGER.md` `[IMPLEMENTED]`
+- Sketch runtime helper pattern (single-active sketch, multi-technique): `SKETCH_RUNTIME_MANAGER.md` `[IMPLEMENTED]`
 - Container sizing and layout: `CONTAINER_UTILITY.md` `[IMPLEMENTED]`
 - Lightweight canvas drawing API: `CANVAS_DRAWING_UTILITY.md` `[IMPLEMENTED]`
 - Initial control randomization reference: `INITIAL_CONTROL_RANDOMIZATION.md` `[IMPLEMENTED]`
-- Pause/resume for animated layers (`runtime?.enablePause?.()`, `runtime?.paused`, `runtime?.onPauseChange`): see `../README.md` Pause/Resume section and `../composables/usePlayback.ts` `[IMPLEMENTED]`
+- Pause/resume for animated sketches (`runtime?.enablePause?.()`, `runtime?.paused`, `runtime?.onPauseChange`): see `../README.md` Pause/Resume section and `../composables/usePlayback.ts` `[IMPLEMENTED]`
 - Project config migration playbook: `PROJECT_CONFIG_MIGRATION_PLAYBOOK.md` `[IMPLEMENTED]`
 - Agent prompt preambles and naming guidance: `AGENT_PROMPT_PREAMBLES.md` `[IMPLEMENTED]`
 - Multi-technique runtime (phases 1+2 done; phases 3+4 pending): `MULTI_TECHNIQUE_RUNTIME_PLAN.md` `[PARTIAL]`
@@ -32,7 +32,7 @@ Status labels: `[IMPLEMENTED]` — current behaviour; `[PARTIAL]` — phases 1+2
 
 ### Proposals (not yet built)
 
-- Standalone source export (project/layer detachment): `proposals/STANDALONE_EXPORT_SKETCH.md` `[PROPOSAL]`
+- Standalone source export (project/sketch detachment): `proposals/STANDALONE_EXPORT_SKETCH.md` `[PROPOSAL]`
 - Browser history granularity (milestone vs transient states): `proposals/HISTORY_GRANULARITY_PROPOSAL.md` `[PROPOSAL]`
 
 ### Archive (completed, kept for design reference)

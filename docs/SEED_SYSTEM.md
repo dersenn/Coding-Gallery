@@ -79,11 +79,11 @@ onControlChange((next) => {
 
 This is a per-sketch performance concern, not a correctness requirement. The `reset()` call before `buildStructure()` remains necessary either way.
 
-## Multi-layer sketches: per-layer PRNG instances
+## Multi-sketch sketches: per-sketch PRNG instances
 
-When a sketch has independently toggled layers, `reset()` alone is insufficient. Even after reset, if layer B draws before layer A, toggling B off shifts A's stream to position 0 instead of position N — reshuffling A's output.
+When a sketch has independently toggled sketches, `reset()` alone is insufficient. Even after reset, if sketch B draws before sketch A, toggling B off shifts A's stream to position 0 instead of position N — reshuffling A's output.
 
-The fix is a separate `GenerativeUtils` instance per layer, each created fresh from the current seed at the top of `draw()`:
+The fix is a separate `GenerativeUtils` instance per sketch, each created fresh from the current seed at the top of `draw()`:
 
 ```ts
 import { createGenerativeUtils } from '~/utils/generative'
@@ -98,9 +98,9 @@ const draw = () => {
 }
 ```
 
-Both instances are seeded from the same string, so "new seed" reshuffles both layers in tandem. Creating them inside `draw()` ensures they always reflect the current seed, including after pressing `n`.
+Both instances are seeded from the same string, so "new seed" reshuffles both sketches in tandem. Creating them inside `draw()` ensures they always reflect the current seed, including after pressing `n`.
 
-Use this pattern when layers can be independently toggled and each must produce stable output regardless of which other layers are active. See `projects/c4ta/svg/vera/index.ts` for a working example.
+Use this pattern when sketches can be independently toggled and each must produce stable output regardless of which other sketches are active. See `projects/c4ta/svg/vera/index.ts` for a working example.
 
 ## Troubleshooting checklist
 

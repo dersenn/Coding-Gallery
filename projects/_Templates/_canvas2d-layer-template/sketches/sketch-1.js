@@ -1,9 +1,9 @@
 import { shortcuts } from '~/types/project'
 
 /**
- * Canvas2D Layer Template — animated layer with RAF loop.
+ * Canvas2D Sketch Template — animated sketch with RAF loop.
  *
- * The layer runtime calls draw(context) once on mount and again on
+ * The sketch runtime calls draw(context) once on mount and again on
  * control changes. Resize and cleanup are handled automatically.
  *
  * Context shape:

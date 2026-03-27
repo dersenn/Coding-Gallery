@@ -11,7 +11,7 @@ Control defaults are initialized in `useControls` from control schema defaults, 
 
 In practice, the order is:
 
-1. `project.config.ts` controls are normalized to shared/layer scopes.
+1. `project.config.ts` controls are normalized to shared/sketch scopes.
 2. `initializeScopedControls(...)` builds values from defaults.
 3. Query params override those defaults.
 
@@ -22,8 +22,8 @@ Inject randomized defaults **in `ProjectViewer.loadProject()` before `initialize
 Why:
 
 - It affects first-run values cleanly.
-- It keeps randomization in one place for all techniques/layers.
-- It does not require per-layer draw/init hacks.
+- It keeps randomization in one place for all techniques/sketches.
+- It does not require per-sketch draw/init hacks.
 
 ## Important query behavior
 

@@ -13,7 +13,7 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition,
+  ProjectSketchDefinition,
   RuntimeActionCapabilities,
   ScopedProjectActions,
   ScopedProjectControls
@@ -48,11 +48,11 @@ let isLoading = ref(true)
 let error = ref<string | null>(null)
 const scopedProjectControls = ref<ScopedProjectControls>({
   shared: [],
-  byLayer: {}
+  bySketch: {}
 })
 const scopedProjectActions = ref<ScopedProjectActions>({
   shared: [],
-  byLayer: {}
+  bySketch: {}
 })
 const hasInjectedSvgAction = ref(false)
 const hasInjectedPngAction = ref(false)
@@ -63,7 +63,7 @@ const emit = defineEmits<{
   actionsLoaded: [actions: ProjectActionDefinition[]]
 }>()
 
-// Canonical project config + layer-module loaders.
+// Canonical project config + sketch-module loaders.
 const projectConfigModules = import.meta.glob('~/projects/**/project.config.ts') as Record<
   string,
   () => Promise<{ default: ProjectDefinition }>
@@ -85,44 +85,44 @@ const DOWNLOAD_PNG_ACTION: ProjectActionDefinition = {
 
 const activeDefinition = ref<ProjectDefinition | null>(null)
 const hasSvgTechnique = computed(() => {
-  const layers = activeDefinition.value?.layers ?? []
-  return layers.some((layer) => layer.technique === 'svg')
+  const sketches = activeDefinition.value?.sketches ?? []
+  return sketches.some((sketch) => sketch.technique === 'svg')
 })
 const hasCanvas2dTechnique = computed(() => {
-  const layers = activeDefinition.value?.layers ?? []
-  return layers.some((layer) => layer.technique === 'canvas2d')
+  const sketches = activeDefinition.value?.sketches ?? []
+  return sketches.some((sketch) => sketch.technique === 'canvas2d')
 })
 const themePreference = computed(() => props.project.prefersTheme ?? 'dark')
 const viewerBackground = computed(() => resolveTheme(undefined, themePreference.value).background)
-const defaultLayerId = computed(() => {
-  const layers = activeDefinition.value?.layers ?? []
-  return layers.find((layer) => layer.defaultActive)?.id ?? layers[0]?.id
+const defaultSketchId = computed(() => {
+  const sketches = activeDefinition.value?.sketches ?? []
+  return sketches.find((sketch) => sketch.defaultActive)?.id ?? sketches[0]?.id
 })
-const activeLayerId = computed(() => {
-  const raw = controlValues.value.activeLayer
+const activeSketchId = computed(() => {
+  const raw = controlValues.value.activeSketch
   if (typeof raw === 'string' && raw.length > 0) return raw
-  return defaultLayerId.value
+  return defaultSketchId.value
 })
 const runtimeCapabilities = computed<RuntimeActionCapabilities>(() => {
-  const activeLayer = (activeDefinition.value?.layers ?? []).find((layer) => layer.id === activeLayerId.value)
+  const activeSketch = (activeDefinition.value?.sketches ?? []).find((sketch) => sketch.id === activeSketchId.value)
   return {
-    canDownloadSvg: activeLayer?.technique === 'svg',
-    canDownloadPng: activeLayer?.technique === 'canvas2d'
+    canDownloadSvg: activeSketch?.technique === 'svg',
+    canDownloadPng: activeSketch?.technique === 'canvas2d'
   }
 })
 
 const hasActionKey = (actions: ScopedProjectActions, actionKey: string) => {
   if (actions.shared.some((action) => action.key === actionKey)) return true
-  return Object.values(actions.byLayer).some((layerActions) => {
+  return Object.values(actions.bySketch).some((layerActions) => {
     return layerActions.some((action) => action.key === actionKey)
   })
 }
 
 const emitEffectiveControlsAndActions = () => {
-  const effectiveControls = resolveEffectiveScopedControls(activeLayerId.value, scopedProjectControls.value)
+  const effectiveControls = resolveEffectiveScopedControls(activeSketchId.value, scopedProjectControls.value)
   emit('controlsLoaded', effectiveControls)
   const effectiveActions = resolveEffectiveScopedActions({
-    activeLayerId: activeLayerId.value,
+    activeSketchId: activeSketchId.value,
     scopedActions: scopedProjectActions.value,
     capabilities: runtimeCapabilities.value
   })
@@ -134,7 +134,7 @@ watch(paused, (nextPaused) => {
   pauseCallbacks.forEach((callback) => callback(nextPaused))
 })
 
-watch(activeLayerId, () => {
+watch(activeSketchId, () => {
   setPauseEnabled(false)
 })
 
@@ -251,9 +251,9 @@ const loadProject = async () => {
     }
     initializeScopedControls({
       sharedControls: scopedProjectControls.value.shared,
-      layerControlsById: scopedProjectControls.value.byLayer
+      layerControlsById: scopedProjectControls.value.bySketch
     }, {
-      activeLayerId: defaultLayerId.value
+      activeSketchId: defaultSketchId.value
     })
     emitEffectiveControlsAndActions()
 
@@ -261,18 +261,18 @@ const loadProject = async () => {
     cleanup = await initFromProjectDefinition({
       definition,
       container: containerRef.value,
-      loadLayerModule: async (layer: ProjectLayerDefinition) => {
+      loadSketchModule: async (sketch: ProjectSketchDefinition) => {
         const baseDir = resolvedConfigKey.split('/').slice(0, -1).join('/')
-        const normalizedLayerPath = layer.module.startsWith('./')
-          ? `${baseDir}/${layer.module.slice(2)}`
-          : `${baseDir}/${layer.module}`
+        const normalizedLayerPath = sketch.module.startsWith('./')
+          ? `${baseDir}/${sketch.module.slice(2)}`
+          : `${baseDir}/${sketch.module}`
         const resolvedLayerKey = resolveGlobKey(normalizedLayerPath, layerModules)
           ?? resolveGlobKey(normalizedLayerPath.replace(/\.js$/, '.ts'), layerModules)
           ?? resolveGlobKey(normalizedLayerPath.replace(/\.ts$/, '.js'), layerModules)
         const loader = resolvedLayerKey ? layerModules[resolvedLayerKey] : undefined
         if (!loader) {
           throw new Error(
-            `Layer module not found for project "${definition.id}": ${normalizedLayerPath}`
+            `Sketch module not found for project "${definition.id}": ${normalizedLayerPath}`
           )
         }
         return loader()
@@ -333,7 +333,7 @@ watch(controlValues, (newValues) => {
 }, { deep: true })
 
 watch(
-  () => controlValues.value.activeLayer,
+  () => controlValues.value.activeSketch,
   () => {
     emitEffectiveControlsAndActions()
   }
@@ -350,9 +350,9 @@ watch(
     if (!activeDefinition.value) return
     initializeScopedControls({
       sharedControls: scopedProjectControls.value.shared,
-      layerControlsById: scopedProjectControls.value.byLayer
+      layerControlsById: scopedProjectControls.value.bySketch
     }, {
-      activeLayerId: defaultLayerId.value
+      activeSketchId: defaultSketchId.value
     })
     emitEffectiveControlsAndActions()
   }

@@ -2,7 +2,7 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition
+  ProjectSketchDefinition
 } from '~/types/project'
 
 const ANNI_LAYER_OPTIONS = [
@@ -25,8 +25,8 @@ const ANNI_CONTROLS: ProjectControlDefinition[] = [
     controls: [
       {
         type: 'select',
-        label: 'Layer',
-        key: 'activeLayer',
+        label: 'Sketch',
+        key: 'activeSketch',
         hideLabel: true,
         default: ANNI_DEFAULT_LAYER,
         options: ANNI_LAYER_OPTIONS.map((option) => ({ ...option }))
@@ -39,7 +39,7 @@ const ANNI_CONTROLS: ProjectControlDefinition[] = [
     label: 'Composition Settings',
     collapsible: true,
     defaultOpen: false,
-    visibleWhenSelectKey: 'activeLayer',
+    visibleWhenSelectKey: 'activeSketch',
     visibleWhenSelectValue: 'anni-1',
     controls: [
       {
@@ -59,13 +59,13 @@ const ANNI_ACTIONS: ProjectActionDefinition[] = [
   { key: 'download-svg', label: 'Download SVG' }
 ]
 
-const ANNI_LAYERS: ProjectLayerDefinition[] = [
+const ANNI_SKETCHES: ProjectSketchDefinition[] = [
   {
     id: 'anni-1',
     label: 'Orange, Black and White (1926/27)',
     technique: 'svg',
     container: { mode: '2:3', padding: '3vmin' },
-    module: './layers/anni1.js',
+    module: './sketches/anni1.js',
     defaultActive: true
   },
   {
@@ -73,14 +73,14 @@ const ANNI_LAYERS: ProjectLayerDefinition[] = [
     label: 'Anni 2',
     technique: 'svg',
     container: { mode: '1:1', padding: '3vmin' },
-    module: './layers/anni2.js'
+    module: './sketches/anni2.js'
   }
 ]
 
 const metadata = {
   "id": "anni",
   "title": "Anni",
-  "description": "Multi-layer geometric sketch with toggleable Anni studies",
+  "description": "Multi-sketch geometric sketch with toggleable Anni studies",
   "date": "2026-03",
   "tags": [
     "svg",
@@ -88,7 +88,7 @@ const metadata = {
   ],
   "prefersTheme": "light",
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'layers' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const definition: ProjectDefinition = {
   ...metadata,
@@ -98,7 +98,7 @@ const definition: ProjectDefinition = {
   controls: ANNI_CONTROLS,
   actions: ANNI_ACTIONS,
   container: ANNI_CONTAINER,
-  layers: ANNI_LAYERS
+  sketches: ANNI_SKETCHES
 }
 
 export default definition

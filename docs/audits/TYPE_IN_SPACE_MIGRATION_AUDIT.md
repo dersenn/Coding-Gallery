@@ -8,7 +8,7 @@ Scope: `projects/c4ta/p5/type-in-space/index.ts`
 ### keep
 - Kept the core WEBGL composition: orthographic camera view, orbit interaction, and rotating camera path around the origin.
 - Kept glyph generation from font outlines using `textBounds` and `textToPoints` for the letter `C`.
-- Kept three chunk layers rendered as point-traced line shapes with RGB depth separation.
+- Kept three chunk sketches rendered as point-traced line shapes with RGB depth separation.
 
 ### replace now
 - Replaced legacy global script setup with framework module contract `init(container, context)` and explicit cleanup.

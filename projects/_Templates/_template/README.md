@@ -302,7 +302,7 @@ export async function init(
 
 ## More Templates
 
-- **Canvas2D (animated, recommended)**: `projects/_Templates/_canvas2d-layer-template/`
+- **Canvas2D (animated, recommended)**: `projects/_Templates/_canvas2d-sketch-template/`
 - **Canvas2D (static/simple)**: `projects/_Templates/_canvas2d-template/`
 - **SVG Static**: `projects/_Templates/_svg-template/`
 - **SVG Animated**: `projects/_Templates/_svg-animated-template/`

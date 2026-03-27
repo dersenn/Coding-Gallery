@@ -197,7 +197,7 @@ export interface GenerativeUtils {
     perlin2D: (x: number, y: number) => number
     perlin3D: (x: number, y: number, z: number) => number
     // Deterministic float in [0, 1) for an arbitrary key tuple.
-    // Seed-dependent and order-independent — safe for toggleable layers.
+    // Seed-dependent and order-independent — safe for toggleable sketches.
     cell: (...keys: number[]) => number
   }
   math: {

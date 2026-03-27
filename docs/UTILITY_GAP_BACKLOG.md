@@ -92,7 +92,7 @@ Central list of reusable utility candidates discovered during sketch migrations.
 - ID: `grid-traversal-order`
   - Status: `candidate`
   - Need: Optional traversal mode for `Grid.forEach`/`map` (row-major default, optional column-major) to support direction-dependent progressive pattern logic without changing `row`/`col`, `index`, or `at(row,col)` semantics.
-  - Seen in: `projects/svg/anni/layers/anni1.js` (neighbor-influenced cell modes), anticipated for future left-to-right progressive pattern sketches.
+  - Seen in: `projects/svg/anni/sketches/anni1.js` (neighbor-influenced cell modes), anticipated for future left-to-right progressive pattern sketches.
   - Notes: Keep this iteration-only and backward-compatible; avoid mode-dependent indexing conversions to prevent breaking existing cell/index logic.
 
 - ID: `grid-irregular-track-sizing`
@@ -108,9 +108,9 @@ Central list of reusable utility candidates discovered during sketch migrations.
 
 - ID: `coordinate-cell-hash`
   - Status: `implemented`
-  - Need: deterministic float in `[0, 1)` keyed by an arbitrary tuple of discrete values (layer ID, channel ID, col, row, etc.), independent of draw order and PRNG stream position.
+  - Need: deterministic float in `[0, 1)` keyed by an arbitrary tuple of discrete values (sketch ID, channel ID, col, row, etc.), independent of draw order and PRNG stream position.
   - Seen in: `projects/c4ta/svg/vera/index.ts` (as `stableUnit`/`stableIndex`), `projects/svg/lattice-drift/index.ts` (inline `simplex2` mixing in `rowColor`)
-  - Notes: implemented as `utils.noise.cell(...keys)` in `utils/generative.ts`. Uses seeded `noise2D` with non-axis-aligned irrational scale factors to map key tuples to uncorrelated values. Prefer over manual `simplex2` mixing whenever per-cell stable randomness is needed. Active user: `projects/svg/lattice-drift/index.ts` (row colors). Vera originally used this but was later refactored to per-layer PRNG instances — a clearer pattern for the multi-layer toggle case.
+  - Notes: implemented as `utils.noise.cell(...keys)` in `utils/generative.ts`. Uses seeded `noise2D` with non-axis-aligned irrational scale factors to map key tuples to uncorrelated values. Prefer over manual `simplex2` mixing whenever per-cell stable randomness is needed. Active user: `projects/svg/lattice-drift/index.ts` (row colors). Vera originally used this but was later refactored to per-sketch PRNG instances — a clearer pattern for the multi-sketch toggle case.
 
 ### Geometry and grid composition
 
@@ -137,33 +137,33 @@ Central list of reusable utility candidates discovered during sketch migrations.
 - ID: `dense-grid-raster-runtime`
   - Status: `candidate`
   - Need: Canvas-first rendering path for dense grid/cellular sketches where SVG node counts become a bottleneck (for example 60+ row CA/noise fields), while keeping deterministic seed behavior and an optional SVG export workflow.
-  - Seen in: `projects/svg/growing-things/index.ts`, `projects/svg/growing-things/layers/grid-noise-animated-canvas.js`
+  - Seen in: `projects/svg/growing-things/index.ts`, `projects/svg/growing-things/sketches/grid-noise-animated-canvas.js`
   - Notes:
     - Keep existing control/runtime contracts where possible (`ProjectContext`, seeded utils, redraw lifecycle).
     - Prefer a shared pattern/helper over sketch-local rewrites once at least 2 sketches need this.
     - Consider hybrid mode: interactive Canvas preview + explicit SVG export pass.
 
-- ID: `multi-layer-svg-stacking`
+- ID: `multi-sketch-svg-stacking`
   - Status: `deferred`
-  - Need: Multi-layer sketches (one SVG per layer, toggleable) may need overlay positioning (`el.style.position = 'relative'` + absolute layer stages) when true stacked visibility is required.
+  - Need: Multi-sketch sketches (one SVG per sketch, toggleable) may need overlay positioning (`el.style.position = 'relative'` + absolute sketch stages) when true stacked visibility is required.
   - Seen in: `projects/svg/anni/index.ts`
-  - Notes: `anni` now uses a single-active layer runtime helper (`runtime/layerRuntime.ts`) instead of stacked DOM overlays. Keep this deferred until a sketch needs simultaneously mounted/toggleable layer stacks.
+  - Notes: `anni` now uses a single-active sketch runtime helper (`runtime/sketchRuntime.ts`) instead of stacked DOM overlays. Keep this deferred until a sketch needs simultaneously mounted/toggleable sketch stacks.
 
-- ID: `layer-runtime-manager`
+- ID: `sketch-runtime-manager`
   - Status: `implemented`
-  - Need: Small framework helper for layer lifecycle wiring (`mount/switch/draw/export`) so per-layer SVG composition is less sketch-specific boilerplate.
-  - Seen in: `projects/svg/anni/index.ts` (single-active-layer flow), expectation from layered sketches like Vera-style composition.
-  - Notes: Implemented in `runtime/layerRuntime.ts` and re-exported from `types/project.ts` as: `singleActiveLayerManager(...)` and `singleActiveLayerSetup(...)`. Sketches keep a concise `{ label, canvas, draw }` registry while setup generates runtime definitions from injected runtime context (`createContext`, `resolveRuntimeName`). Naming guidance used by this flow: `canvas` = sizing config, `container` = DOM host, `svg` = render surface, `frame` = drawable geometry.
+  - Need: Small framework helper for sketch lifecycle wiring (`mount/switch/draw/export`) so per-sketch SVG composition is less sketch-specific boilerplate.
+  - Seen in: `projects/svg/anni/index.ts` (single-active-sketch flow), expectation from layered sketches like Vera-style composition.
+  - Notes: Implemented in `runtime/sketchRuntime.ts` and re-exported from `types/project.ts` as: `singleActiveSketchManager(...)` and `singleActiveSketchSetup(...)`. Sketches keep a concise `{ label, canvas, draw }` registry while setup generates runtime definitions from injected runtime context (`createContext`, `resolveRuntimeName`). Naming guidance used by this flow: `canvas` = sizing config, `container` = DOM host, `svg` = render surface, `frame` = drawable geometry.
 
-- ID: `layer-runtime-type-naming-polish`
+- ID: `sketch-runtime-type-naming-polish`
   - Status: `candidate`
-  - Need: Optionally shorten verbose layer-runtime type names for local readability (for example `SingleActiveSvgLayerCreateArgs` -> `LayerCreateArgs`) while keeping runtime object vocabulary stable (`canvas`, `container`, `svg`, `frame`).
-  - Seen in: `runtime/layerRuntime.ts`, `types/project.ts`, `projects/svg/anni/index.ts`
+  - Need: Optionally shorten verbose sketch-runtime type names for local readability (for example `SingleActiveSvgLayerCreateArgs` -> `LayerCreateArgs`) while keeping runtime object vocabulary stable (`canvas`, `container`, `svg`, `frame`).
+  - Seen in: `runtime/sketchRuntime.ts`, `types/project.ts`, `projects/svg/anni/index.ts`
   - Notes: prioritize zero-behavior-change aliasing/renames only; avoid API churn if utility is expected to expand beyond `anni`.
 
 - ID: `frame-padding-css-units`
   - Status: `candidate`
-  - Need: Single-SVG inner-frame layout currently supports a lightweight subset of padding units (`number`, `px`, `%`, `vmin`, plain numeric string). Add a shared resolver for broader CSS length support (`rem`, `em`, `vw`, `vh`, and potentially `calc(...)`) when simulating per-layer artboards.
+  - Need: Single-SVG inner-frame layout currently supports a lightweight subset of padding units (`number`, `px`, `%`, `vmin`, plain numeric string). Add a shared resolver for broader CSS length support (`rem`, `em`, `vw`, `vh`, and potentially `calc(...)`) when simulating per-sketch artboards.
   - Seen in: `projects/svg/anni/index.ts` (`resolveInsetPx(...)` in single-SVG frame mode)
   - Notes: Keep deterministic frame math and avoid layout thrash; prefer centralizing this in a utility rather than sketch-local parsing once reused.
 
@@ -175,7 +175,7 @@ Central list of reusable utility candidates discovered during sketch migrations.
 
 - ID: `control-group-conditional-visibility`
   - Status: `implemented`
-  - Need: allow control groups (`type: 'group'`) to use the same conditional visibility gates as leaf controls (`visibleWhenSelectKey`, `visibleWhenSelectValue`, `visibleWhenSelectValues`) so layer-specific groups can hide entirely when inactive.
+  - Need: allow control groups (`type: 'group'`) to use the same conditional visibility gates as leaf controls (`visibleWhenSelectKey`, `visibleWhenSelectValue`, `visibleWhenSelectValues`) so sketch-specific groups can hide entirely when inactive.
   - Seen in: `types/project.ts`, `components/ControlPanel.vue`, `projects/svg/anni/index.ts`
   - Notes: Implemented by extending `ControlGroupDefinition` with optional `visibleWhenSelect*` fields and reusing shared select-gate visibility semantics for both groups and leaf controls; behavior remains unchanged when no visibility condition is defined.
 
@@ -184,7 +184,7 @@ Central list of reusable utility candidates discovered during sketch migrations.
 - ID: `control-panel-derived-value-display`
   - Status: `candidate`
   - Need: show effective/resolved values in the control panel when a control is in an automatic mode (for example selected auto rule preset -> actual preset/rules used this draw).
-  - Seen in: `projects/svg/growing-things/index.ts`, `projects/svg/growing-things/layers/noisy-automata.js`
+  - Seen in: `projects/svg/growing-things/index.ts`, `projects/svg/growing-things/sketches/noisy-automata.js`
   - Notes: Generic panel concern, not sketch-specific. Could support optional read-only "derived value" rows or inline annotations for controls that map to runtime-selected values.
 
 ### p5 migration helpers
@@ -203,14 +203,14 @@ Central list of reusable utility candidates discovered during sketch migrations.
 
 ### Typing and iteration ergonomics
 
-- ID: `js-layer-minimal-jsdoc`
+- ID: `js-sketch-minimal-jsdoc`
   - Status: `candidate`
-  - Need: tiny shared JSDoc pattern/snippet for layer modules authored as `.js` so sketch iteration stays low-friction while preserving editor autocomplete on draw context.
-  - Seen in: `projects/svg/anni/layers/anni1.js`, `projects/svg/anni/layers/anni2.js`
+  - Need: tiny shared JSDoc pattern/snippet for sketch modules authored as `.js` so sketch iteration stays low-friction while preserving editor autocomplete on draw context.
+  - Seen in: `projects/svg/anni/sketches/anni1.js`, `projects/svg/anni/sketches/anni2.js`
   - Notes: keep this intentionally lightweight (for example one `@param` on exported draw functions) and avoid full TypeScript-style annotations inside JS files.
 
-- ID: `layer-module-export-convention`
+- ID: `sketch-module-export-convention`
   - Status: `candidate`
-  - Need: establish a templating convention for layer modules to export generic function names (for example `draw`) and alias them at import sites (`draw as drawLayerX`) so per-file naming carries identity while APIs stay uniform.
-  - Seen in: `projects/svg/anni/index.ts`, `projects/svg/anni/layers/anni1.js`, `projects/svg/anni/layers/anni2.js`
-  - Notes: keep compatibility with current layer registry pattern and apply first in templates/new sketches before retrofitting older files.
+  - Need: establish a templating convention for sketch modules to export generic function names (for example `draw`) and alias them at import sites (`draw as drawLayerX`) so per-file naming carries identity while APIs stay uniform.
+  - Seen in: `projects/svg/anni/index.ts`, `projects/svg/anni/sketches/anni1.js`, `projects/svg/anni/sketches/anni2.js`
+  - Notes: keep compatibility with current sketch registry pattern and apply first in templates/new sketches before retrofitting older files.

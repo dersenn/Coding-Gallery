@@ -2,7 +2,7 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition
+  ProjectSketchDefinition
 } from '~/types/project'
 
 const metadata = {
@@ -15,7 +15,7 @@ const metadata = {
     "misc"
   ],
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'layers' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const CONTAINER = { mode: 'full' as const }
 const TECHNIQUES = ['svg'] as const
@@ -24,13 +24,13 @@ const CONTROLS: ProjectControlDefinition[] = []
 const ACTIONS: ProjectActionDefinition[] = []
 
 
-const LAYERS: ProjectLayerDefinition[] = [
+const SKETCHES: ProjectSketchDefinition[] = [
   {
     id: 'mascara-lines',
     label: 'Mascara Lines',
     technique: 'svg',
     container: { mode: '3:4' },
-    module: './layers/mascara-lines.js',
+    module: './sketches/mascara-lines.js',
   }
 ]
 
@@ -42,7 +42,7 @@ const definition: ProjectDefinition = {
   controls: CONTROLS,
   actions: ACTIONS,
   container: CONTAINER,
-  layers: LAYERS
+  sketches: SKETCHES
 }
 
 

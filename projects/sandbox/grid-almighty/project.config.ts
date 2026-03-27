@@ -2,7 +2,7 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition
+  ProjectSketchDefinition
 } from '~/types/project'
 
 const metadata = {
@@ -15,7 +15,7 @@ const metadata = {
     "grid"
   ],
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'layers' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const CONTAINER = { mode: 'full' as const }
 const TECHNIQUES = ['canvas2d'] as const
@@ -24,13 +24,13 @@ const CONTROLS: ProjectControlDefinition[] = []
 const ACTIONS: ProjectActionDefinition[] = []
 
 
-const LAYERS: ProjectLayerDefinition[] = [
+const SKETCHES: ProjectSketchDefinition[] = [
   {
     id: 'grid-1',
     label: 'Grid 1',
     technique: 'canvas2d',
     container: { mode: '1:1', padding: '9vmin' },
-    module: './layers/grid-1.js',
+    module: './sketches/grid-1.js',
   }
 ]
 
@@ -47,7 +47,7 @@ const definition: ProjectDefinition = {
   controls: CONTROLS,
   actions: ACTIONS,
   container: CONTAINER,
-  layers: LAYERS
+  sketches: SKETCHES
 }
 
 

@@ -16,7 +16,7 @@ interface NormalizeScopedProjectConfigResult {
 }
 
 interface ResolveEffectiveActionsArgs {
-  activeLayerId?: string
+  activeSketchId?: string
   scopedActions: ScopedProjectActions
   capabilities: RuntimeActionCapabilities
 }
@@ -37,28 +37,28 @@ const flattenControls = (controls: ProjectControlDefinition[]): ControlDefinitio
   return flattened
 }
 
-const hasActiveLayerSelect = (controls: ProjectControlDefinition[]): boolean => {
+const hasActiveSketchSelect = (controls: ProjectControlDefinition[]): boolean => {
   return flattenControls(controls).some((control) => {
-    return control.type === 'select' && control.key === 'activeLayer'
+    return control.type === 'select' && control.key === 'activeSketch'
   })
 }
 
-const buildAutoLayerControl = (definition: ProjectDefinition): SelectControlDefinition | undefined => {
-  const layers = definition.layers ?? []
-  if (layers.length <= 1) return undefined
+const buildAutoSketchControl = (definition: ProjectDefinition): SelectControlDefinition | undefined => {
+  const sketches = definition.sketches ?? []
+  if (sketches.length <= 1) return undefined
 
-  const defaultLayer = layers.find((layer) => layer.defaultActive)?.id ?? layers[0]?.id
+  const defaultLayer = sketches.find((sketch) => sketch.defaultActive)?.id ?? sketches[0]?.id
   if (!defaultLayer) return undefined
 
   return {
     type: 'select',
-    label: 'Layer',
-    key: 'activeLayer',
+    label: 'Sketch',
+    key: 'activeSketch',
     hideLabel: true,
     default: defaultLayer,
-    options: layers.map((layer) => ({
-      value: layer.id,
-      label: layer.label ?? layer.id
+    options: sketches.map((sketch) => ({
+      value: sketch.id,
+      label: sketch.label ?? sketch.id
     }))
   }
 }
@@ -76,17 +76,17 @@ export const normalizeScopedProjectConfig = (
   definition: ProjectDefinition
 ): NormalizeScopedProjectConfigResult => {
   const sharedControls = [...(definition.controls ?? [])]
-  const byLayerControls: ScopedProjectControls['byLayer'] = {}
-  const byLayerActions: ScopedProjectActions['byLayer'] = {}
+  const bySketchControls: ScopedProjectControls['bySketch'] = {}
+  const bySketchActions: ScopedProjectActions['bySketch'] = {}
 
-  ;(definition.layers ?? []).forEach((layer) => {
-    byLayerControls[layer.id] = [...(layer.controls ?? [])]
-    byLayerActions[layer.id] = [...(layer.actions ?? [])]
+  ;(definition.sketches ?? []).forEach((sketch) => {
+    bySketchControls[sketch.id] = [...(sketch.controls ?? [])]
+    bySketchActions[sketch.id] = [...(sketch.actions ?? [])]
   })
 
-  const autoLayerControl = hasActiveLayerSelect(sharedControls)
+  const autoLayerControl = hasActiveSketchSelect(sharedControls)
     ? undefined
-    : buildAutoLayerControl(definition)
+    : buildAutoSketchControl(definition)
   if (autoLayerControl) {
     sharedControls.unshift(autoLayerControl)
   }
@@ -94,29 +94,29 @@ export const normalizeScopedProjectConfig = (
   return {
     controls: {
       shared: sharedControls,
-      byLayer: byLayerControls,
-      activeLayerControl: autoLayerControl
+      bySketch: bySketchControls,
+      activeSketchControl: autoLayerControl
     },
     actions: {
       shared: [...(definition.actions ?? [])],
-      byLayer: byLayerActions
+      bySketch: bySketchActions
     }
   }
 }
 
 export const resolveEffectiveScopedControls = (
-  activeLayerId: string | undefined,
+  activeSketchId: string | undefined,
   scopedControls: ScopedProjectControls
 ): ProjectControlDefinition[] => {
-  const layerControls = activeLayerId ? (scopedControls.byLayer[activeLayerId] ?? []) : []
+  const layerControls = activeSketchId ? (scopedControls.bySketch[activeSketchId] ?? []) : []
   return [...scopedControls.shared, ...layerControls]
 }
 
 export const resolveEffectiveScopedActions = (
   args: ResolveEffectiveActionsArgs
 ): ProjectActionDefinition[] => {
-  const layerActions = args.activeLayerId
-    ? (args.scopedActions.byLayer[args.activeLayerId] ?? [])
+  const layerActions = args.activeSketchId
+    ? (args.scopedActions.bySketch[args.activeSketchId] ?? [])
     : []
   return [...args.scopedActions.shared, ...layerActions].filter((action) => {
     return supportsAction(action, args.capabilities)

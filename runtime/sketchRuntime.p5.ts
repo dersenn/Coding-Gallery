@@ -1,5 +1,5 @@
 import type { CleanupFunction } from '~/types/project'
-import type { SingleActiveLayerRuntime } from '~/runtime/layerRuntime'
+import type { SingleActiveSketchRuntime } from '~/runtime/sketchRuntime'
 
 export type P5LayerInit = (container: HTMLElement) => Promise<CleanupFunction> | CleanupFunction
 
@@ -8,7 +8,7 @@ interface CreateP5LayerRuntimeArgs {
   init: P5LayerInit
 }
 
-export function createP5LayerRuntime(args: CreateP5LayerRuntimeArgs): SingleActiveLayerRuntime {
+export function createP5SketchRuntime(args: CreateP5LayerRuntimeArgs): SingleActiveSketchRuntime {
   const { parent, init } = args
   let cleanup: CleanupFunction | null = null
   let cleanupRequested = false
@@ -28,7 +28,7 @@ export function createP5LayerRuntime(args: CreateP5LayerRuntimeArgs): SingleActi
       }
     })
     .catch((error) => {
-      console.error('Failed to initialize p5 layer runtime', error)
+      console.error('Failed to initialize p5 sketch runtime', error)
     })
 
   return {

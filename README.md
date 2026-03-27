@@ -46,7 +46,7 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   ├── _Templates/            # Hidden project templates and reference examples
 │   │   ├── _template/             # p5.js starter template
 │   │   ├── _canvas2d-template/    # Canvas2D starter template (init pattern)
-│   │   ├── _canvas2d-layer-template/ # Canvas2D layer template (canonical modern pattern)
+│   │   ├── _canvas2d-sketch-template/ # Canvas2D sketch template (canonical modern pattern)
 │   │   ├── _svg-template/         # SVG static template
 │   │   ├── _svg-animated-template/ # SVG animated template
 │   │   ├── _noise-field/          # Noise field reference example (p5.js)
@@ -56,11 +56,11 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 ├── types/
 │   └── project.ts             # TypeScript interfaces
 ├── runtime/
-│   ├── projectBootstrap.ts    # Framework project/layer bootstrap orchestration
-│   ├── layerRuntime.ts        # Technique-aware single-active layer runtime
-│   ├── layerRuntime.canvas2d.ts # Canvas2D layer technique adapter
-│   ├── layerRuntime.svg.ts    # SVG layer technique adapter
-│   └── layerRuntime.p5.ts     # p5.js layer technique adapter
+│   ├── projectBootstrap.ts    # Framework project/sketch bootstrap orchestration
+│   ├── sketchRuntime.ts        # Technique-aware single-active sketch runtime
+│   ├── sketchRuntime.canvas2d.ts # Canvas2D sketch technique adapter
+│   ├── sketchRuntime.svg.ts    # SVG sketch technique adapter
+│   └── sketchRuntime.p5.ts     # p5.js sketch technique adapter
 ├── plugins/
 │   └── keyboard-shortcuts.client.ts  # Nuxt convention: global keyboard shortcut hook
 ├── server/
@@ -82,7 +82,7 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 ## Creating a New Project
 
 Choose a template based on your sketch type:
-- **Canvas2D (layer pattern, recommended for animated sketches)**: `projects/_Templates/_canvas2d-layer-template/`
+- **Canvas2D (sketch pattern, recommended for animated sketches)**: `projects/_Templates/_canvas2d-sketch-template/`
 - **Canvas2D (init pattern, for simple/static sketches)**: `projects/_Templates/_canvas2d-template/`
 - **SVG (static)**: `projects/_Templates/_svg-template/`
 - **SVG (animated)**: `projects/_Templates/_svg-animated-template/`
@@ -91,8 +91,8 @@ Choose a template based on your sketch type:
 ### 1. Copy the Template
 
 ```bash
-# Canvas2D — layer pattern (recommended for new animated sketches)
-cp -r projects/_Templates/_canvas2d-layer-template projects/sandbox/my-new-project
+# Canvas2D — sketch pattern (recommended for new animated sketches)
+cp -r projects/_Templates/_canvas2d-sketch-template projects/sandbox/my-new-project
 
 # Canvas2D — init pattern (simple/static)
 cp -r projects/_Templates/_canvas2d-template projects/sandbox/my-new-project
@@ -230,10 +230,10 @@ For SVG projects, if you do not register `download-svg`, the viewer injects a fa
 
 ### 6. Add Project Definition + Index Entry
 
-Create `project.config.ts` beside your entry file. The modern canonical pattern uses a `layers[]` array that points to individual layer modules:
+Create `project.config.ts` beside your entry file. The modern canonical pattern uses a `sketches[]` array that points to individual sketch modules:
 
 ```ts
-import type { ProjectDefinition, ProjectControlDefinition, ProjectLayerDefinition } from '~/types/project'
+import type { ProjectDefinition, ProjectControlDefinition, ProjectSketchDefinition } from '~/types/project'
 
 const CONTROLS: ProjectControlDefinition[] = [
   {
@@ -248,13 +248,13 @@ const CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
-const LAYERS: ProjectLayerDefinition[] = [
+const SKETCHES: ProjectSketchDefinition[] = [
   {
-    id: 'my-layer',
-    label: 'My Layer',
+    id: 'my-sketch',
+    label: 'My Sketch',
     technique: 'canvas2d',          // 'canvas2d' | 'svg' | 'p5'
     container: { mode: 'full' },    // 'full' | 'square' | '4:3' | { mode, padding }
-    module: './layers/my-layer.js',
+    module: './sketches/my-sketch.js',
     controls: CONTROLS,
     defaultActive: true
   }
@@ -266,16 +266,16 @@ const definition: ProjectDefinition = {
   description: 'A cool generative sketch',
   date: '2026-03',
   tags: ['canvas2d', 'generative'],
-  layers: LAYERS
+  sketches: SKETCHES
 }
 
 export default definition
 ```
 
-Each layer module (`./layers/my-layer.js`) exports a `draw(context)` function. The layer runtime handles resize, lifecycle, and cleanup automatically:
+Each sketch module (`./sketches/my-sketch.js`) exports a `draw(context)` function. The sketch runtime handles resize, lifecycle, and cleanup automatically:
 
 ```js
-// layers/my-layer.js
+// sketches/my-sketch.js
 import { shortcuts } from '~/types/project'
 
 const LOOP_BY_CANVAS = new WeakMap()
@@ -311,7 +311,7 @@ export function draw(context) {
 }
 ```
 
-**For single-file sketches** (no layers, `init()` pattern — still supported, especially for p5.js and SVG):
+**For single-file sketches** (no sketches, `init()` pattern — still supported, especially for p5.js and SVG):
 
 ```ts
 import type { ProjectDefinition, ProjectModule } from '~/types/project'
@@ -440,10 +440,10 @@ console.log('Seed:', utils.seed.current)
 
 ### Pause / Resume
 
-Animated sketches can opt into the pause button in the viewer shell by calling `runtime?.enablePause?.()` once at draw-time. The `runtime` object is available in the layer draw context:
+Animated sketches can opt into the pause button in the viewer shell by calling `runtime?.enablePause?.()` once at draw-time. The `runtime` object is available in the sketch draw context:
 
 ```js
-// layers/my-layer.js
+// sketches/my-sketch.js
 export function draw(context) {
   const { canvas, runtime } = context
 

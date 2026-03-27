@@ -14,7 +14,7 @@ const metadata = {
     "grid"
   ],
   "hidden": false
-} satisfies Omit<ProjectDefinition, "init" | "controls" | "actions" | "theme" | "container" | "supportedTechniques" | "defaultTechnique" | "layers">
+} satisfies Omit<ProjectDefinition, "init" | "controls" | "actions" | "theme" | "container" | "supportedTechniques" | "defaultTechnique" | "sketches">
 
 const definition: ProjectDefinition = {
   ...metadata,
@@ -27,7 +27,7 @@ const definition: ProjectDefinition = {
   theme: legacyModule.theme,
   container: legacyModule.container,
   supportedTechniques: legacyModule.supportedTechniques,
-  layers: legacyModule.layers
+  sketches: legacyModule.sketches
 }
 
 export default definition

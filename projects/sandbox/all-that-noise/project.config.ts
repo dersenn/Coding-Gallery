@@ -2,7 +2,7 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition
+  ProjectSketchDefinition
 } from '~/types/project'
 
 const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
@@ -369,13 +369,13 @@ const THIS_IS_WATER_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
-const LAYERS: ProjectLayerDefinition[] = [
+const SKETCHES: ProjectSketchDefinition[] = [
   {
     id: 'noise-core',
     label: 'Noise Core',
     technique: 'canvas2d',
     container: { mode: 'full' },
-    module: './layers/noise-core.js',
+    module: './sketches/noise-core.js',
     controls: NOISE_CORE_CONTROLS
   },
   {
@@ -383,7 +383,7 @@ const LAYERS: ProjectLayerDefinition[] = [
     label: 'This Is Water',
     technique: 'canvas2d',
     container: { mode: 'full' },
-    module: './layers/this-is-water.js',
+    module: './sketches/this-is-water.js',
     controls: THIS_IS_WATER_CONTROLS,
     defaultActive: true
   }
@@ -407,7 +407,7 @@ const metadata = {
     "noise"
   ],
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'layers' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const definition: ProjectDefinition = {
   ...metadata,
@@ -417,7 +417,7 @@ const definition: ProjectDefinition = {
   controls: CONTROLS,
   actions: ACTIONS,
   container: CONTAINER,
-  layers: LAYERS
+  sketches: SKETCHES
 }
 
 export default definition

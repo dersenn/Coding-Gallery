@@ -103,16 +103,16 @@ export const container = { mode: '4:3', padding: '2vmin' }
 
 The `container` field is typed as `ContainerMode | ContainerConfig` on `ProjectModule` in `types/project.ts`.
 
-## Per-layer canvases
+## Per-sketch canvases
 
-Layers that share one container-resolved artboard (e.g. vera) call `resolveContainer` once — all layers draw into the same `svg.w` / `svg.h`. If a future sketch needs separate artboards per layer, call `resolveContainer` multiple times; each call creates its own wrapper div inside the container.
+Sketches that share one container-resolved artboard (e.g. vera) call `resolveContainer` once — all sketches draw into the same `svg.w` / `svg.h`. If a future sketch needs separate artboards per sketch, call `resolveContainer` multiple times; each call creates its own wrapper div inside the container.
 
 ```typescript
 // Hypothetical two-canvas sketch
 const { el: elA, width: wA, height: hA } = resolveContainer(container, 'square')
 const { el: elB, width: wB, height: hB } = resolveContainer(container, '16:9')
-const svgA = new SVG({ parent: elA, id: 'layer-a', width: wA, height: hA })
-const svgB = new SVG({ parent: elB, id: 'layer-b', width: wB, height: hB })
+const svgA = new SVG({ parent: elA, id: 'sketch-a', width: wA, height: hA })
+const svgB = new SVG({ parent: elB, id: 'sketch-b', width: wB, height: hB })
 ```
 
 ## Implementation notes

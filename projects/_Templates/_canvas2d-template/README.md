@@ -3,7 +3,7 @@
 Lightweight template for canvas2d sketches using the `init()` pattern — a single function that runs once, sets up the canvas, and optionally handles control changes and resize.
 
 Use this template for: static/single-draw sketches, quick experiments, and sketches without a continuous animation loop.
-For animated sketches (RAF loop, noise fields, physics), use `_canvas2d-layer-template/` instead — it gives you automatic resize, cleaner lifecycle, and built-in pause support.
+For animated sketches (RAF loop, noise fields, physics), use `_canvas2d-sketch-template/` instead — it gives you automatic resize, cleaner lifecycle, and built-in pause support.
 
 ## Quick Start
 
@@ -172,7 +172,7 @@ return () => {
 }
 ```
 
-Note: the layer-based template (`_canvas2d-layer-template/`) handles resize automatically.
+Note: the sketch-based template (`_canvas2d-sketch-template/`) handles resize automatically.
 Use that template if resize correctness matters or you're adding an animation loop.
 
 ## Keyboard Shortcuts
@@ -183,7 +183,7 @@ Use that template if resize correctness matters or you're adding an animation lo
 
 ## See Also
 
-- Animated sketch (recommended for RAF loops): `projects/_Templates/_canvas2d-layer-template/`
+- Animated sketch (recommended for RAF loops): `projects/_Templates/_canvas2d-sketch-template/`
 - Main README: `/README.md`
 - Canvas API docs: `/docs/CANVAS_DRAWING_UTILITY.md`
 - Container sizing: `/docs/CONTAINER_UTILITY.md`

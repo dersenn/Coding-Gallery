@@ -1,6 +1,6 @@
-# Canvas2D Layer Template
+# Canvas2D Sketch Template
 
-Canonical template for canvas2d sketches with an animation loop. Uses the modern layer-based `draw(context)` pattern — the same approach used in **all-that-noise** and **grid-almighty**.
+Canonical template for canvas2d sketches with an animation loop. Uses the modern sketch-based `draw(context)` pattern — the same approach used in **all-that-noise** and **grid-almighty**.
 
 Use this template for: animated sketches, noise fields, grid animations, anything with a RAF loop.
 For quick static sketches without animation, `_canvas2d-template/` (init pattern) is lighter.
@@ -9,20 +9,20 @@ For quick static sketches without animation, `_canvas2d-template/` (init pattern
 
 1. **Copy this folder** and rename it:
    ```bash
-   cp -r projects/_Templates/_canvas2d-layer-template projects/sandbox/my-sketch
+   cp -r projects/_Templates/_canvas2d-sketch-template projects/sandbox/my-sketch
    ```
 
-2. **Rename the layer ID and module** in `project.config.ts`:
+2. **Rename the sketch ID and module** in `project.config.ts`:
    ```ts
    {
-     id: 'my-layer',           // used in URL params + layer switcher
-     label: 'My Layer',
-     module: './layers/my-layer.js',  // rename layers/layer-1.js to match
+     id: 'my-sketch',           // used in URL params + sketch switcher
+     label: 'My Sketch',
+     module: './sketches/my-sketch.js',  // rename sketches/sketch-1.js to match
      ...
    }
    ```
 
-3. **Add your sketch code** in `layers/layer-1.js` (or your renamed file)
+3. **Add your sketch code** in `sketches/sketch-1.js` (or your renamed file)
    inside the `draw(context)` function, between the marked comment lines.
 
 4. **Add metadata** to `data/projects.json`:
@@ -48,13 +48,13 @@ For quick static sketches without animation, `_canvas2d-template/` (init pattern
 
 ```
 my-sketch/
-├── project.config.ts   # ProjectDefinition with layers[], controls, metadata
+├── project.config.ts   # ProjectDefinition with sketches[], controls, metadata
 ├── index.ts            # Empty stub (runtime uses project.config.ts)
-└── layers/
-    └── layer-1.js      # export function draw(context) { ... }
+└── sketches/
+    └── sketch-1.js      # export function draw(context) { ... }
 ```
 
-## How the Layer Runtime Works
+## How the Sketch Runtime Works
 
 `draw(context)` is called **once on mount**. You start your own RAF loop inside it:
 
@@ -82,7 +82,7 @@ export function draw(context) {
 The runtime handles:
 - **Resize** — calls `draw()` again when the container changes size
 - **Cleanup** — canvas removed from DOM; `isConnected` check stops the loop
-- **Layer switching** — old canvas removed, new one mounted and `draw()` called fresh
+- **Sketch switching** — old canvas removed, new one mounted and `draw()` called fresh
 
 `draw()` is also called again on control changes, so the loop re-initialises with the new settings. The `LOOP_BY_CANVAS` guard prevents duplicate loops.
 
@@ -91,7 +91,7 @@ The runtime handles:
 Define controls in `project.config.ts` and access them via `context.controls`:
 
 ```js
-// In layers/layer-1.js:
+// In sketches/sketch-1.js:
 export function draw(context) {
   const { controls } = context
   const count = controls?.count ?? 40   // always provide a fallback default
@@ -223,20 +223,20 @@ canvas.cellEdges(cells, stroke, sw, { strokeAlign: 'inside', includeOuter: false
 
 `canvas.c` is the center Vec, `canvas.w` and `canvas.h` are pixel dimensions.
 
-## Multiple Layers
+## Multiple Sketches
 
-To add a second layer, add another entry to `LAYERS` in `project.config.ts` and create
-a corresponding module in `layers/`. Use a `select` control keyed `activeLayer` to let
+To add a second sketch, add another entry to `SKETCHES` in `project.config.ts` and create
+a corresponding module in `sketches/`. Use a `select` control keyed `activeSketch` to let
 users switch:
 
 ```ts
-const LAYERS = [
-  { id: 'layer-a', ..., module: './layers/layer-a.js', defaultActive: true },
-  { id: 'layer-b', ..., module: './layers/layer-b.js' }
+const SKETCHES = [
+  { id: 'sketch-a', ..., module: './sketches/sketch-a.js', defaultActive: true },
+  { id: 'sketch-b', ..., module: './sketches/sketch-b.js' }
 ]
 ```
 
-The viewer auto-generates a layer switcher when multiple layers are defined.
+The viewer auto-generates a sketch switcher when multiple sketches are defined.
 
 ## Keyboard Shortcuts
 
