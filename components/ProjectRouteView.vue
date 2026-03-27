@@ -39,7 +39,21 @@
         <div
           class="self-end flex items-center gap-3 p-4"
         >
-          <h1 class="project-overlay-type text-2xl leading-tight">{{ project.title }}</h1>
+          <div class="flex flex-col items-end gap-1">
+            <h1 class="project-overlay-type text-2xl leading-tight">{{ project.title }}</h1>
+            <select
+              v-if="hasMultipleSketches"
+              :value="String(controlValues.activeSketch ?? '')"
+              class="project-overlay-type text-sm bg-transparent border-none p-0 cursor-pointer opacity-60 hover:opacity-100 transition-opacity self-end"
+              @change="handleSketchSelect(($event.target as HTMLSelectElement).value)"
+            >
+              <option
+                v-for="opt in sketchOptions"
+                :key="String(opt.value)"
+                :value="String(opt.value)"
+              >{{ opt.label }}</option>
+            </select>
+          </div>
           <UButton
             v-if="pauseEnabled"
             :icon="paused ? 'i-heroicons-play' : 'i-heroicons-pause'"
@@ -147,6 +161,17 @@ const isPanelExpanded = ref(false)
 const viewerInstanceKey = ref(0)
 const actionRequest = ref<{ key: string; nonce: number } | null>(null)
 const actionNonce = ref(0)
+const activeSketchControl = computed(() =>
+  flattenControls(loadedControls.value).find(
+    (c): c is SelectControlDefinition => c.type === 'select' && c.key === 'activeSketch'
+  ) ?? null
+)
+const sketchOptions = computed(() => activeSketchControl.value?.options ?? [])
+const hasMultipleSketches = computed(() => sketchOptions.value.length > 1)
+const handleSketchSelect = (sketchId: string) => {
+  void router.push({ query: { ...route.query, activeSketch: sketchId } })
+}
+
 const hasSvgDownloadAction = computed(() => {
   return visibleActions.value.some((action) => action.key === 'download-svg')
 })
