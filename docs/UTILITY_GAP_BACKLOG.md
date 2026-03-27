@@ -187,6 +187,25 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: `projects/svg/growing-things/index.ts`, `projects/svg/growing-things/sketches/noisy-automata.js`
   - Notes: Generic panel concern, not sketch-specific. Could support optional read-only "derived value" rows or inline annotations for controls that map to runtime-selected values.
 
+- ID: `control-randomisation-explore`
+  - Status: `candidate`
+  - Priority: **medium**
+  - Need: a way to **randomise control parameters** (within schema min/max and option sets) so authors can explore the space and find strong presets faster than manual twiddling. Exact product shape **TBD**: project-wide vs per-sketch; single action ("shuffle"); optional constraints (lock subset, respect visibility); seed linkage; whether results write to URL/query or a disposable preset slot.
+  - Seen in: exploration workflow while building `projects/sandbox/grid-almighty` grid-2 (many correlated sliders).
+  - Notes: Goals TBD — balance surprise vs usability (avoid impossible combos); respect control `type` coercion and conditional visibility; consider debounce with redraw cost on heavy sketches.
+
+### Runtime and sketch container
+
+- ID: `sketch-container-dynamic-aspect`
+  - Status: `candidate`
+  - Priority: **high**
+  - Need: change the **sketch layer container** (`resolveContainer` output: canvas pixel size, wrapper centering) in response to control changes, not only at mount or sketch switch. Today container mode lives on `ProjectSketchDefinition.container`; `singleActiveSketchManager` calls `resolveContainer` inside `mountActiveIfNeeded` (resize remounts, control change does not).
+  - Seen in: `projects/sandbox/grid-almighty` grid-2 — inner artboard uses `resolveInnerFrame` per draw as a workaround; true 16:9 **canvas** + export would still follow the fixed sketch container.
+  - Notes:
+    - Separate from `resolveInnerFrame`-style letterboxing inside a fixed canvas (already cheap per frame).
+    - Options to explore: remount active layer when a declared “container control” changes; or optional `getContainerConfig(controls) => ContainerConfig` hook on sketch defs; watch for double layout thrash with `ResizeObserver`.
+    - PNG/SVG export dimensions should stay coherent if outer size changes.
+
 ### p5 migration helpers
 
 - ID: `asset-path-preload-helper`
