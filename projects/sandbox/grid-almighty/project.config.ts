@@ -8,7 +8,7 @@ import type {
 const metadata = {
   "id": "grid-almighty",
   "title": "Grid Almighty",
-  "description": "Grid Almighty",
+  "description": "Grid Almightyyy",
   "date": "2026-03",
   "tags": [
     "canvas2d",
