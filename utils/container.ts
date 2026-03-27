@@ -99,7 +99,7 @@ const parseAspectMode = (mode: Exclude<ContainerMode, 'full' | 'square'>): numbe
 
 /**
  * Resolves an inner frame from canvas mode/padding inside a fixed outer size.
- * Useful for single-SVG sketches that simulate per-layer artboards.
+ * Useful for single-SVG sketches that simulate per-sketch artboards.
  */
 export function resolveInnerFrame(
   outerWidth: number,

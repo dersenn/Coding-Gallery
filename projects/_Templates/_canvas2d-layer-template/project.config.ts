@@ -2,7 +2,7 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition
+  ProjectSketchDefinition
 } from '~/types/project'
 
 const CONTROLS: ProjectControlDefinition[] = [
@@ -37,26 +37,26 @@ const CONTROLS: ProjectControlDefinition[] = [
 
 const ACTIONS: ProjectActionDefinition[] = []
 
-const LAYERS: ProjectLayerDefinition[] = [
+const SKETCHES: ProjectSketchDefinition[] = [
   {
-    id: 'layer-1',
-    label: 'Layer 1',
+    id: 'sketch-1',
+    label: 'Sketch 1',
     technique: 'canvas2d',
     container: { mode: 'full' },
-    module: './layers/layer-1.js',
+    module: './sketches/sketch-1.js',
     controls: CONTROLS,
     defaultActive: true
   }
 ]
 
 const metadata = {
-  "id": "canvas2d-layer-template",
-  "title": "Canvas2D Layer Template",
-  "description": "Canonical layer-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
+  "id": "canvas2d-sketch-template",
+  "title": "Canvas2D Sketch Template",
+  "description": "Canonical sketch-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
   "date": "2026-03",
   "tags": ["canvas2d", "template"],
   "hidden": true
-} satisfies Omit<ProjectDefinition, "init" | "techniques" | "defaultTechnique" | "libraries" | "controls" | "actions" | "theme" | "container" | "supportedTechniques" | "layers">
+} satisfies Omit<ProjectDefinition, "init" | "techniques" | "defaultTechnique" | "libraries" | "controls" | "actions" | "theme" | "container" | "supportedTechniques" | "sketches">
 
 const definition: ProjectDefinition = {
   ...metadata,
@@ -66,7 +66,7 @@ const definition: ProjectDefinition = {
   controls: CONTROLS,
   actions: ACTIONS,
   container: { mode: 'full' },
-  layers: LAYERS
+  sketches: SKETCHES
 }
 
 export default definition

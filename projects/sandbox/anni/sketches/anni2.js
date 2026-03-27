@@ -13,7 +13,7 @@ export function draw(context) {
   const lightAccent = theme.palette[settings.colors.accent] ?? theme.foreground
   svg.rect(v(frame.x, frame.y), frame.width, frame.height, background, 'none', 0)
 
-  // Demonstrate frame utility by carving a nested artboard inside the layer frame.
+  // Demonstrate frame utility by carving a nested artboard inside the sketch frame.
   const inner = resolveInnerFrame(frame.width, frame.height, { mode: 'full', padding: settings.frame.inset })
   const artFrame = {
     x: frame.x + inner.x,

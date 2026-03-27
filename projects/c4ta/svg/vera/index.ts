@@ -7,18 +7,18 @@ import type {
 import { SVG, shortcuts, resolveContainer } from '~/types/project'
 import { syncControlState } from '~/composables/useControls'
 import { createGenerativeUtils } from '~/utils/generative'
-import { drawVera1 } from './layers/vera1'
-import { drawVera2 } from './layers/vera2'
-import type { LayerDrawContext } from './layers/types'
+import { drawVera1 } from './sketches/vera1'
+import { drawVera2 } from './sketches/vera2'
+import type { LayerDrawContext } from './sketches/types'
 
 /**
  * Vera (C4TA — computational line studies)
  *
- * A series of independently toggleable layers, each exploring a different
+ * A series of independently toggleable sketches, each exploring a different
  * rule system for line placement within an overlapping tile grid.
  * Intended as a growing exercise in computational composition.
  *
- * Layer inventory:
+ * Sketch inventory:
  * - Vera 1: constrained motif selection (4 candidates per tile)
  * - Vera 2: one diagonal per tile from a random left-edge point to a random right-edge point
  */
@@ -69,8 +69,8 @@ export async function init(
 
   const draw = () => {
     const seed = utils.seed.current
-    // Each layer gets its own PRNG stream from the same project seed.
-    // Toggling one layer cannot affect the other's random sequence.
+    // Each sketch gets its own PRNG stream from the same project seed.
+    // Toggling one sketch cannot affect the other's random sequence.
     const v1rnd = createGenerativeUtils(seed)
     const v2rnd = createGenerativeUtils(seed)
 

@@ -1,3 +1,3 @@
-// Layer-based projects use project.config.ts + layers/*.js rather than this file.
+// Sketch-based projects use project.config.ts + sketches/*.js rather than this file.
 // Runtime definition is in project.config.ts.
-// Sketch code lives in layers/layer-1.js.
+// Sketch code lives in sketches/sketch-1.js.

@@ -207,7 +207,7 @@ function createNoiseGrid(canvas, settings, utils) {
 }
 
 /**
- * Minimal animated canvas playground layer:
+ * Minimal animated canvas playground sketch:
  * starts one RAF loop per mounted canvas and stops automatically on unmount.
  */
 export function draw(context) {

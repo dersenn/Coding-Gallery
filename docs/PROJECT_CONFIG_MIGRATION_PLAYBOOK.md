@@ -15,7 +15,7 @@ Use this for one-project migrations and batch migrations.
 
 ## Scope assumptions
 
-- Keep draw/algorithm logic in `layers/*.js|ts` (or sketch-local modules).
+- Keep draw/algorithm logic in `sketches/*.js|ts` (or sketch-local modules).
 - Keep runtime orchestration in `runtime/`.
 - Do not move Nuxt convention files out of `plugins/` or `server/api/`.
 
@@ -23,8 +23,8 @@ Use this for one-project migrations and batch migrations.
 
 1. Create or update `projects/.../project.config.ts`:
    - include project metadata (`id`, `title`, `description`, `date`, `tags`, optional visibility/theme flags)
-   - include declarative runtime fields (`container`, `techniques`, `defaultTechnique`, `controls`, `actions`, `layers`)
-2. Ensure each `layers[]` entry has:
+   - include declarative runtime fields (`container`, `techniques`, `defaultTechnique`, `controls`, `actions`, `sketches`)
+2. Ensure each `sketches[]` entry has:
    - `id`
    - `technique` (`svg`, `canvas2d`, or supported set)
    - `container` where needed
@@ -37,8 +37,8 @@ Use this for one-project migrations and batch migrations.
    - keep canonical `entryFile` to `/projects/.../index.ts|js`
    - keep thin metadata fields only
 5. Validate action/control behavior:
-   - layer-scoped action visibility via `visibleWhenSelect*`
-   - defaults behavior preserves active layer when intended
+   - sketch-scoped action visibility via `visibleWhenSelect*`
+   - defaults behavior preserves active sketch when intended
 
 ## Validation gates (required)
 
@@ -55,9 +55,9 @@ For the migrated route:
 
 - route loads without runtime errors
 - controls panel opens and reflects config definitions
-- layer selection works
-- download actions shown only for relevant layer/technique
-- defaults/reset behavior matches expectation (especially active layer preservation)
+- sketch selection works
+- download actions shown only for relevant sketch/technique
+- defaults/reset behavior matches expectation (especially active sketch preservation)
 
 ## Suggested batching strategy
 
@@ -74,9 +74,9 @@ For the migrated route:
 - **Config not found at runtime**
   - verify `configFile` path in `data/projects.json`
   - verify file matches glob-resolvable path under `projects/`
-- **Layer module not found**
-  - ensure `layers[].module` resolves under project folder
-  - check extension fallback (`.js` vs `.ts`) in layer module paths
+- **Sketch module not found**
+  - ensure `sketches[].module` resolves under project folder
+  - check extension fallback (`.js` vs `.ts`) in sketch module paths
 - **Validation drift errors**
   - sync index metadata fields with config metadata
   - keep `entryFile` and `configFile` paths canonical and existing

@@ -12,7 +12,7 @@ Scope: `projects/svg/bezier-lab/index.ts`
 
 ### replace now
 - Replaced legacy global engine/path/vector classes with framework `SVG`, `Path`, and `Vec`.
-- Replaced per-folder page selection with in-sketch variant selection control (matching the multi-layer style used by `a-vera-2`).
+- Replaced per-folder page selection with in-sketch variant selection control (matching the multi-sketch style used by `a-vera-2`).
 - Replaced keyboard-driven download with framework `download-svg` action.
 
 ### replace later
@@ -26,6 +26,6 @@ Scope: `projects/svg/bezier-lab/index.ts`
 
 ## Utility-first evidence
 - Utilities/classes checked: `Path.buildPolygon`, `Path.buildSpline`, `Path.buildQuadBez`, `SVG` primitives, `shortcuts(utils)` (`v`, `simplex2`), control lifecycle via `syncControlState`.
-- Chosen path: use existing framework path/rendering/control primitives + custom deterministic point generation to keep layer toggles stable.
+- Chosen path: use existing framework path/rendering/control primitives + custom deterministic point generation to keep sketch toggles stable.
 - Classification: keep / replace now / replace later as listed above.
 - Rationale: framework already covers drawing/path primitives and lifecycle; the V2/V3 comparison setup is sketch-specific composition behavior.

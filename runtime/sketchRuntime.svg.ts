@@ -1,5 +1,5 @@
 import { SVG } from '~/utils/svg'
-import type { SingleActiveLayerRuntime } from '~/runtime/layerRuntime'
+import type { SingleActiveSketchRuntime } from '~/runtime/sketchRuntime'
 
 interface CreateSvgLayerRuntimeArgs {
   parent: HTMLElement
@@ -9,7 +9,7 @@ interface CreateSvgLayerRuntimeArgs {
   onDraw: (svg: SVG) => void
 }
 
-export function createSvgLayerRuntime(args: CreateSvgLayerRuntimeArgs): SingleActiveLayerRuntime {
+export function createSvgSketchRuntime(args: CreateSvgLayerRuntimeArgs): SingleActiveSketchRuntime {
   const { parent, width, height, runtimeName, onDraw } = args
   const svg = new SVG({ parent, id: runtimeName, width, height })
 

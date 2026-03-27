@@ -46,10 +46,10 @@ export const useControls = () => {
   const controlValues = useState<ControlValues>('controlValues', () => ({}))
   const scopedControlValues = useState<{
     shared: ControlValues
-    layers: Record<string, ControlValues>
+    sketches: Record<string, ControlValues>
   }>('scopedControlValues', () => ({
     shared: {},
-    layers: {}
+    sketches: {}
   }))
   const scopedControlSchema = useState<{
     sharedControls: ProjectControlDefinition[]
@@ -123,13 +123,13 @@ export const useControls = () => {
     return nextValues
   }
 
-  const toLayerQueryKey = (layerId: string, key: string) => {
-    return `layer.${layerId}.${key}`
+  const toLayerQueryKey = (sketchId: string, key: string) => {
+    return `sketch.${sketchId}.${key}`
   }
 
   const resolveScopedActiveLayer = (fallbackLayerId?: string): string | undefined => {
-    const sharedLayer = scopedControlValues.value.shared.activeLayer
-    const direct = controlValues.value.activeLayer
+    const sharedLayer = scopedControlValues.value.shared.activeSketch
+    const direct = controlValues.value.activeSketch
     const layerIds = Object.keys(scopedControlSchema.value.layerControlsById ?? {})
     const hasLayerScope = layerIds.length > 0
     const isValidLayerId = (value: unknown): value is string => {
@@ -155,12 +155,12 @@ export const useControls = () => {
     sharedControls.forEach((control) => {
       nextSharedValues[control.key] = control.default
     })
-    Object.entries(layerControlsById).forEach(([layerId, controls]) => {
+    Object.entries(layerControlsById).forEach(([sketchId, controls]) => {
       const layerDefaults: ControlValues = {}
       controls.forEach((control) => {
         layerDefaults[control.key] = control.default
       })
-      nextLayerValues[layerId] = layerDefaults
+      nextLayerValues[sketchId] = layerDefaults
     })
 
     sharedControls.forEach((control) => {
@@ -169,17 +169,17 @@ export const useControls = () => {
       nextSharedValues[control.key] = parseControlValueFromQuery(control, urlValue as string | string[] | null)
     })
 
-    Object.entries(layerControlsById).forEach(([layerId, controls]) => {
+    Object.entries(layerControlsById).forEach(([sketchId, controls]) => {
       controls.forEach((control) => {
-        const scopedKey = toLayerQueryKey(layerId, control.key)
+        const scopedKey = toLayerQueryKey(sketchId, control.key)
         const scopedValue = route.query[scopedKey]
         const legacyValue = route.query[control.key]
         const sourceValue = scopedValue ?? legacyValue
         if (sourceValue === undefined || sourceValue === null) return
-        if (!nextLayerValues[layerId]) {
-          nextLayerValues[layerId] = {}
+        if (!nextLayerValues[sketchId]) {
+          nextLayerValues[sketchId] = {}
         }
-        nextLayerValues[layerId]![control.key] = parseControlValueFromQuery(
+        nextLayerValues[sketchId]![control.key] = parseControlValueFromQuery(
           control,
           sourceValue as string | string[] | null
         )
@@ -188,32 +188,32 @@ export const useControls = () => {
 
     return {
       shared: nextSharedValues,
-      layers: nextLayerValues
+      sketches: nextLayerValues
     }
   }
 
-  const mergeEffectiveControlValues = (activeLayerId?: string): ControlValues => {
+  const mergeEffectiveControlValues = (activeSketchId?: string): ControlValues => {
     const mergedShared = { ...scopedControlValues.value.shared }
-    const mergedLayer = activeLayerId
-      ? (scopedControlValues.value.layers[activeLayerId] ?? {})
+    const mergedLayer = activeSketchId
+      ? (scopedControlValues.value.sketches[activeSketchId] ?? {})
       : {}
     return {
       ...mergedShared,
       ...mergedLayer,
-      ...(activeLayerId ? { activeLayer: activeLayerId } : {})
+      ...(activeSketchId ? { activeSketch: activeSketchId } : {})
     }
   }
 
   const applyEffectiveControlValues = (fallbackLayerId?: string) => {
-    const activeLayerId = resolveScopedActiveLayer(fallbackLayerId)
-    controlValues.value = mergeEffectiveControlValues(activeLayerId)
+    const activeSketchId = resolveScopedActiveLayer(fallbackLayerId)
+    controlValues.value = mergeEffectiveControlValues(activeSketchId)
   }
 
   const flattenScopedSchema = () => {
     const sharedLeaf = flattenControls(scopedControlSchema.value.sharedControls)
     const layerLeafById: Record<string, ControlDefinition[]> = {}
-    Object.entries(scopedControlSchema.value.layerControlsById).forEach(([layerId, controls]) => {
-      layerLeafById[layerId] = flattenControls(controls)
+    Object.entries(scopedControlSchema.value.layerControlsById).forEach(([sketchId, controls]) => {
+      layerLeafById[sketchId] = flattenControls(controls)
     })
     return {
       sharedLeaf,
@@ -226,12 +226,12 @@ export const useControls = () => {
     return sharedLeaf.some((control) => control.key === key)
   }
 
-  const resolveControlLayerScope = (key: string, activeLayerId?: string): string | null => {
+  const resolveControlLayerScope = (key: string, activeSketchId?: string): string | null => {
     const { layerLeafById } = flattenScopedSchema()
-    if (activeLayerId) {
-      const activeLayerControls = layerLeafById[activeLayerId] ?? []
-      if (activeLayerControls.some((control) => control.key === key)) {
-        return activeLayerId
+    if (activeSketchId) {
+      const activeSketchControls = layerLeafById[activeSketchId] ?? []
+      if (activeSketchControls.some((control) => control.key === key)) {
+        return activeSketchId
       }
     }
     const anyLayerEntry = Object.entries(layerLeafById).find(([, controls]) => {
@@ -248,13 +248,13 @@ export const useControls = () => {
     }
     const leafControls = flattenControls(nextControls)
     if (!leafControls.length) {
-      scopedControlValues.value = { shared: {}, layers: {} }
+      scopedControlValues.value = { shared: {}, sketches: {} }
       controlValues.value = {}
       return
     }
     scopedControlValues.value = {
       shared: buildControlValuesFromQuery(leafControls),
-      layers: {}
+      sketches: {}
     }
     applyEffectiveControlValues()
   }
@@ -264,7 +264,7 @@ export const useControls = () => {
       sharedControls: ProjectControlDefinition[]
       layerControlsById: Record<string, ProjectControlDefinition[]>
     },
-    options?: { activeLayerId?: string }
+    options?: { activeSketchId?: string }
   ) => {
     scopedControlSchema.value = {
       sharedControls: scopedControls.sharedControls ?? [],
@@ -273,26 +273,26 @@ export const useControls = () => {
 
     const { sharedLeaf, layerLeafById } = flattenScopedSchema()
     if (!sharedLeaf.length && Object.keys(layerLeafById).length === 0) {
-      scopedControlValues.value = { shared: {}, layers: {} }
+      scopedControlValues.value = { shared: {}, sketches: {} }
       controlValues.value = {}
       return
     }
 
     scopedControlValues.value = buildScopedControlValuesFromQuery(sharedLeaf, layerLeafById)
-    const resolvedActiveLayer = resolveScopedActiveLayer(options?.activeLayerId)
+    const resolvedActiveLayer = resolveScopedActiveLayer(options?.activeSketchId)
     if (resolvedActiveLayer) {
-      scopedControlValues.value.shared.activeLayer = resolvedActiveLayer
+      scopedControlValues.value.shared.activeSketch = resolvedActiveLayer
     }
-    applyEffectiveControlValues(options?.activeLayerId)
+    applyEffectiveControlValues(options?.activeSketchId)
   }
 
   type ControlHistoryMode = 'push' | 'replace'
 
   const syncQueryWithControl = (key: string, value: ControlValue, history: ControlHistoryMode) => {
-    const activeLayerId = resolveScopedActiveLayer()
+    const activeSketchId = resolveScopedActiveLayer()
     const queryKey = isSharedControlKey(key)
       ? key
-      : (activeLayerId ? toLayerQueryKey(activeLayerId, key) : key)
+      : (activeSketchId ? toLayerQueryKey(activeSketchId, key) : key)
     const newQuery = { ...route.query, [queryKey]: serializeControlValueForQuery(value) }
     if (history === 'replace') {
       return router.replace({ query: newQuery })
@@ -305,19 +305,19 @@ export const useControls = () => {
     value: ControlValue,
     options?: { history?: ControlHistoryMode }
   ) => {
-    const activeLayerId = resolveScopedActiveLayer()
-    const nextActiveLayerId = key === 'activeLayer' && typeof value === 'string'
+    const activeSketchId = resolveScopedActiveLayer()
+    const nextActiveLayerId = key === 'activeSketch' && typeof value === 'string'
       ? value
-      : activeLayerId
-    if (key === 'activeLayer' || isSharedControlKey(key)) {
+      : activeSketchId
+    if (key === 'activeSketch' || isSharedControlKey(key)) {
       scopedControlValues.value.shared[key] = value
     } else {
-      const scopedLayerId = resolveControlLayerScope(key, activeLayerId)
+      const scopedLayerId = resolveControlLayerScope(key, activeSketchId)
       if (scopedLayerId) {
-        if (!scopedControlValues.value.layers[scopedLayerId]) {
-          scopedControlValues.value.layers[scopedLayerId] = {}
+        if (!scopedControlValues.value.sketches[scopedLayerId]) {
+          scopedControlValues.value.sketches[scopedLayerId] = {}
         }
-        scopedControlValues.value.layers[scopedLayerId]![key] = value
+        scopedControlValues.value.sketches[scopedLayerId]![key] = value
       } else {
         scopedControlValues.value.shared[key] = value
       }
@@ -343,8 +343,8 @@ export const useControls = () => {
     await router.push({ query: newQuery })
   }
 
-  const resetLayerControls = async (
-    options?: { preserveKeys?: string[]; activeLayerId?: string }
+  const resetSketchControls = async (
+    options?: { preserveKeys?: string[]; activeSketchId?: string }
   ) => {
     const hasLayerScopedControls = Object.keys(scopedControlSchema.value.layerControlsById).length > 0
     if (!hasLayerScopedControls) {
@@ -359,10 +359,10 @@ export const useControls = () => {
       return
     }
 
-    const activeLayerId = options?.activeLayerId ?? resolveScopedActiveLayer()
-    if (!activeLayerId) return
+    const activeSketchId = options?.activeSketchId ?? resolveScopedActiveLayer()
+    if (!activeSketchId) return
     const layerControls = flattenControls(
-      scopedControlSchema.value.layerControlsById[activeLayerId] ?? []
+      scopedControlSchema.value.layerControlsById[activeSketchId] ?? []
     )
     if (!layerControls.length) return
 
@@ -370,14 +370,14 @@ export const useControls = () => {
     const keysToRemove: string[] = []
     layerControls.forEach((control) => {
       if (preserve.has(control.key)) return
-      keysToRemove.push(toLayerQueryKey(activeLayerId, control.key))
+      keysToRemove.push(toLayerQueryKey(activeSketchId, control.key))
       if (!isSharedControlKey(control.key)) {
         keysToRemove.push(control.key)
       }
     })
 
     await removeControlKeysFromQuery(keysToRemove)
-    initializeScopedControls(scopedControlSchema.value, { activeLayerId })
+    initializeScopedControls(scopedControlSchema.value, { activeSketchId })
   }
 
   const resetAllControls = async (options?: { preserveKeys?: string[] }) => {
@@ -389,10 +389,10 @@ export const useControls = () => {
       if (preserve.has(control.key)) return
       keysToRemove.push(control.key)
     })
-    Object.entries(layerLeafById).forEach(([layerId, controls]) => {
+    Object.entries(layerLeafById).forEach(([sketchId, controls]) => {
       controls.forEach((control) => {
         if (preserve.has(control.key)) return
-        keysToRemove.push(toLayerQueryKey(layerId, control.key))
+        keysToRemove.push(toLayerQueryKey(sketchId, control.key))
         if (!isSharedControlKey(control.key)) {
           keysToRemove.push(control.key)
         }
@@ -401,7 +401,7 @@ export const useControls = () => {
 
     await removeControlKeysFromQuery(keysToRemove)
     initializeScopedControls(scopedControlSchema.value, {
-      activeLayerId: resolveScopedActiveLayer()
+      activeSketchId: resolveScopedActiveLayer()
     })
   }
 
@@ -415,7 +415,7 @@ export const useControls = () => {
     const preserveKeys = new Set(options?.preserveKeys ?? [])
     const hasLayerScopedControls = Object.keys(scopedControlSchema.value.layerControlsById).length > 0
     if (hasLayerScopedControls) {
-      await resetLayerControls({
+      await resetSketchControls({
         preserveKeys: [...preserveKeys]
       })
       return
@@ -447,7 +447,7 @@ export const useControls = () => {
     updateControl,
     commitControl,
     resetControls,
-    resetLayerControls,
+    resetSketchControls,
     resetAllControls
   }
 }

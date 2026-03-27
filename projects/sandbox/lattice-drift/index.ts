@@ -81,8 +81,8 @@ export const controls: ProjectControlDefinition[] = [
   },
   {
     type: 'group',
-    id: 'layers',
-    label: 'Layers',
+    id: 'sketches',
+    label: 'Sketches',
     collapsible: true,
     defaultOpen: true,
     controls: [

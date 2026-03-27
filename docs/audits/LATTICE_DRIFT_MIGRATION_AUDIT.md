@@ -8,12 +8,12 @@ Scope: `projects/svg/lattice-drift/index.ts`
 ### keep
 - Kept the legacy two-stage subdivision composition: randomized left/right boundaries, then randomized row interpolation between boundaries.
 - Kept column-wise strand extraction and smooth spline rendering for organic vertical flow.
-- Kept optional point overlay behavior as a scaffold/debug layer.
+- Kept optional point overlay behavior as a scaffold/debug sketch.
 
 ### replace now
 - Replaced legacy global engine helpers with framework contracts: `SVG`, `Path`, `Vec`, and control/action lifecycle.
 - Replaced legacy `divLength(..., 'RND')` calls with framework `utils.math.divLength(...)` options-object modes.
-- Replaced ad-hoc runtime behavior with explicit grouped controls for structure, subdivision, layers, and style.
+- Replaced ad-hoc runtime behavior with explicit grouped controls for structure, subdivision, sketches, and style.
 - Replaced non-repeatable redraw randomness with deterministic redraw sampling tied to project seed.
 
 ### replace later

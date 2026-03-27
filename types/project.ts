@@ -99,19 +99,19 @@ export interface ControlValues {
 export interface ProjectActionDefinition extends ConditionalVisibilityDefinition {
   key: string
   label: string
-  scope?: 'shared' | 'layer'
-  layerId?: string
+  scope?: 'shared' | 'sketch'
+  sketchId?: string
 }
 
 export interface ScopedProjectControls {
   shared: ProjectControlDefinition[]
-  byLayer: Record<string, ProjectControlDefinition[]>
-  activeLayerControl?: SelectControlDefinition
+  bySketch: Record<string, ProjectControlDefinition[]>
+  activeSketchControl?: SelectControlDefinition
 }
 
 export interface ScopedProjectActions {
   shared: ProjectActionDefinition[]
-  byLayer: Record<string, ProjectActionDefinition[]>
+  bySketch: Record<string, ProjectActionDefinition[]>
 }
 
 export interface RuntimeActionCapabilities {
@@ -119,7 +119,7 @@ export interface RuntimeActionCapabilities {
   canDownloadPng: boolean
 }
 
-export interface ProjectLayerDefinition {
+export interface ProjectSketchDefinition {
   id: string
   label?: string
   technique: Technique
@@ -153,11 +153,11 @@ export interface ProjectDefinition extends ProjectMetadata {
   container?: ContainerMode | ContainerConfig
   controls?: ProjectControlDefinition[]
   actions?: ProjectActionDefinition[]
-  layers?: ProjectLayerDefinition[]
+  sketches?: ProjectSketchDefinition[]
   libraries?: string[]
   /**
    * Optional escape hatch for advanced/custom sketches.
-   * Prefer metadata-driven layer/runtime bootstrap where possible.
+   * Prefer metadata-driven sketch/runtime bootstrap where possible.
    */
   init?: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
   theme?: ThemeOverride
@@ -176,7 +176,7 @@ export interface ProjectModule {
   container?: ContainerMode | ContainerConfig
   supportedTechniques?: Technique[]
   defaultTechnique?: Technique
-  layers?: ProjectLayerDefinition[]
+  sketches?: ProjectSketchDefinition[]
 }
 
 // Compatibility alias during migration.
@@ -232,21 +232,21 @@ export type {
   FrameTransform
 } from '~/utils/container'
 export {
-  singleActiveLayerManager,
-  singleActiveLayerSetup
-} from '~/runtime/layerRuntime'
+  singleActiveSketchManager,
+  singleActiveSketchSetup
+} from '~/runtime/sketchRuntime'
 export type {
-  LayerCanvas,
-  LayerTechniqueRuntime,
-  SingleActiveLayerFrame,
-  SingleActiveLayerRuntime,
-  SingleActiveLayerCreateArgs,
-  SingleActiveLayerDefinition,
-  SingleActiveLayerManagerArgs,
-  SingleActiveLayerManager,
-  SingleActiveLayerRegistryEntry,
-  SingleActiveLayerRegistry,
-  SingleActiveLayerSetupArgs,
-  SingleActiveLayerSelectOption,
-  SingleActiveLayerSetup
-} from '~/runtime/layerRuntime'
+  SketchCanvas,
+  SketchTechniqueRuntime,
+  SingleActiveSketchFrame,
+  SingleActiveSketchRuntime,
+  SingleActiveSketchCreateArgs,
+  SingleActiveSketchDefinition,
+  SingleActiveSketchManagerArgs,
+  SingleActiveSketchManager,
+  SingleActiveSketchRegistryEntry,
+  SingleActiveSketchRegistry,
+  SingleActiveSketchSetupArgs,
+  SingleActiveSketchSelectOption,
+  SingleActiveSketchSetup
+} from '~/runtime/sketchRuntime'

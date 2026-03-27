@@ -130,7 +130,7 @@ function drawFilledCells(canvas, grid, ownerByIndex, palette, fallbackFill) {
 }
 
 /**
- * Canvas variation of the grid-growth layer:
+ * Canvas variation of the grid-growth sketch:
  * preserves the seeded frontier fill behavior while drawing through Canvas2D.
  */
 export function draw(context) {

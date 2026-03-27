@@ -104,16 +104,16 @@ Concrete design options (pick one or combine):
 
 ## Runtime architecture
 
-### Multi-technique project/layer runtime
+### Multi-technique project/sketch runtime
 
 - ID: `multi-technique-runtime`
 - Status: `implemented`
 - Priority: **medium**
-- Area: `types/project.ts`, `runtime/layerRuntime.ts`, `components/ProjectViewer.vue`
+- Area: `types/project.ts`, `runtime/sketchRuntime.ts`, `components/ProjectViewer.vue`
 
 **Problem**  
 Project metadata can already represent multiple libraries/techniques, but the
-current layer manager contract is SVG-specialized (`SingleActiveSvg...`,
+current sketch manager contract is SVG-specialized (`SingleActiveSvg...`,
 `exportActiveSvg`). This makes mixed or switchable technique workflows harder
 than necessary when adding canvas2d-first sketches.
 
@@ -121,7 +121,7 @@ than necessary when adding canvas2d-first sketches.
 See `MULTI_TECHNIQUE_RUNTIME_PLAN.md` for phased design and migration strategy.
 
 **Current status**  
-- Generalized runtime helpers are active in `runtime/layerRuntime.ts`.
+- Generalized runtime helpers are active in `runtime/sketchRuntime.ts`.
 - Metadata bootstrap is active in `runtime/projectBootstrap.ts`.
 - Canonical per-project config loading is active in `components/ProjectViewer.vue`.
 - `growing-things` is the reference mixed-tech pilot for current runtime shape.
@@ -130,9 +130,9 @@ See `MULTI_TECHNIQUE_RUNTIME_PLAN.md` for phased design and migration strategy.
 Continue incremental project migrations to pure config-first authoring per
 `PROJECT_CONFIG_MIGRATION_PLAYBOOK.md`.
 
-### Standalone project/layer source export
+### Standalone project/sketch source export
 
-- ID: `standalone-project-layer-export`
+- ID: `standalone-project-sketch-export`
 - Status: `candidate`
 - Priority: **high**
 - Area: `components/ProjectViewer.vue`, `runtime/`, `types/project.ts`, `utils/download.ts`
@@ -141,7 +141,7 @@ Continue incremental project migrations to pure config-first authoring per
 Current export workflow focuses on rendered artifacts (`download-svg`, `download-png`). This is useful for final outputs, but it does not support the original portability goal of detaching a sketch from gallery/runtime UI and running it independently as source code.
 
 **Desired behavior**
-- Export active layer as a standalone runnable package (raw mode, no gallery controls by default).
+- Export active sketch as a standalone runnable package (raw mode, no gallery controls by default).
 - Export full project as a standalone runnable package.
 - Keep deterministic seed behavior and default control values.
 - Avoid framework UI dependencies in exported output.
@@ -150,14 +150,14 @@ Current export workflow focuses on rendered artifacts (`download-svg`, `download
 See `STANDALONE_EXPORT_SKETCH.md` for phased design, output package shape, and technique rollout.
 
 **Suggested phases**
-1. `svg` + `canvas2d` raw layer export prototype.
+1. `svg` + `canvas2d` raw sketch export prototype.
 2. Downloadable zip package generation.
 3. Optional lightweight controls scaffolding.
 4. `p5`-specific export adapter phase.
 
 **Files likely affected**
 - `components/ProjectViewer.vue` — expose export action dispatch + capability checks.
-- `runtime/projectBootstrap.ts` and/or `runtime/layerRuntime.ts` — standalone-capable runtime descriptors.
+- `runtime/projectBootstrap.ts` and/or `runtime/sketchRuntime.ts` — standalone-capable runtime descriptors.
 - `types/project.ts` — optional standalone export capability contract.
 - `utils/download.ts` (or new `utils/standaloneExport.ts`) — package/file generation helpers.
 - `projects/_Templates/` — reusable standalone template skeleton(s).
@@ -183,69 +183,69 @@ If p5 migration introduces significant branching, split technique handlers into 
 - Area: `types/project.ts`, `components/ProjectViewer.vue`, `runtime/projectBootstrap.ts`
 
 **Problem**  
-Most sketches still write `utils.*` chains repeatedly or recreate local aliases with `shortcuts(utils)` in each file. The shortcut API exists but is not a consistent runtime contract, so ergonomics vary by sketch style and module type (project `init` vs layer `draw`).
+Most sketches still write `utils.*` chains repeatedly or recreate local aliases with `shortcuts(utils)` in each file. The shortcut API exists but is not a consistent runtime contract, so ergonomics vary by sketch style and module type (project `init` vs sketch `draw`).
 
 **Desired behavior**
-- Expose a canonical shortcuts object from runtime context (for example `sc`) for both project and layer execution paths.
+- Expose a canonical shortcuts object from runtime context (for example `sc`) for both project and sketch execution paths.
 - Keep `utils` as the canonical full API name (do not replace it with `u` at framework contract level).
-- Preserve backward compatibility for existing aliases already injected in layer draws (`v`, `rnd`).
+- Preserve backward compatibility for existing aliases already injected in sketch draws (`v`, `rnd`).
 
 **Proposed direction**
 1. Add a typed shortcuts field (for example `sc`) to `ProjectContext`.
 2. In viewer/bootstrap context construction, instantiate once from `shortcuts(utils)` and pass through runtime.
-3. Include the same field in metadata layer draw context so layer modules and init modules have parity.
+3. Include the same field in metadata sketch draw context so sketch modules and init modules have parity.
 4. Keep migration incremental: existing sketches continue to work, new sketches prefer `sc.*`.
 
 **Files likely affected**
 - `types/project.ts` — runtime context type expansion for shortcuts.
 - `components/ProjectViewer.vue` — context object passed to project init/bootstrap.
-- `runtime/projectBootstrap.ts` — layer draw-context payload standardization.
+- `runtime/projectBootstrap.ts` — sketch draw-context payload standardization.
 - `projects/_Templates/` — examples updated to prefer runtime-provided shortcuts.
 
 ---
 
 ## Controls and actions UX
 
-### Layer-scoped actions and defaults for multi-tech projects
+### Sketch-scoped actions and defaults for multi-tech projects
 
-- ID: `layer-scoped-controls-actions`
+- ID: `sketch-scoped-controls-actions`
 - Status: `implemented`
 - Priority: **high**
 - Area: `components/ControlPanel.vue`, `components/ProjectRouteView.vue`, `components/ProjectViewer.vue`, `composables/useControls.ts`
 
 **Problem**  
-In multi-layer/multi-technique projects, controls and action buttons are currently treated as project-global. This causes two UX issues:
+In multi-sketch/multi-technique projects, controls and action buttons are currently treated as project-global. This causes two UX issues:
 
-- The panel can show actions that do not apply to the active layer (for example showing both SVG and PNG save options simultaneously).
-- "Defaults" reset is global, so it can reset `activeLayer` and jump to the default layer instead of only resetting the currently active layer settings.
+- The panel can show actions that do not apply to the active sketch (for example showing both SVG and PNG save options simultaneously).
+- "Defaults" reset is global, so it can reset `activeSketch` and jump to the default sketch instead of only resetting the currently active sketch settings.
 
 **Desired behavior**
-- Action visibility should be layer-aware:
+- Action visibility should be sketch-aware:
   - show shared/global actions always
-  - show layer-specific actions only for the active layer
+  - show sketch-specific actions only for the active sketch
 - Defaults should support scoped reset:
-  - `Reset Layer` resets only controls owned by the active layer and preserves `activeLayer`
-  - optional `Reset All` resets shared + all layer controls
-- Download action behavior should be capability-aware (active layer/runtime decides whether SVG or PNG save is available).
+  - `Reset Sketch` resets only controls owned by the active sketch and preserves `activeSketch`
+  - optional `Reset All` resets shared + all sketch controls
+- Download action behavior should be capability-aware (active sketch/runtime decides whether SVG or PNG save is available).
 
 **Proposed direction**
 1. Introduce a control/action scoping model in runtime contracts:
    - shared project-level controls/actions
-   - per-layer controls/actions
-2. Add active-layer capability reporting from runtime to viewer (for action filtering).
+   - per-sketch controls/actions
+2. Add active-sketch capability reporting from runtime to viewer (for action filtering).
 3. Update panel action rendering so it resolves effective actions from:
    - shared actions
-   - active-layer actions
+   - active-sketch actions
    - active runtime capabilities
 4. Split reset semantics:
-   - keep keyboard shortcut `d` mapped to `Reset Layer`
+   - keep keyboard shortcut `d` mapped to `Reset Sketch`
    - add optional panel action for `Reset All`
 5. Keep backward compatibility:
-   - projects without layer-scoped metadata continue to use current global behavior.
+   - projects without sketch-scoped metadata continue to use current global behavior.
 
 **Files likely affected**
 - `types/project.ts` — formalize scoped controls/actions contract (if needed)
-- `projects/*/index.ts` (layered projects) — declare layer-scoped controls/actions
+- `projects/*/index.ts` (layered projects) — declare sketch-scoped controls/actions
 - `composables/useControls.ts` — add reset-by-scope helpers
 - `components/ControlPanel.vue` — action grouping/visibility by scope
 - `components/ProjectRouteView.vue` — keyboard/action dispatch semantics
@@ -254,11 +254,11 @@ In multi-layer/multi-technique projects, controls and action buttons are current
 **Progress update**
 - Scoped controls/actions are now first-class:
   - shared controls/actions at project level
-  - per-layer controls/actions in `layers[].controls` / `layers[].actions`
-- Effective panel controls/actions now resolve from active layer context.
-- Defaults are split into `Reset Layer` (shortcut `d`) and optional `Reset All`.
-- Layered projects can omit manual `activeLayer` control; viewer auto-generates it when multiple layers exist.
-- `projects/svg/growing-things` is migrated as the pilot for independent layer state.
+  - per-sketch controls/actions in `sketches[].controls` / `sketches[].actions`
+- Effective panel controls/actions now resolve from active sketch context.
+- Defaults are split into `Reset Sketch` (shortcut `d`) and optional `Reset All`.
+- Layered projects can omit manual `activeSketch` control; viewer auto-generates it when multiple sketches exist.
+- `projects/svg/growing-things` is migrated as the pilot for independent sketch state.
 
 ---
 

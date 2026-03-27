@@ -1,7 +1,7 @@
 import { Grid } from '~/types/project'
 
 /**
- * Grid Almighty layer skeleton:
+ * Grid Almighty sketch skeleton:
  * keep the grid/cell runtime structure, but draw only a simple circle per cell.
  */
 export function draw(context) {

@@ -2,7 +2,7 @@ import type {
   ProjectActionDefinition,
   ProjectControlDefinition,
   ProjectDefinition,
-  ProjectLayerDefinition
+  ProjectSketchDefinition
 } from '~/types/project'
 
 const GROWTH_CONTROLS: ProjectControlDefinition[] = [
@@ -226,13 +226,13 @@ const GROWTH_CANVAS_ACTIONS: ProjectActionDefinition[] = [
   }
 ]
 
-const LAYERS: ProjectLayerDefinition[] = [
+const SKETCHES: ProjectSketchDefinition[] = [
   {
     id: 'noisy-automata',
     label: 'Noisy Automata',
     technique: 'canvas2d',
     container: { mode: 'full' },
-    module: './layers/noisy-automata.js',
+    module: './sketches/noisy-automata.js',
     controls: NOISY_AUTOMATA_CONTROLS,
     actions: NOISY_AUTOMATA_ACTIONS,
     defaultActive: true
@@ -242,7 +242,7 @@ const LAYERS: ProjectLayerDefinition[] = [
     label: 'Grid Growth (Canvas2D)',
     technique: 'canvas2d',
     container: { mode: 'full' },
-    module: './layers/grid-canvas.js',
+    module: './sketches/grid-canvas.js',
     controls: GROWTH_CONTROLS,
     actions: GROWTH_CANVAS_ACTIONS
   }
@@ -266,7 +266,7 @@ const metadata = {
     "noise"
   ],
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'layers' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const definition: ProjectDefinition = {
   ...metadata,
@@ -276,7 +276,7 @@ const definition: ProjectDefinition = {
   controls: CONTROLS,
   actions: ACTIONS,
   container: CONTAINER,
-  layers: LAYERS
+  sketches: SKETCHES
 }
 
 export default definition

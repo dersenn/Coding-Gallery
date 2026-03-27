@@ -1,5 +1,5 @@
 import { Canvas } from '~/utils/canvas'
-import type { SingleActiveLayerRuntime } from '~/runtime/layerRuntime'
+import type { SingleActiveSketchRuntime } from '~/runtime/sketchRuntime'
 
 interface CreateCanvas2dLayerRuntimeArgs {
   parent: HTMLElement
@@ -9,9 +9,9 @@ interface CreateCanvas2dLayerRuntimeArgs {
   onDraw: (canvas: Canvas) => void
 }
 
-export function createCanvas2dLayerRuntime(
+export function createCanvas2dSketchRuntime(
   args: CreateCanvas2dLayerRuntimeArgs
-): SingleActiveLayerRuntime {
+): SingleActiveSketchRuntime {
   const { parent, width, height, runtimeName, onDraw } = args
   const canvas = new Canvas({
     parent,

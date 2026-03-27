@@ -73,10 +73,10 @@ const validateProjectIndexEntry = async (project) => {
   }
 
   const hasInit = /init:\s*legacyModule\.init|init:\s*\w+/.test(configSource)
-  const hasLayers = /layers:\s*\w+|layers:\s*\[/.test(configSource)
-  if (!hasInit && !hasLayers) {
+  const hasSketches = /sketches:\s*\w+|sketches:\s*\[/.test(configSource)
+  if (!hasInit && !hasSketches) {
     throw new Error(
-      `Project config "${project.configFile}" must provide init or declarative layers in definition`
+      `Project config "${project.configFile}" must provide init or declarative sketches in definition`
     )
   }
 }

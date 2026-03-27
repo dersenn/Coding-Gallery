@@ -10,7 +10,7 @@ import p5 from 'p5'
  *
  * What is being tested/preserved:
  * - Font outline sampling via `textToPoints`.
- * - Chunked depth-layer rendering with RGB-separated stroke groups.
+ * - Chunked depth-sketch rendering with RGB-separated stroke groups.
  * - Camera orbit around centered glyph under orthographic projection.
  *
  * Non-goals:
@@ -133,7 +133,7 @@ export async function init(
       cam.lookAt(0, 0, 0)
       cam.setPosition(camX, 0, camZ)
 
-      // Step 2: render point-traced glyph chunks at separated depth layers.
+      // Step 2: render point-traced glyph chunks at separated depth sketches.
       p.strokeWeight(5)
       p.noFill()
       for (let i = 0; i < glyph.chunks.length; i++) {

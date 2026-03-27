@@ -15,7 +15,7 @@
   {
     "id": "anni",
     "title": "Anni",
-    "description": "Multi-layer geometric sketch with toggleable Anni studies",
+    "description": "Multi-sketch geometric sketch with toggleable Anni studies",
     "date": "2026-03",
     "tags": [
       "svg",
@@ -242,9 +242,9 @@
     "entryFile": "/projects/c4ta/p5/trails/index.ts"
   },
   {
-    "id": "canvas2d-layer-template",
-    "title": "Canvas2D Layer Template",
-    "description": "Canonical layer-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
+    "id": "canvas2d-sketch-template",
+    "title": "Canvas2D Sketch Template",
+    "description": "Canonical sketch-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
     "date": "2026-03",
     "tags": [
       "canvas2d",

@@ -119,7 +119,7 @@ const route = useRoute()
 const router = useRouter()
 const { getProjectById } = useProjectLoader()
 const { utils } = useGenerativeUtils()
-const { controlValues, resetLayerControls, resetAllControls } = useControls()
+const { controlValues, resetSketchControls, resetAllControls } = useControls()
 const { paused, pauseEnabled, togglePause } = usePlayback()
 
 const project = computed(() => getProjectById(props.projectId))
@@ -175,7 +175,7 @@ const shortcutHints = computed(() => {
     hints.push({ key: 'space', label: paused.value ? 'play' : 'pause', action: togglePause })
   }
   if (canShowControlsUI.value) {
-    hints.push({ key: 'd', label: 'reset layer', action: () => { void handleControlAction('reset-layer-controls') } })
+    hints.push({ key: 'd', label: 'reset sketch', action: () => { void handleControlAction('reset-sketch-controls') } })
   }
   if (hasSvgDownloadAction.value) {
     hints.push({ key: 's', label: 'save SVG', action: () => { void handleControlAction('download-svg') } })
@@ -239,13 +239,13 @@ const createSeed = () => {
 }
 
 const handleControlAction = async (key: string) => {
-  if (key === 'reset-controls' || key === 'reset-layer-controls') {
-    await resetLayerControls({ preserveKeys: ['activeLayer'] })
+  if (key === 'reset-controls' || key === 'reset-sketch-controls') {
+    await resetSketchControls({ preserveKeys: ['activeSketch'] })
     return
   }
 
   if (key === 'reset-all-controls') {
-    await resetAllControls({ preserveKeys: ['activeLayer'] })
+    await resetAllControls({ preserveKeys: ['activeSketch'] })
     return
   }
 
@@ -352,7 +352,7 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
 
   if (event.key.toLowerCase() === 'd') {
     event.preventDefault()
-    void handleControlAction('reset-layer-controls')
+    void handleControlAction('reset-sketch-controls')
     return
   }
 

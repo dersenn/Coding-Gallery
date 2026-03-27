@@ -122,7 +122,7 @@ const DEFAULT_CUSTOM_PALETTE = readPersistedCustomPalette()
  * - Noise Scale: Overall noise zoom (higher = larger features)
  * - Stretch X/Y: Axis stretch for directional/striped patterns
  * - Amplitude: Overall noise intensity
- * - Octaves: Number of noise layers (1-4)
+ * - Octaves: Number of noise sketches (1-4)
  * - Lacunarity: Frequency multiplier per octave (2.0 = each octave doubles frequency)
  * - Persistence: Amplitude multiplier per octave (0.5 = each octave halves amplitude)
  *
