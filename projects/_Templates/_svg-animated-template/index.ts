@@ -51,9 +51,12 @@ export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, onControlChange, registerAction } = context
+  const { controls, utils, runtime, onControlChange, registerAction } = context
   const { v, rnd, map, rad, simplex2 } = shortcuts(utils)
   const controlState = { ...controls }
+
+  // Enable the pause/play button in the viewer shell.
+  runtime?.enablePause?.()
 
   // resolveContainer sets up container centering and returns the sized wrapper element.
   // Switch the mode string to change the layout — no other code needs to change.
@@ -100,23 +103,25 @@ export async function init(
   // Animation loop
   function animate() {
     if (!isRunning) return
-    
-    frameCount++
-    
-    // Update circles
-    circles.forEach((c, i) => {
-      const x = svg.c.x + Math.cos(c.angle + frameCount * c.speed) * c.radius
-      const y = svg.c.y + Math.sin(c.angle + frameCount * c.speed) * c.radius
-      
-      // Update SVG attributes directly (convert numbers to strings)
-      c.el.setAttribute('cx', x.toString())
-      c.el.setAttribute('cy', y.toString())
-      
-      // Optional: use noise for organic movement
-      const noiseVal = simplex2(x * 0.01, y * 0.01)
-      const r = map(noiseVal, -1, 1, 5, 15)
-      c.el.setAttribute('r', r.toString())
-    })
+
+    if (!runtime?.paused) {
+      frameCount++
+
+      // Update circles
+      circles.forEach((c) => {
+        const x = svg.c.x + Math.cos(c.angle + frameCount * c.speed) * c.radius
+        const y = svg.c.y + Math.sin(c.angle + frameCount * c.speed) * c.radius
+
+        // Update SVG attributes directly (convert numbers to strings)
+        c.el.setAttribute('cx', x.toString())
+        c.el.setAttribute('cy', y.toString())
+
+        // Optional: use noise for organic movement
+        const noiseVal = simplex2(x * 0.01, y * 0.01)
+        const r = map(noiseVal, -1, 1, 5, 15)
+        c.el.setAttribute('r', r.toString())
+      })
+    }
 
     // Continue animation loop
     animationId = requestAnimationFrame(animate)

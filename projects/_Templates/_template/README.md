@@ -6,7 +6,7 @@ Minimal template for creating new p5.js projects in the gallery.
 
 1. **Copy this folder** and rename it:
    ```bash
-   cp -r projects/_Templates/_template projects/p5/my-sketch
+   cp -r projects/_Templates/_template projects/sandbox/my-sketch
    ```
 
 2. **Edit `index.ts`** (or rename to `index.js`) - Add your controls and implement your sketch
@@ -17,10 +17,10 @@ Minimal template for creating new p5.js projects in the gallery.
      "id": "my-sketch",
      "title": "My Sketch",
      "description": "A cool generative sketch",
-     "date": "2026-02",
+     "date": "2026-03",
      "tags": ["p5js", "generative"],
-     "entryFile": "/projects/p5/my-sketch/index.ts",
-     "configFile": "/projects/p5/my-sketch/project.config.ts"
+     "entryFile": "/projects/sandbox/my-sketch/index.ts",
+     "configFile": "/projects/sandbox/my-sketch/project.config.ts"
    }
    ```
    Keep `entryFile` canonical and define runtime behavior in `project.config.ts`.
@@ -29,7 +29,7 @@ Minimal template for creating new p5.js projects in the gallery.
    ```bash
    npm run dev
    ```
-   Navigate to `http://localhost:3000/my-sketch` (legacy `http://localhost:3000/project/my-sketch` also works)
+   Navigate to `http://localhost:3000/my-sketch`
 
 ## New Project Checklist
 
@@ -302,9 +302,10 @@ export async function init(
 
 ## More Templates
 
+- **Canvas2D (animated, recommended)**: `projects/_Templates/_canvas2d-layer-template/`
+- **Canvas2D (static/simple)**: `projects/_Templates/_canvas2d-template/`
 - **SVG Static**: `projects/_Templates/_svg-template/`
 - **SVG Animated**: `projects/_Templates/_svg-animated-template/`
-- **Canvas2D**: `projects/_Templates/_canvas2d-template/`
 
 ## Vanilla Canvas Option
 

@@ -183,12 +183,22 @@
   {
     "id": "canvas2d-template",
     "title": "Canvas2D Template",
-    "description": "Template",
+    "description": "Simple init-pattern canvas2d template for static or single-draw sketches",
     "date": "2026-03",
     "tags": ["canvas2d", "template"],
     "hidden": true,
     "configFile": "/projects/_Templates/_canvas2d-template/project.config.ts",
     "entryFile": "/projects/_Templates/_canvas2d-template/index.ts"
+  },
+  {
+    "id": "canvas2d-layer-template",
+    "title": "Canvas2D Layer Template",
+    "description": "Canonical layer-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
+    "date": "2026-03",
+    "tags": ["canvas2d", "template"],
+    "hidden": true,
+    "configFile": "/projects/_Templates/_canvas2d-layer-template/project.config.ts",
+    "entryFile": "/projects/_Templates/_canvas2d-layer-template/index.ts"
   },
   {
     "id": "svg-template",
@@ -233,10 +243,10 @@
   },
   {
     "id": "svg-misc",
-    "title": "SVG Misc",
-    "description": "SVG Misc",
+    "title": "Mascara Lines",
+    "description": "SVG line studies — mascara-style stroked line compositions",
     "date": "2026-03",
-    "tags": ["svg", "misc"],
+    "tags": ["svg", "lines"],
     "hidden": false,
     "prefersTheme": "light",
     "configFile": "/projects/sandbox/svg-misc/project.config.ts",

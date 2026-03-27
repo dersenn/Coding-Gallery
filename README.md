@@ -34,7 +34,8 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   ├── useControls.ts         # Control state management
 │   ├── useGenerativeUtils.ts  # Generative art utilities accessor
 │   ├── useSeedFromURL.ts      # URL seed parameter management
-│   └── useProjectLoader.ts    # Project metadata loader
+│   ├── useProjectLoader.ts    # Project metadata loader
+│   └── usePlayback.ts         # Pause/resume state for animation loops
 ├── data/
 │   └── projects.json          # Project metadata
 ├── pages/
@@ -42,18 +43,24 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   ├── [id].vue               # Primary full-screen project route
 │   └── project/[id].vue       # Legacy-compatible project route
 ├── projects/
-│   ├── _Templates/            # Hidden project templates
-│   │   ├── _template/         # p5.js starter template
-│   │   ├── _svg-template/     # SVG static template
-│   │   └── _svg-animated-template/ # SVG animated template
-│   ├── p5/                    # p5.js sketches
-│   ├── svg/                   # SVG sketches
+│   ├── _Templates/            # Hidden project templates and reference examples
+│   │   ├── _template/             # p5.js starter template
+│   │   ├── _canvas2d-template/    # Canvas2D starter template (init pattern)
+│   │   ├── _canvas2d-layer-template/ # Canvas2D layer template (canonical modern pattern)
+│   │   ├── _svg-template/         # SVG static template
+│   │   ├── _svg-animated-template/ # SVG animated template
+│   │   ├── _noise-field/          # Noise field reference example (p5.js)
+│   │   └── _svg-example/          # SVG engine live reference
+│   ├── sandbox/               # Active projects
 │   └── c4ta/                  # Migrated C4TA sketches (subdivided by medium)
 ├── types/
 │   └── project.ts             # TypeScript interfaces
 ├── runtime/
 │   ├── projectBootstrap.ts    # Framework project/layer bootstrap orchestration
-│   └── layerRuntime.ts        # Technique-aware single-active layer runtime
+│   ├── layerRuntime.ts        # Technique-aware single-active layer runtime
+│   ├── layerRuntime.canvas2d.ts # Canvas2D layer technique adapter
+│   ├── layerRuntime.svg.ts    # SVG layer technique adapter
+│   └── layerRuntime.p5.ts     # p5.js layer technique adapter
 ├── plugins/
 │   └── keyboard-shortcuts.client.ts  # Nuxt convention: global keyboard shortcut hook
 ├── server/
@@ -75,23 +82,31 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 ## Creating a New Project
 
 Choose a template based on your sketch type:
-- **p5.js**: `projects/_Templates/_template/`
+- **Canvas2D (layer pattern, recommended for animated sketches)**: `projects/_Templates/_canvas2d-layer-template/`
+- **Canvas2D (init pattern, for simple/static sketches)**: `projects/_Templates/_canvas2d-template/`
 - **SVG (static)**: `projects/_Templates/_svg-template/`
 - **SVG (animated)**: `projects/_Templates/_svg-animated-template/`
+- **p5.js**: `projects/_Templates/_template/`
 
 ### 1. Copy the Template
 
 ```bash
-# For p5.js
-cp -r projects/_Templates/_template projects/p5/my-new-project
+# Canvas2D — layer pattern (recommended for new animated sketches)
+cp -r projects/_Templates/_canvas2d-layer-template projects/sandbox/my-new-project
 
-# For SVG
-cp -r projects/_Templates/_svg-template projects/svg/my-svg-project
+# Canvas2D — init pattern (simple/static)
+cp -r projects/_Templates/_canvas2d-template projects/sandbox/my-new-project
+
+# SVG (static)
+cp -r projects/_Templates/_svg-template projects/sandbox/my-svg-project
+
+# p5.js
+cp -r projects/_Templates/_template projects/sandbox/my-p5-project
 ```
 
 ### 2. Implement Your Sketch
 
-Edit `projects/p5/my-new-project/index.ts` (or `index.js` for rapid iteration):
+Edit your project's entry file (or `index.js` for rapid iteration):
 
 ```typescript
 import type { ProjectContext, CleanupFunction } from '~/types/project'
@@ -215,23 +230,104 @@ For SVG projects, if you do not register `download-svg`, the viewer injects a fa
 
 ### 6. Add Project Definition + Index Entry
 
-Create `project.config.ts` beside your project `index.ts`:
+Create `project.config.ts` beside your entry file. The modern canonical pattern uses a `layers[]` array that points to individual layer modules:
 
 ```ts
-import type { ProjectDefinition, ProjectModule } from '~/types/project'
-import * as legacyModuleExports from './index'
+import type { ProjectDefinition, ProjectControlDefinition, ProjectLayerDefinition } from '~/types/project'
 
-const legacyModule = legacyModuleExports as unknown as Partial<ProjectModule>
+const CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'composition',
+    label: 'Composition',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      { type: 'slider', label: 'Count', key: 'count', default: 40, min: 5, max: 200, step: 1 }
+    ]
+  }
+]
+
+const LAYERS: ProjectLayerDefinition[] = [
+  {
+    id: 'my-layer',
+    label: 'My Layer',
+    technique: 'canvas2d',          // 'canvas2d' | 'svg' | 'p5'
+    container: { mode: 'full' },    // 'full' | 'square' | '4:3' | { mode, padding }
+    module: './layers/my-layer.js',
+    controls: CONTROLS,
+    defaultActive: true
+  }
+]
 
 const definition: ProjectDefinition = {
   id: 'my-new-project',
   title: 'My New Project',
-  description: 'A cool sketch',
-  date: '2024-12',
-  tags: ['p5js', 'generative'],
-  init: legacyModule.init as ProjectDefinition['init'],
-  controls: legacyModule.controls,
-  actions: legacyModule.actions
+  description: 'A cool generative sketch',
+  date: '2026-03',
+  tags: ['canvas2d', 'generative'],
+  layers: LAYERS
+}
+
+export default definition
+```
+
+Each layer module (`./layers/my-layer.js`) exports a `draw(context)` function. The layer runtime handles resize, lifecycle, and cleanup automatically:
+
+```js
+// layers/my-layer.js
+import { shortcuts } from '~/types/project'
+
+const LOOP_BY_CANVAS = new WeakMap()
+
+export function draw(context) {
+  const { canvas, theme, controls, utils, runtime } = context
+  const { v, rnd } = shortcuts(utils)
+
+  // Enable the pause button in the viewer shell (optional)
+  runtime?.enablePause?.()
+
+  let running = true
+  const tick = () => {
+    if (!running || !canvas.el.isConnected) {
+      running = false
+      LOOP_BY_CANVAS.delete(canvas.el)
+      return
+    }
+    if (!runtime?.paused) {
+      canvas.background(theme.background)
+      const count = controls?.count ?? 40
+      for (let i = 0; i < count; i++) {
+        canvas.circle(v(rnd() * canvas.w, rnd() * canvas.h), 4, theme.foreground)
+      }
+    }
+    requestAnimationFrame(tick)
+  }
+
+  if (!LOOP_BY_CANVAS.has(canvas.el)) {
+    LOOP_BY_CANVAS.set(canvas.el, true)
+    requestAnimationFrame(tick)
+  }
+}
+```
+
+**For single-file sketches** (no layers, `init()` pattern — still supported, especially for p5.js and SVG):
+
+```ts
+import type { ProjectDefinition, ProjectModule } from '~/types/project'
+import * as mod from './index'
+
+const m = mod as unknown as Partial<ProjectModule>
+
+const definition: ProjectDefinition = {
+  id: 'my-sketch',
+  title: 'My Sketch',
+  description: 'Description',
+  date: '2026-03',
+  tags: ['svg'],
+  init: m.init as ProjectDefinition['init'],
+  controls: m.controls,
+  actions: m.actions
 }
 
 export default definition
@@ -243,19 +339,21 @@ Then add a thin entry to `data/projects.json`:
 {
   "id": "my-new-project",
   "title": "My New Project",
-  "description": "A cool sketch",
-  "date": "2024-12",
-  "tags": ["p5js", "generative"],
-  "entryFile": "/projects/p5/my-new-project/index.ts",
-  "configFile": "/projects/p5/my-new-project/project.config.ts"
+  "description": "A cool generative sketch",
+  "date": "2026-03",
+  "tags": ["canvas2d", "generative"],
+  "entryFile": "/projects/sandbox/my-new-project/index.ts",
+  "configFile": "/projects/sandbox/my-new-project/project.config.ts"
 }
 ```
 
-`configFile` is the canonical runtime definition.  
+`configFile` is the canonical runtime definition.
 `entryFile` remains in the index as canonical source path for structure/taxonomy validation.
 
 **Optional fields:**
 - `"hidden": true` - Hide from gallery (still accessible via direct URL)
+- `"noControls": true` - Suppress the control panel entirely (for sketches with no controls)
+- `"prefersTheme": "light"` - Start in light theme by default
 - `"github": "https://github.com/..."` - Shows "View on GitHub" link in info panel
 
 To reveal hidden projects on the gallery page, set a token in your environment and use it as a query parameter:
@@ -339,6 +437,47 @@ console.log('Seed:', utils.seed.current)
 - Press **'s'** to save SVG output (SVG projects only; uses `download-svg` action when available, with a viewer fallback for SVG projects)
 - Seeds are automatically saved in the URL for sharing
 - A discreet bottom overlay on project pages shows these shortcuts and the current seed
+
+### Pause / Resume
+
+Animated sketches can opt into the pause button in the viewer shell by calling `runtime?.enablePause?.()` once at draw-time. The `runtime` object is available in the layer draw context:
+
+```js
+// layers/my-layer.js
+export function draw(context) {
+  const { canvas, runtime } = context
+
+  // Enable the pause/play button
+  runtime?.enablePause?.()
+
+  // Check paused state before drawing each frame
+  const tick = () => {
+    if (!canvas.el.isConnected) return
+    if (!runtime?.paused) {
+      // render frame
+    }
+    requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+}
+```
+
+For time-based animations that need to stay in sync after unpausing, listen to pause-state changes to freeze/resume a running timestamp:
+
+```js
+let timeOffset = 0
+let pausedAt = 0
+
+runtime?.onPauseChange?.((isPaused) => {
+  if (isPaused) {
+    pausedAt = performance.now()
+  } else {
+    timeOffset += performance.now() - pausedAt
+  }
+})
+
+// In tick: const elapsed = (performance.now() - timeOffset) * speed
+```
 
 ### Math Helpers
 

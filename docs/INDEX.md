@@ -8,20 +8,26 @@ Use this folder for supporting docs while keeping the repository root focused on
 
 ## Topic references
 
-- Seed system details: `SEED_SYSTEM.md`
-- SVG engine details: `SVG_IMPLEMENTATION.md`
-- Grid and Cell utilities: See main `../README.md` (Grid and Cell Utilities section)
-- Extending GridCell per sketch (factory pattern): `GRID_CELL_EXTENSION.md`
-- Migration audits: `audits/` (use `SKETCHNAME_MIGRATION_AUDIT.md`, e.g. `PEARLYMATS_MIGRATION_AUDIT.md`)
-- Legacy source manifests: `legacy-manifests/`
-- Utility gap backlog: `UTILITY_GAP_BACKLOG.md` (centralized reusable utility candidates from migrations)
-- Layer runtime helper pattern (single-active SVG layers): `LAYER_RUNTIME_MANAGER.md`
-- Multi-technique runtime proposal (SVG + canvas2d): `MULTI_TECHNIQUE_RUNTIME_PLAN.md`
-- Standalone source export sketch (project/layer detachment): `STANDALONE_EXPORT_SKETCH.md`
-- Project config migration playbook: `PROJECT_CONFIG_MIGRATION_PLAYBOOK.md`
-- Initial control randomization reference: `INITIAL_CONTROL_RANDOMIZATION.md`
-- Framework backlog: `FRAMEWORK_BACKLOG.md` (viewer shell, controls UI, and runtime improvements)
-- Open backlog: add `validate:projects` metadata/file drift checker (see checklist in main `../README.md` and project rules)
+Status labels: `[IMPLEMENTED]` — current behaviour; `[PROPOSAL]` — not yet built; `[BACKLOG]` — tracked work items.
+
+- Seed system details: `SEED_SYSTEM.md` `[IMPLEMENTED]`
+- SVG engine details: `SVG_IMPLEMENTATION.md` `[IMPLEMENTED]`
+- Grid and Cell utilities: See main `../README.md` (Grid and Cell Utilities section) `[IMPLEMENTED]`
+- Extending GridCell per sketch (factory pattern): `GRID_CELL_EXTENSION.md` `[IMPLEMENTED]`
+- Layer runtime helper pattern (single-active layer, multi-technique): `LAYER_RUNTIME_MANAGER.md` `[IMPLEMENTED]`
+- Multi-technique runtime design notes: `MULTI_TECHNIQUE_RUNTIME_PLAN.md` `[IMPLEMENTED]`
+- Pause/resume for animated layers (`runtime?.enablePause?.()`, `runtime?.paused`, `runtime?.onPauseChange`): see `../README.md` Pause/Resume section and `../composables/usePlayback.ts` `[IMPLEMENTED]`
+- Container sizing and layout: `CONTAINER_UTILITY.md` `[IMPLEMENTED]`
+- Lightweight canvas drawing API: `CANVAS_DRAWING_UTILITY.md` `[IMPLEMENTED]`
+- Initial control randomization reference: `INITIAL_CONTROL_RANDOMIZATION.md` `[IMPLEMENTED]`
+- Project config migration playbook: `PROJECT_CONFIG_MIGRATION_PLAYBOOK.md` `[IMPLEMENTED]`
+- Migration audits: `audits/` (use `SKETCHNAME_MIGRATION_AUDIT.md`, e.g. `PEARLYMATS_MIGRATION_AUDIT.md`) `[IMPLEMENTED]`
+- Legacy source manifests: `legacy-manifests/` `[IMPLEMENTED]`
+- Utility gap backlog: `UTILITY_GAP_BACKLOG.md` (centralized reusable utility candidates from migrations) `[BACKLOG]`
+- Standalone source export sketch (project/layer detachment): `STANDALONE_EXPORT_SKETCH.md` `[PROPOSAL]`
+- History granularity (state/undo design): `HISTORY_GRANULARITY_PROPOSAL.md` `[PROPOSAL]`
+- GridCell refactor plan: `GRIDCELL_REFACTOR_PLAN.md` `[PROPOSAL]`
+- Framework backlog: `FRAMEWORK_BACKLOG.md` (viewer shell, controls UI, and runtime improvements) `[BACKLOG]`
 - Agent prompt preambles and naming guidance: `AGENT_PROMPT_PREAMBLES.md`
 
 ## Framework-first quick reference
