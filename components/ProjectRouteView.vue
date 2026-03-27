@@ -36,46 +36,44 @@
           ? `h-full ${showControls ? 'project-panel-surface backdrop-blur-sm' : ''}`
           : ''"
       >
-        <div
-          class="self-end flex items-center gap-3 p-4"
-        >
-          <div class="flex flex-col items-end gap-1">
+        <div class="self-end flex flex-col items-end gap-1 p-4">
+          <div class="flex items-center gap-3">
             <h1 class="project-overlay-type text-2xl leading-tight">{{ project.title }}</h1>
-            <select
-              v-if="hasMultipleSketches"
-              :value="String(controlValues.activeSketch ?? '')"
-              class="project-overlay-type text-sm bg-transparent border-none p-0 cursor-pointer opacity-60 hover:opacity-100 transition-opacity self-end"
-              @change="handleSketchSelect(($event.target as HTMLSelectElement).value)"
-            >
-              <option
-                v-for="opt in sketchOptions"
-                :key="String(opt.value)"
-                :value="String(opt.value)"
-              >{{ opt.label }}</option>
-            </select>
+            <UButton
+              v-if="pauseEnabled"
+              :icon="paused ? 'i-heroicons-play' : 'i-heroicons-pause'"
+              @click="togglePause()"
+              size="xl"
+              color="neutral"
+              variant="ghost"
+            />
+            <UButton
+              v-if="canShowControlsUI"
+              :icon="showControls ? 'i-heroicons-eye-slash' : 'i-heroicons-adjustments-horizontal'"
+              @click="showControls = !showControls"
+              size="xl"
+              color="neutral"
+              variant="ghost"
+            />
           </div>
-          <UButton
-            v-if="pauseEnabled"
-            :icon="paused ? 'i-heroicons-play' : 'i-heroicons-pause'"
-            @click="togglePause()"
-            size="xl"
-            color="neutral"
-            variant="ghost"
-          />
-          <UButton
-            v-if="canShowControlsUI"
-            :icon="showControls ? 'i-heroicons-eye-slash' : 'i-heroicons-adjustments-horizontal'"
-            @click="showControls = !showControls"
-            size="xl"
-            color="neutral"
-            variant="ghost"
-          />
+          <select
+            v-if="hasMultipleSketches"
+            :value="String(controlValues.activeSketch ?? '')"
+            class="project-overlay-type text-sm bg-transparent border-none p-0 cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
+            @change="handleSketchSelect(($event.target as HTMLSelectElement).value)"
+          >
+            <option
+              v-for="opt in sketchOptions"
+              :key="String(opt.value)"
+              :value="String(opt.value)"
+            >{{ opt.label }}</option>
+          </select>
         </div>
 
         <Transition name="slide-left" @after-leave="handleControlsAfterLeave">
           <div v-if="canShowControlsUI && showControls" class="flex-1 min-h-0">
             <ControlPanel
-              :controls="loadedControls"
+              :controls="controlsForPanel"
               :context-actions="visibleActions"
               :panel-state-key="project.id"
               class="h-full"
@@ -168,6 +166,11 @@ const activeSketchControl = computed(() =>
 )
 const sketchOptions = computed(() => activeSketchControl.value?.options ?? [])
 const hasMultipleSketches = computed(() => sketchOptions.value.length > 1)
+const controlsForPanel = computed(() =>
+  loadedControls.value.filter(
+    (c) => !(c.type === 'select' && c.key === 'activeSketch')
+  )
+)
 const handleSketchSelect = (sketchId: string) => {
   void router.push({ query: { ...route.query, activeSketch: sketchId } })
 }
