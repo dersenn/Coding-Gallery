@@ -85,12 +85,20 @@ const DOWNLOAD_PNG_ACTION: ProjectActionDefinition = {
 
 const activeDefinition = ref<ProjectDefinition | null>(null)
 const hasSvgTechnique = computed(() => {
-  const sketches = activeDefinition.value?.sketches ?? []
-  return sketches.some((sketch) => sketch.technique === 'svg')
+  const definition = activeDefinition.value
+  const sketches = definition?.sketches ?? []
+  if (sketches.some((sketch) => sketch.technique === 'svg')) return true
+  const supported = definition?.supportedTechniques ?? []
+  if (supported.includes('svg')) return true
+  return Boolean(props.project.tags?.includes('svg'))
 })
 const hasCanvas2dTechnique = computed(() => {
-  const sketches = activeDefinition.value?.sketches ?? []
-  return sketches.some((sketch) => sketch.technique === 'canvas2d')
+  const definition = activeDefinition.value
+  const sketches = definition?.sketches ?? []
+  if (sketches.some((sketch) => sketch.technique === 'canvas2d')) return true
+  const supported = definition?.supportedTechniques ?? []
+  if (supported.includes('canvas2d')) return true
+  return Boolean(props.project.tags?.includes('canvas2d'))
 })
 const themePreference = computed(() => props.project.prefersTheme ?? 'dark')
 const viewerBackground = computed(() => resolveTheme(undefined, themePreference.value).background)
@@ -104,10 +112,25 @@ const activeSketchId = computed(() => {
   return defaultSketchId.value
 })
 const runtimeCapabilities = computed<RuntimeActionCapabilities>(() => {
-  const activeSketch = (activeDefinition.value?.sketches ?? []).find((sketch) => sketch.id === activeSketchId.value)
+  const definition = activeDefinition.value
+  const sketches = definition?.sketches ?? []
+  const activeSketch = sketches.find((sketch) => sketch.id === activeSketchId.value)
+  if (activeSketch) {
+    return {
+      canDownloadSvg: activeSketch.technique === 'svg',
+      canDownloadPng: activeSketch.technique === 'canvas2d'
+    }
+  }
+  const supported = definition?.supportedTechniques ?? []
+  if (supported.length > 0) {
+    return {
+      canDownloadSvg: supported.includes('svg'),
+      canDownloadPng: supported.includes('canvas2d')
+    }
+  }
   return {
-    canDownloadSvg: activeSketch?.technique === 'svg',
-    canDownloadPng: activeSketch?.technique === 'canvas2d'
+    canDownloadSvg: hasActionKey(scopedProjectActions.value, DOWNLOAD_SVG_ACTION_KEY),
+    canDownloadPng: hasActionKey(scopedProjectActions.value, DOWNLOAD_PNG_ACTION_KEY)
   }
 })
 

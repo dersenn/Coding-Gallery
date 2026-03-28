@@ -1,4 +1,9 @@
-import type { ProjectContext, CleanupFunction, ProjectControlDefinition } from '~/types/project'
+import type {
+  ProjectContext,
+  CleanupFunction,
+  ProjectControlDefinition,
+  ProjectActionDefinition
+} from '~/types/project'
 import { SVG, Grid, GridCell, Color, resolveContainer } from '~/types/project'
 import {
   buildColorOptionLabels,
@@ -307,13 +312,17 @@ export const controls: ProjectControlDefinition[] = [
   }
 ]
 
+export const actions: ProjectActionDefinition[] = [
+  { key: 'download-svg', label: 'Download SVG' }
+]
+
 export const container = 'square'
 
 export async function init(
   container: HTMLElement,
   context: ProjectContext
 ): Promise<CleanupFunction> {
-  const { controls, utils, theme, onControlChange } = context
+  const { controls, utils, theme, onControlChange, registerAction } = context
   const { v, simplex2 } = shortcuts(utils)
 
   const controlState = {
@@ -709,6 +718,10 @@ export async function init(
 
   // Initial draw
   draw()
+
+  registerAction('download-svg', () => {
+    svg.save(utils.seed.current, 'pearlymats')
+  })
 
   // React to control changes
   onControlChange((newControls) => {
