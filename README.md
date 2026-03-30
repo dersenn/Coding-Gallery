@@ -1,6 +1,6 @@
 # Creative Coding Gallery
 
-A modern gallery for showcasing creative coding projects built with Nuxt 3, Vue 3, and Nuxt UI.
+A modern gallery for showcasing creative coding projects built with Nuxt 4, Vue 3, and Nuxt UI 3.
 
 ## Architecture
 
@@ -881,9 +881,9 @@ npm run preview
 
 ## Tech Stack
 
-- **Nuxt 3** - Vue framework
+- **Nuxt 4** - Vue framework
 - **Vue 3** - Composition API with TypeScript
-- **Nuxt UI** - Component library
+- **Nuxt UI 3** - Component library
 - **p5.js** - Creative coding library
 - **simplex-noise** - Noise generation
 - **TypeScript** - Type safety at the framework/wrapper level with optional sketch-level opt-out (`// @ts-nocheck`)
