@@ -7,26 +7,6 @@ import type {
 
 const GRID2_CONTROLS: ProjectControlDefinition[] = [
   {
-    type: 'select',
-    key: 'artboardAspect',
-    label: 'Artboard aspect',
-    group: 'Layout',
-    order: 5,
-    default: 'full',
-    options: [
-      { label: 'Use full canvas', value: 'full' },
-      { label: 'Square', value: 'square' },
-      { label: '1 : 1', value: '1:1' },
-      { label: '2 : 3 (portrait)', value: '2:3' },
-      { label: '3 : 2 (landscape)', value: '3:2' },
-      { label: '3 : 4', value: '3:4' },
-      { label: '4 : 3', value: '4:3' },
-      { label: '16 : 9', value: '16:9' },
-      { label: '9 : 16', value: '9:16' },
-      { label: 'φ (1 : 1.618)', value: '1:1.618' },
-    ],
-  },
-  {
     type: 'group',
     id: 'grid2-color',
     label: 'Color',
@@ -262,6 +242,93 @@ const GRID2_CONTROLS: ProjectControlDefinition[] = [
   },
 ]
 
+
+const GRIDWAVE_CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'gridwave-color',
+    label: 'Color',
+    order: 0,
+    defaultOpen: false,
+    controls: [
+      {
+        type: 'color',
+        key: 'sketchBackground',
+        label: 'Background',
+        order: 0,
+        default: '#000000',
+      },
+      {
+        type: 'color',
+        key: 'sketchForeground',
+        label: 'Foreground',
+        order: 1,
+        default: '#00ff00',
+      },
+    ],
+  },
+  {
+    type: 'slider',
+    key: 'rows',
+    label: 'Rows',
+    group: 'Grid',
+    order: 10,
+    default: 12,
+    min: 2,
+    max: 36,
+    step: 1,
+  },
+  {
+    type: 'slider',
+    key: 'minSplit',
+    label: 'Min split',
+    group: 'Wave',
+    order: 20,
+    default: 1,
+    min: 1,
+    max: 36,
+    step: 1,
+  },
+  {
+    type: 'slider',
+    key: 'maxSplit',
+    label: 'Max split',
+    group: 'Wave',
+    order: 21,
+    default: 12,
+    min: 1,
+    max: 36,
+    step: 1,
+  },
+  {
+    type: 'slider',
+    key: 'waveFreq',
+    label: 'Frequency',
+    group: 'Wave',
+    order: 22,
+    default: 1.0,
+    min: 0.1,
+    max: 10.0,
+    step: 0.1,
+  },
+  {
+    type: 'toggle',
+    key: 'useNoise',
+    label: 'Use noise',
+    group: 'Wave',
+    order: 23,
+    default: false,
+  },
+  {
+    type: 'toggle',
+    key: 'showGrid',
+    label: 'Cell edges',
+    group: 'Debug',
+    order: 90,
+    default: false,
+  },
+]
+
 const metadata = {
   "id": "grid-almighty",
   "title": "Grid Almighty",
@@ -293,9 +360,17 @@ const SKETCHES: ProjectSketchDefinition[] = [
     id: 'grid-2',
     label: 'Grid 2',
     technique: 'canvas2d',
-    container: { mode: '2:3', padding: '9vmin' },
+    container: { mode: 'full', padding: '0' },
     module: './sketches/grid-2.js',
     controls: GRID2_CONTROLS,
+  },
+  {
+    id: 'grid-3',
+    label: 'Grid 3',
+    technique: 'canvas2d',
+    container: { mode: 'full', padding: '0' },
+    module: './sketches/grid-3.js',
+    controls: GRIDWAVE_CONTROLS,
   }
 ]
 
