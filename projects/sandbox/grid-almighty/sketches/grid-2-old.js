@@ -231,6 +231,7 @@ function resolveSettings(_utils, controls) {
   }
 }
 
+
 /**
  * Map a random interior sample from utils.math.divLength along (0,0)→(1,0)
  * to an integer split count in [minV, maxV] (seed-driven via divLength + pick index).
