@@ -6,8 +6,7 @@ import type {
 } from '~/types/project'
 
 const ANNI_LAYER_OPTIONS = [
-  { label: 'Orange, Black and White (1926/27)', value: 'anni-1' },
-  { label: 'Anni 2', value: 'anni-2' }
+  { label: 'Orange, Black and White (1926/27)', value: 'anni-1' }
 ] as const
 
 const ANNI_DEFAULT_LAYER = 'anni-1' as const
@@ -16,23 +15,6 @@ const ANNI_TECHNIQUES = ['svg'] as const
 const ANNI_DEFAULT_TECHNIQUE = 'svg' as const
 
 const ANNI_CONTROLS: ProjectControlDefinition[] = [
-  {
-    type: 'group',
-    id: 'composition',
-    label: 'Composition',
-    collapsible: true,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'select',
-        label: 'Sketch',
-        key: 'activeSketch',
-        hideLabel: true,
-        default: ANNI_DEFAULT_LAYER,
-        options: ANNI_LAYER_OPTIONS.map((option) => ({ ...option }))
-      }
-    ]
-  },
   {
     type: 'group',
     id: 'anni-1',
@@ -67,13 +49,6 @@ const ANNI_SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: '2:3', padding: '3vmin' },
     module: './sketches/anni1.js',
     defaultActive: true
-  },
-  {
-    id: 'anni-2',
-    label: 'Anni 2',
-    technique: 'svg',
-    container: { mode: '1:1', padding: '3vmin' },
-    module: './sketches/anni2.js'
   }
 ]
 
