@@ -289,6 +289,24 @@ export class Canvas {
     this.ctx.restore()
   }
 
+  ellipse(
+    at: Vec,
+    rx: number,
+    ry: number,
+    rotation: number = 0,
+    fill: string = this.def.fill,
+    stroke: string = this.def.stroke,
+    strokeW: number = this.def.strokeW
+  ): void {
+    this.ctx.save()
+    applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
+    this.ctx.beginPath()
+    this.ctx.ellipse(at.x, at.y, Math.max(0, rx), Math.max(0, ry), rotation, 0, Math.PI * 2)
+    if (fill !== 'transparent') this.ctx.fill()
+    if (stroke !== 'transparent' && strokeW > 0) this.ctx.stroke()
+    this.ctx.restore()
+  }
+
   rect(
     at: Vec,
     width: number,

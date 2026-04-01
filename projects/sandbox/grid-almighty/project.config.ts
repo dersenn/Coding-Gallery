@@ -371,6 +371,14 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full', padding: '0' },
     module: './sketches/grid-3.js',
     controls: GRIDWAVE_CONTROLS,
+  },
+  {
+    id: 'grid-4',
+    label: 'Grid 4',
+    technique: 'canvas2d',
+    container: { mode: 'full', padding: '0' },
+    module: './sketches/grid-4.js',
+    controls: GRIDWAVE_CONTROLS,
   }
 ]
 

@@ -184,7 +184,7 @@ types/
 
 ## Reference sketches
 
-- `grid-wave.js` — canonical minimal pattern: closures, shortcuts, wave-driven subdivision
-- `grid-3.js` — fuller example: three subdivision modes, helper functions
+- `grid-3.js` — canonical minimal pattern: closures, shortcuts, wave-driven subdivision
+- `grid-2.js` — fuller example: three subdivision modes, helper functions
 - `this-is-water.js` — animated canvas2d sketch (currently has own RAF loop;
   migration to `runtime.loop()` pending)
