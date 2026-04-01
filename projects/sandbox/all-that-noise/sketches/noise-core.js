@@ -1,7 +1,5 @@
 import { Grid, GridCell } from '~/types/project'
 
-const LOOP_BY_CANVAS = new WeakMap()
-
 function getSettings(controls) {
   return {
     cols: Math.floor(controls?.noise_anim_cols ?? 64),
@@ -60,16 +58,9 @@ function createNoiseGrid(canvas, settings, utils) {
   })
 }
 
-/**
- * Minimal animated canvas playground sketch:
- * starts one RAF loop per mounted canvas and stops automatically on unmount.
- */
-export function draw(context) {
-  const { canvas, theme, utils, controls } = context
+export function draw({ canvas, theme, utils, controls, runtime }) {
   if (!canvas) return
-  if (LOOP_BY_CANVAS.has(canvas.el)) return
 
-  let running = true
   let grid = null
   let gridSignature = ''
 
@@ -83,16 +74,9 @@ export function draw(context) {
     return grid
   }
 
-  const tick = (now) => {
-    if (!running) return
-    if (!canvas.el.isConnected) {
-      running = false
-      LOOP_BY_CANVAS.delete(canvas.el)
-      return
-    }
-
+  runtime.loop(({ elapsed }) => {
     const settings = getSettings(controls)
-    const time = now * settings.timeScale
+    const time = elapsed * settings.timeScale
     const activeGrid = resolveGrid(settings)
 
     canvas.background(theme.background)
@@ -100,10 +84,5 @@ export function draw(context) {
       // Noise is dynamic per frame; grid topology is reused until signature changes.
       cell.draw(canvas, settings, time, theme)
     })
-
-    requestAnimationFrame(tick)
-  }
-
-  LOOP_BY_CANVAS.set(canvas.el, true)
-  requestAnimationFrame(tick)
+  })
 }

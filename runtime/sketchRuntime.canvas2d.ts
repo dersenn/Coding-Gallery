@@ -7,12 +7,13 @@ interface CreateCanvas2dLayerRuntimeArgs {
   height: number
   runtimeName: string
   onDraw: (canvas: Canvas) => void
+  onDestroy?: () => void
 }
 
 export function createCanvas2dSketchRuntime(
   args: CreateCanvas2dLayerRuntimeArgs
 ): SingleActiveSketchRuntime {
-  const { parent, width, height, runtimeName, onDraw } = args
+  const { parent, width, height, runtimeName, onDraw, onDestroy } = args
   const canvas = new Canvas({
     parent,
     id: runtimeName,
@@ -29,6 +30,7 @@ export function createCanvas2dSketchRuntime(
       canvas.save({ seed, projectId: runtimeName })
     },
     destroy: () => {
+      onDestroy?.()
       canvas.el.remove()
     }
   }

@@ -1,9 +1,6 @@
 import { Grid, GridCell } from '~/types/project'
 import { Color } from '~/utils/color'
 
-const LOOP_BY_CANVAS = new WeakMap()
-const STATE_BY_CANVAS = new WeakMap()
-
 function getSettings(controls, theme) {
   return {
     cols: 1,
@@ -212,24 +209,11 @@ function createNoiseGrid(canvas, settings, utils) {
   })
 }
 
-/**
- * Minimal animated canvas playground sketch:
- * starts one RAF loop per mounted canvas and stops automatically on unmount.
- */
-export function draw(context) {
-  const { canvas, theme, utils, controls, runtime } = context
+export function draw({ canvas, theme, utils, controls, runtime }) {
   if (!canvas) return
-  if (LOOP_BY_CANVAS.has(canvas.el)) return
 
-  runtime?.enablePause?.()
-
-  let running = true
-  let rafId = null
   let grid = null
   let gridSignature = ''
-  let pauseCleanup = null
-  let pausedAt = null
-  let pausedTotalMs = 0
 
   // Rebuild grid only when dimensions or row/col topology change.
   const resolveGrid = (settings) => {
@@ -241,25 +225,9 @@ export function draw(context) {
     return grid
   }
 
-  const tick = (now) => {
-    if (!running) return
-    if (!canvas.el.isConnected) {
-      running = false
-      if (rafId !== null) cancelAnimationFrame(rafId)
-      if (pauseCleanup) pauseCleanup()
-      LOOP_BY_CANVAS.delete(canvas.el)
-      STATE_BY_CANVAS.delete(canvas.el)
-      return
-    }
-
-    if (runtime?.paused) {
-      rafId = null
-      return
-    }
-
+  runtime.loop(({ elapsed }) => {
     const settings = getSettings(controls, theme)
-    const effectiveNow = now - pausedTotalMs
-    const time = effectiveNow * settings.timeScale
+    const time = elapsed * settings.timeScale
     const activeGrid = resolveGrid(settings)
 
     // Per-frame repaint: topology can stay static while sampled values animate.
@@ -268,44 +236,5 @@ export function draw(context) {
       // Noise is dynamic per frame; grid topology is reused until signature changes.
       cell.draw(canvas, settings, time, theme)
     })
-
-    rafId = requestAnimationFrame(tick)
-  }
-
-  const start = () => {
-    if (!running) return
-    if (!canvas.el.isConnected) return
-    if (runtime?.paused) return
-    if (rafId !== null) return
-    rafId = requestAnimationFrame(tick)
-  }
-
-  if (runtime?.onPauseChange) {
-    pauseCleanup = runtime.onPauseChange((paused) => {
-      if (!running) return
-      if (paused) {
-        pausedAt = performance.now()
-        if (rafId !== null) {
-          cancelAnimationFrame(rafId)
-          rafId = null
-        }
-        return
-      }
-      if (pausedAt !== null) {
-        pausedTotalMs += performance.now() - pausedAt
-        pausedAt = null
-      }
-      start()
-    })
-  }
-
-  LOOP_BY_CANVAS.set(canvas.el, true)
-  STATE_BY_CANVAS.set(canvas.el, {
-    stop: () => {
-      running = false
-      if (rafId !== null) cancelAnimationFrame(rafId)
-      if (pauseCleanup) pauseCleanup()
-    }
   })
-  start()
 }
