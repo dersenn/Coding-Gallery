@@ -11,6 +11,7 @@ import { singleActiveSketchManager, type SingleActiveSketchDefinition } from '~/
 import { createSvgSketchRuntime } from '~/runtime/sketchRuntime.svg'
 import { createCanvas2dSketchRuntime } from '~/runtime/sketchRuntime.canvas2d'
 import { createP5SketchRuntime } from '~/runtime/sketchRuntime.p5'
+import { createLoopManager } from '~/runtime/loopManager'
 
 interface InitFromProjectDefinitionArgs {
   definition: ProjectDefinition
@@ -106,14 +107,35 @@ export async function initFromProjectDefinition(
       }
 
       if (sketch.technique === 'canvas2d') {
+        let canvasEl: HTMLElement | null = null
+        const loopManager = createLoopManager(
+          () => canvasEl?.isConnected ?? true,
+          runtime
+        )
         return createCanvas2dSketchRuntime({
           parent,
           width: layerWidth,
           height: layerHeight,
           runtimeName: `${definition.id}-${sketch.id}`,
           onDraw: (canvas) => {
-            drawWithModule(undefined, canvas)
-          }
+            canvasEl = canvas.el
+            const augmentedRuntime = runtime ? { ...runtime, loop: loopManager.register } : undefined
+            const layerModule = loadedLayerModules.get(sketch.id)
+            layerModule?.draw?.({
+              technique: sketch.technique,
+              canvas,
+              ctx: canvas.ctx,
+              frame,
+              theme,
+              utils,
+              controls: controlState,
+              runtime: augmentedRuntime,
+              v,
+              rnd,
+              coin
+            })
+          },
+          onDestroy: () => loopManager.stop()
         })
       }
 

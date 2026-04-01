@@ -7,10 +7,11 @@ interface CreateSvgLayerRuntimeArgs {
   height: number
   runtimeName: string
   onDraw: (svg: SVG) => void
+  onDestroy?: () => void
 }
 
 export function createSvgSketchRuntime(args: CreateSvgLayerRuntimeArgs): SingleActiveSketchRuntime {
-  const { parent, width, height, runtimeName, onDraw } = args
+  const { parent, width, height, runtimeName, onDraw, onDestroy } = args
   const svg = new SVG({ parent, id: runtimeName, width, height })
 
   return {
@@ -23,6 +24,7 @@ export function createSvgSketchRuntime(args: CreateSvgLayerRuntimeArgs): SingleA
       svg.save(String(seed), runtimeName)
     },
     destroy: () => {
+      onDestroy?.()
       svg.stage.remove()
     }
   }

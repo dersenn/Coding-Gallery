@@ -1,6 +1,7 @@
 import type { GenerativeUtils } from '~/utils/generative'
 import type { ThemeOverride, ThemeTokens } from '~/utils/theme'
 import type { ContainerMode, ContainerConfig } from '~/utils/container'
+import type { LoopTickState } from '~/runtime/loopManager'
 
 export type Technique = 'svg' | 'canvas2d' | 'p5'
 
@@ -193,6 +194,7 @@ export interface ProjectContext {
     enablePause?: () => void
     togglePause: () => void
     onPauseChange: (callback: (paused: boolean) => void) => CleanupFunction
+    loop?: (fn: (state: LoopTickState) => void) => void
   }
 }
 
