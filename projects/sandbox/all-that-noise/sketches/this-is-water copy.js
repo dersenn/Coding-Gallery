@@ -1,0 +1,240 @@
+import { Grid, GridCell } from '~/types/project'
+import { Color } from '~/utils/color'
+
+function getSettings(controls, theme) {
+  return {
+    cols: 1,
+    rows: 1,
+    shortSideDivisions: Math.floor(controls?.water_short_side_divisions ?? 90),
+    noiseScale: controls?.noise_anim_scale ?? 0.065,
+    timeScale: controls?.noise_anim_time_scale ?? 0.0006,
+    warpScale: controls?.noise_anim_warp ?? 0.18,
+    contrast: controls?.noise_anim_contrast ?? 1,
+    useOsc: controls?.use_osc ?? true,
+    useContrastOsc: controls?.use_contrast_osc ?? true,
+    foamMin: controls?.foam_min ?? 0.6,
+    foamMax: controls?.foam_max ?? 0.63,
+    foamBandPad: controls?.foam_band_pad ?? 0.07,
+    foamRise: controls?.foam_rise ?? 0.22,
+    foamFall: controls?.foam_fall ?? 0.05,
+    foamShow: controls?.foam_show ?? 0.35,
+    shadowOffsetX: controls?.shadow_offset_x ?? 8,
+    shadowOffsetY: controls?.shadow_offset_y ?? -8,
+    shadowLinked: controls?.shadow_linked ?? true,
+    shadowLinkedMinOffset: controls?.shadow_linked_min_offset ?? -0.15,
+    shadowLinkedMaxOffset: controls?.shadow_linked_max_offset ?? -0.05,
+    shadowLinkedPadBoost: controls?.shadow_linked_pad_boost ?? 0.03,
+    shadowMin: controls?.shadow_min ?? 0.45,
+    shadowMax: controls?.shadow_max ?? 0.58,
+    shadowBandPad: controls?.shadow_band_pad ?? 0.08,
+    shadowRise: controls?.shadow_rise ?? 0.16,
+    shadowFall: controls?.shadow_fall ?? 0.04,
+    shadowShow: controls?.shadow_show ?? 0.3,
+    // Keep field-space stable across grid resolution changes.
+    sampleReferenceDivisions: Math.floor(controls?.sample_reference_divisions ?? 90),
+    palette: {
+      pool: {
+        water: theme.palette[4],
+        shadow: theme.palette[2],
+        foam: theme.white,
+        shadowAlpha: 0.3
+      },
+      sea: {
+        water: theme.palette[2],
+        shadow: theme.black,
+        foam: theme.white,
+        shadowAlpha: 0.6
+      },
+      poison: {
+        water: Color.parse(theme.foreground).withAlpha(0.9).toRgbaString(),
+        shadow: theme.black,
+        foam: Color.parse(theme.white).withAlpha(0.5).toRgbaString(),
+        shadowAlpha: 0.6
+      }
+    },
+    type: controls?.water_type ?? 'sea'
+  }
+}
+
+// Intent: generate "water bands" by sampling one evolving scalar field twice
+// (foam pass + shifted shadow pass), then using hysteresis/persistence to keep
+// temporal continuity and avoid single-frame flicker.
+class NoiseCell extends GridCell {
+  constructor(config) {
+    super(config)
+    this.isfoam = false
+    this.isshadow = false
+    this.foamLife = 0
+    this.shadowLife = 0
+  }
+
+  updateBandState(value, state, life, cfg) {
+    const inEnter = cfg.enterMin < value && value < cfg.enterMax
+    const inExit = cfg.exitMin < value && value < cfg.exitMax
+    // Hysteresis: once on, use wider exit band
+    const isOn = state ? inExit : inEnter
+    // Temporal persistence
+    const rise = cfg.rise ?? 0.2
+    const fall = cfg.fall ?? 0.06
+    const nextLife = isOn
+      ? Math.min(1, life + rise)
+      : Math.max(0, life - fall)
+    return { isOn, life: nextLife }
+  }
+
+  sampleNormalized(settings, time, {offX = 0, offY = 0}) {
+    const { utils } = this.grid
+    // Sample from world/pixel space mapped into a fixed virtual unit size so
+    // shortSideDivisions only changes render resolution, not field character.
+    const shortSide = Math.max(1, Math.min(this.grid.width, this.grid.height))
+    const unit = shortSide / Math.max(1, settings.sampleReferenceDivisions)
+    const sampleCol = (this.x + this.width * 0.5 - this.grid.x) / unit
+    const sampleRow = (this.y + this.height * 0.5 - this.grid.y) / unit
+
+    // offX/offY remain in "virtual cell" units so existing controls still read naturally.
+    const baseX = (sampleCol + offX) * settings.noiseScale
+    const baseY = (sampleRow + offY) * settings.noiseScale
+
+    // Phase fields for two directional wave components (sum-of-sines / Gerstner-like
+    // orbital offset). row/col coefficients are wave-vector components.
+    const phi1 = time * 1.8 + sampleRow * 0.12 + sampleCol * 0.08
+    const phi2 = time * 1.15 + sampleRow * 0.07 - sampleCol * 0.11  // different angle
+
+    // 90-degree sin/cos pairing approximates circular particle orbits.
+    const oscX = settings.useOsc
+      ? (-Math.sin(phi1) * 0.10 + -Math.sin(phi2) * 0.06)
+      : 0
+    const oscY = settings.useOsc
+      ? (Math.cos(phi1) * 0.07 + Math.cos(phi2) * 0.04)
+      : 0
+
+    // Domain warping bends noise coordinates so structures split/merge over time
+    // instead of looking like rigidly translated blobs.
+    const warpX = utils.noise.simplex2D(baseX * 0.7 - time * 0.8, baseY * 0.7 + time * 0.6) * settings.warpScale
+    const warpY = utils.noise.simplex2D(baseX * 0.7 + 23.1 + time * 0.5, baseY * 0.7 - 11.7 - time * 0.7) * settings.warpScale
+
+    const x = baseX + warpX + oscX
+    const y = baseY + warpY + oscY
+
+    // You can also sharpen the wave shape itself with the self-modulated trick if you want more character:
+    // const sharpened = Math.sin(phi1 + Math.sin(phi1 * 0.5) * 1.2)
+
+    // Three-octave fBm: low octave drives macro patches, higher octaves add texture.
+    const n0 = utils.noise.simplex2D(x * 0.9 + time * 0.2, y * 0.9 - time * 0.15)
+    const n1 = utils.noise.simplex2D(x * 1.8 - time * 0.35, y * 1.8 + time * 0.25)
+    const n2 = utils.noise.simplex2D(x * 3.2 + time * 0.5, y * 3.2 - time * 0.4)
+    const n = n0 * 0.62 + n1 * 0.28 + n2 * 0.1
+
+    const normalized = utils.math.clamp((n + 1) * 0.5, 0, 1)
+    // Mild temporal contrast breathing prevents long static "plateaus" in thresholding.
+    const contrast = settings.useContrastOsc
+      ? utils.math.clamp(settings.contrast + Math.sin(time * 1.2) * 0.2, 0.4, 3)
+      : settings.contrast
+
+    return normalized ** contrast
+  }
+
+  draw(canvas, settings, time, theme) {
+    // Same generator, two nearby sample domains: foam + lagging/offset shadow.
+    const foamN = this.sampleNormalized(settings, time, { offX: 0, offY: 0 })
+    const shadowN = this.sampleNormalized(settings, time, {
+      offX: settings.shadowOffsetX,
+      offY: settings.shadowOffsetY
+    })
+
+    const clrs = settings.palette[settings.type]
+
+    // Narrow enter band + padded exit band = sticky state (less twinkle).
+    const foamCfg = {
+      enterMin: settings.foamMin,
+      enterMax: settings.foamMax,
+      exitMin: settings.foamMin - settings.foamBandPad,
+      exitMax: settings.foamMax + settings.foamBandPad,
+      rise: settings.foamRise,
+      fall: settings.foamFall
+    }
+    const linkedShadowCfg = {
+      enterMin: settings.foamMin + settings.shadowLinkedMinOffset,
+      enterMax: settings.foamMax + settings.shadowLinkedMaxOffset,
+      exitMin: settings.foamMin + settings.shadowLinkedMinOffset - (settings.foamBandPad + settings.shadowLinkedPadBoost),
+      exitMax: settings.foamMax + settings.shadowLinkedMaxOffset + (settings.foamBandPad + settings.shadowLinkedPadBoost),
+      rise: settings.foamRise * 0.75,
+      fall: settings.foamFall * 0.8
+    }
+    const customShadowCfg = {
+      enterMin: settings.shadowMin,
+      enterMax: settings.shadowMax,
+      exitMin: settings.shadowMin - settings.shadowBandPad,
+      exitMax: settings.shadowMax + settings.shadowBandPad,
+      rise: settings.shadowRise,
+      fall: settings.shadowFall
+    }
+    const shadowCfg = settings.shadowLinked ? linkedShadowCfg : customShadowCfg
+
+    // Life is a temporal low-pass over binary band membership.
+    const nextFoam = this.updateBandState(foamN, this.isfoam, this.foamLife, foamCfg)
+    const nextShadow = this.updateBandState(shadowN, this.isshadow, this.shadowLife, shadowCfg)
+    this.isfoam = nextFoam.isOn
+    this.foamLife = nextFoam.life
+    this.isshadow = nextShadow.isOn
+    this.shadowLife = nextShadow.life
+
+    const showFoam = this.foamLife > settings.foamShow
+    const showShadow = this.shadowLife > (settings.shadowLinked ? Math.max(0.05, settings.foamShow - 0.05) : settings.shadowShow)
+
+    let fill = 'transparent'
+    if (showShadow) fill = Color.parse(clrs.shadow)?.withAlpha(clrs.shadowAlpha).toRgbaString() ?? 'rgba(255, 255, 255, 0.5)'
+    if (showFoam) fill = Color.parse(clrs.foam)?.toRgbaString() ?? 'rgba(255, 255, 255, 1)'
+
+    // Draw as tiled grid cells to preserve clean seams at any density.
+    canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)
+  }
+}
+
+class NoiseFieldGrid extends Grid {
+  createCell(config) {
+    return new NoiseCell(config)
+  }
+}
+
+function createNoiseGrid(canvas, settings, utils) {
+  return new NoiseFieldGrid({
+    cols: settings.cols,
+    rows: settings.rows,
+    width: canvas.w,
+    height: canvas.h,
+    cellSizing: 'squareByShortSide',
+    shortSideDivisions: settings.shortSideDivisions,
+    utils
+  })
+}
+
+export function draw({ canvas, theme, utils, controls, runtime }) {
+  if (!canvas) return
+
+  let grid = null
+  let gridSignature = ''
+
+  // Rebuild grid only when dimensions or row/col topology change.
+  const resolveGrid = (settings) => {
+    const nextSignature = `${canvas.w}x${canvas.h}:${settings.shortSideDivisions}`
+    if (!grid || gridSignature !== nextSignature) {
+      grid = createNoiseGrid(canvas, settings, utils)
+      gridSignature = nextSignature
+    }
+    return grid
+  }
+
+  runtime.loop(({ elapsed }) => {
+    const settings = getSettings(controls, theme)
+    const time = elapsed * settings.timeScale
+    const activeGrid = resolveGrid(settings)
+
+    // Per-frame repaint: topology can stay static while sampled values animate.
+    canvas.background(Color.parse(settings.palette[settings.type].water)?.toRgbaString() ?? 'rgba(255, 255, 255, 1)')
+    activeGrid.forEach((cell) => {
+      // Noise is dynamic per frame; grid topology is reused until signature changes.
+      cell.draw(canvas, settings, time, theme)
+    })
+  })
+}

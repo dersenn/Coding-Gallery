@@ -1,6 +1,7 @@
 import { Grid, GridCell } from '~/types/project'
 import { Color } from '~/utils/color'
 
+
 class MyGrid extends Grid {
   createCell(config) {
     return new MyCell(config)
@@ -101,64 +102,60 @@ class MyCell extends GridCell {
   }
 }
 
-function getSettings(c, theme) {
-  return {
-    cols: 1,
-    rows: 1,
-    shortSideDivisions: Math.floor(c.water_short_side_divisions ?? 90),
-    sampleReferenceDivisions: Math.floor(c.sample_reference_divisions ?? 90),
-    noiseScale: c.noise_anim_scale ?? 0.065,
-    timeScale: c.noise_anim_time_scale ?? 0.0006,
-    warpScale: c.noise_anim_warp ?? 0.18,
-    contrast: c.noise_anim_contrast ?? 1,
-    useOsc: c.use_osc ?? true,
-    useContrastOsc: c.use_contrast_osc ?? true,
-    foamMin: c.foam_min ?? 0.6,
-    foamMax: c.foam_max ?? 0.63,
-    foamBandPad: c.foam_band_pad ?? 0.07,
-    foamRise: c.foam_rise ?? 0.22,
-    foamFall: c.foam_fall ?? 0.05,
-    foamShow: c.foam_show ?? 0.35,
-    shadowOffsetX: c.shadow_offset_x ?? 8,
-    shadowOffsetY: c.shadow_offset_y ?? -8,
-    shadowLinked: c.shadow_linked ?? true,
-    shadowLinkedMinOffset: c.shadow_linked_min_offset ?? -0.15,
-    shadowLinkedMaxOffset: c.shadow_linked_max_offset ?? -0.05,
-    shadowLinkedPadBoost: c.shadow_linked_pad_boost ?? 0.03,
-    shadowMin: c.shadow_min ?? 0.45,
-    shadowMax: c.shadow_max ?? 0.58,
-    shadowBandPad: c.shadow_band_pad ?? 0.08,
-    shadowRise: c.shadow_rise ?? 0.16,
-    shadowFall: c.shadow_fall ?? 0.04,
-    shadowShow: c.shadow_show ?? 0.3,
-    type: c.water_type ?? 'sea',
-    palette: {
-      pool: { water: theme.palette[4], shadow: theme.palette[2], foam: theme.white, shadowAlpha: 0.3 },
-      sea: { water: theme.palette[2], shadow: theme.black, foam: theme.white, shadowAlpha: 0.6 },
-      poison: { water: Color.parse(theme.foreground).withAlpha(0.9).toRgbaString(), shadow: theme.black, foam: Color.parse(theme.white).withAlpha(0.5).toRgbaString(), shadowAlpha: 0.6 }
-    }
-  }
-}
-
 export function draw({ canvas, theme, utils, controls: c, runtime }) {
   if (!canvas) return
 
   let grid = null
   let gridSignature = ''
 
-  runtime.loop(({ elapsed }) => {
-    const s = getSettings(c, theme)
+  const palette = {
+    pool: { water: theme.palette[4], shadow: theme.palette[2], foam: theme.white, shadowAlpha: 0.3 },
+    sea: { water: theme.palette[2], shadow: theme.black, foam: theme.white, shadowAlpha: 0.6 },
+    poison: { water: Color.parse(theme.foreground).withAlpha(0.9).toRgbaString(), shadow: theme.black, foam: Color.parse(theme.white).withAlpha(0.5).toRgbaString(), shadowAlpha: 0.6 }
+  }
 
-    const nextSignature = `${canvas.w}x${canvas.h}:${s.shortSideDivisions}`
+  runtime.loop(({ elapsed }) => {
+    const shortSideDivisions = Math.floor(c.water_short_side_divisions ?? 90)
+    const s = {
+      cols: 1, rows: 1,
+      shortSideDivisions,
+      sampleReferenceDivisions: Math.floor(c.sample_reference_divisions ?? 90),
+      noiseScale: c.noise_anim_scale ?? 0.065,
+      timeScale: c.noise_anim_time_scale ?? 0.0006,
+      warpScale: c.noise_anim_warp ?? 0.18,
+      contrast: c.noise_anim_contrast ?? 1,
+      useOsc: c.use_osc ?? true,
+      useContrastOsc: c.use_contrast_osc ?? true,
+      foamMin: c.foam_min ?? 0.6,
+      foamMax: c.foam_max ?? 0.63,
+      foamBandPad: c.foam_band_pad ?? 0.07,
+      foamRise: c.foam_rise ?? 0.22,
+      foamFall: c.foam_fall ?? 0.05,
+      foamShow: c.foam_show ?? 0.35,
+      shadowOffsetX: c.shadow_offset_x ?? 8,
+      shadowOffsetY: c.shadow_offset_y ?? -8,
+      shadowLinked: c.shadow_linked ?? true,
+      shadowLinkedMinOffset: c.shadow_linked_min_offset ?? -0.15,
+      shadowLinkedMaxOffset: c.shadow_linked_max_offset ?? -0.05,
+      shadowLinkedPadBoost: c.shadow_linked_pad_boost ?? 0.03,
+      shadowMin: c.shadow_min ?? 0.45,
+      shadowMax: c.shadow_max ?? 0.58,
+      shadowBandPad: c.shadow_band_pad ?? 0.08,
+      shadowRise: c.shadow_rise ?? 0.16,
+      shadowFall: c.shadow_fall ?? 0.04,
+      shadowShow: c.shadow_show ?? 0.3,
+      type: c.water_type ?? 'sea',
+      palette
+    }
+
+    const nextSignature = `${canvas.w}x${canvas.h}:${shortSideDivisions}`
     if (!grid || gridSignature !== nextSignature) {
       grid = new MyGrid({
-        cols: s.cols,
-        rows: s.rows,
-        width: canvas.w,
-        height: canvas.h,
+        cols: s.cols, rows: s.rows,
+        width: canvas.w, height: canvas.h,
         cellSizing: 'squareByShortSide',
         shortSideDivisions: s.shortSideDivisions,
-        utils
+        utils  // ← just utils, not canvas.utils
       })
       gridSignature = nextSignature
     }
