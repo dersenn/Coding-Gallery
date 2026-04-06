@@ -1,5 +1,8 @@
 import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
+import { buildWeave, renderWeave } from '~/utils/weave'
+
+
 
 
 
@@ -59,34 +62,103 @@ class MyCell extends GridCell {
     this.color = colors[i]
   }
 
+  drawWeave(canvas, weave) {
+    const cellSize = this.width / weave.cols
+    const ctx = canvas.ctx
+    const ox = Math.round(this.x)
+    const oy = Math.round(this.y)
+
+    for (let row = 0; row < weave.rows; row++) {
+      for (let col = 0; col < weave.cols; col++) {
+        const x0 = Math.round(ox + col * cellSize)
+        const x1 = Math.round(ox + (col + 1) * cellSize)
+        const y0 = Math.round(oy + row * cellSize)
+        const y1 = Math.round(oy + (row + 1) * cellSize)
+        const warpUp = weave.drawdown[row][col]
+        ctx.fillStyle = warpUp
+          ? weave.warpColors[col % weave.warpColors.length]
+          : weave.weftColors[row % weave.weftColors.length]
+        ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+      }
+    }
+  }
+
+
   draw(canvas, theme) {
+    const { v } = shortcuts(this.grid.utils)
     const r = this.width / 2
     const bucket = Math.min(Math.floor(this.noise * theme.palette.length), theme.palette.length - 1)
 
     switch (bucket) {
       case 0:
-        canvas.circle(this.center(), r, this.color, 'transparent', 0)
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 2, 3, 4],
+          treadling: [1, 2, 3, 4],
+          tieup: [
+            [true, false, false, false],
+            [false, true, false, false],
+            [false, false, true, false],
+            [false, false, false, true],
+          ],
+          warpColors: [this.color, theme.white],
+          weftColors: [theme.white, this.color],
+        }))
         break
       case 1:
-        canvas.circle(this.center(), r * 0.5, this.color, 'transparent', 0)
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 2],
+          treadling: [1, 2],
+          tieup: [
+            [true, false],
+            [false, true]
+          ],
+          warpColors: [theme.white, theme.white],
+          weftColors: [this.color, this.color],
+        }))
         break
       case 2:
-        canvas.rect(this.tl(), this.width / 2, this.height, theme.white, 'transparent', 0)
-        canvas.rect(new Vec(this.center().x, this.center().y - this.height / 2), this.width / 2, this.height, this.color, 'transparent', 0)
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 2, 3, 4],
+          treadling: [1, 2, 3, 4],
+          tieup: [
+            [true, true, false, false],
+            [false, true, true, false],
+            [false, false, true, true],
+            [true, false, false, true]
+          ],
+          warpColors: [this.color, theme.white],
+          weftColors: [theme.white, this.color],
+        }))
         break
       case 3:
-        const height = this.height / 3
-        canvas.rect(this.tl(), height, height, this.color, 'transparent', 0)
-        canvas.rect({ x: this.tl().x + 2 * height, y: this.tl().y }, height, height, this.color, 'transparent', 0)
-        canvas.rect({ x: this.tl().x + height, y: this.tl().y + height }, 2 * height, height, this.color, 'transparent', 0)
-        canvas.rect({ x: this.tl().x, y: this.tl().y + 2 * height }, 2 * height, height, this.color, 'transparent', 0)
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 2, 1, 2],
+          treadling: [1, 2, 1, 2],
+          tieup: [
+            [true, false],
+            [false, true]
+          ],
+          warpColors: [theme.white, this.color],
+          weftColors: [this.color, theme.white],
+        }))
         break
       case 4:
-        canvas.rect(this.tl(), this.width, this.height / 2, this.color, 'transparent', 0)
-        canvas.rect(new Vec(this.center().x, this.center().y - this.height / 2), this.width / 2, this.height, this.color, 'transparent', 0)
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 2, 3, 4],
+          treadling: [1, 2, 3, 4],
+          tieup: [
+            [true, false, false, false],
+            [false, false, false, true],
+            [false, false, true, false],
+            [false, true, false, false]
+          ],
+          warpColors: [this.color, theme.white],
+          weftColors: [theme.white, this.color],
+        }))
         break
+
       default:
-        canvas.rect(this.tl(), this.width, this.height, this.color, 'transparent', 0)
+        canvas.rect(this.tl(), this.width, this.height, theme.black, 'transparent', 0)
     }
   }
 }
@@ -107,7 +179,7 @@ export function draw(context) {
 
   const grid = new MyGrid({ 
     cols: 1, 
-    rows: rndInt(2, 6), 
+    rows: rndInt(1, 4), 
     width: 
     canvas.w, 
     height: 
@@ -142,7 +214,7 @@ export function draw(context) {
   })
 
 
-  canvas.cellEdges(terminals, theme.annotation, 1, { strokeAlign: 'center', includeOuter: false })
+  // canvas.cellEdges(terminals, theme.annotation, 1, { strokeAlign: 'center', includeOuter: false })
 
 
 
