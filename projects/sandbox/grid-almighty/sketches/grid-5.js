@@ -98,8 +98,8 @@ class MyCell extends GridCell {
             [false, false, true, false],
             [false, false, false, true],
           ],
-          warpColors: [this.color, theme.white],
-          weftColors: [theme.white, this.color],
+          warpColors: [this.color, 'transparent'],
+          weftColors: ['transparent', this.color],
         }))
         break
       case 1:
@@ -110,7 +110,7 @@ class MyCell extends GridCell {
             [true, false],
             [false, true]
           ],
-          warpColors: [theme.white, theme.white],
+          warpColors: ['transparent', 'transparent'],
           weftColors: [this.color, this.color],
         }))
         break
@@ -125,7 +125,7 @@ class MyCell extends GridCell {
             [true, true, false, true],
           ],
           warpColors: [this.color],
-          weftColors: [theme.white],
+          weftColors: ['transparent'],
         }))
         break
       case 3:
@@ -136,8 +136,8 @@ class MyCell extends GridCell {
             [true, false],
             [false, true]
           ],
-          warpColors: [theme.white, this.color],
-          weftColors: [this.color, theme.white],
+          warpColors: ['transparent', this.color],
+          weftColors: [this.color, 'transparent'],
         }))
         break
       case 4:
@@ -150,7 +150,7 @@ class MyCell extends GridCell {
             [true, true, false, false],
             [true, false, false, true],
           ],
-          warpColors: [theme.white],
+          warpColors: ['transparent'],
           weftColors: [this.color],
         }))
         break
@@ -165,12 +165,12 @@ class MyCell extends GridCell {
             [true, false, false, true],
           ],
           warpColors: [
-            theme.white, theme.white, theme.white, theme.white,
+            'transparent', 'transparent', 'transparent', 'transparent',
             this.color, this.color, this.color, this.color,
           ],
           weftColors: [
             this.color, this.color, this.color, this.color,
-            theme.white, theme.white, theme.white, theme.white,
+            'transparent', 'transparent', 'transparent', 'transparent',
           ],
         }))
         break
