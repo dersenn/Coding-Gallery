@@ -63,17 +63,16 @@ class MyCell extends GridCell {
   }
 
   drawWeave(canvas, weave) {
-    const cellSize = this.width / weave.cols
+    const colSize = this.width / weave.cols
+    const rowSize = this.height / weave.rows
     const ctx = canvas.ctx
-    const ox = Math.round(this.x)
-    const oy = Math.round(this.y)
 
     for (let row = 0; row < weave.rows; row++) {
       for (let col = 0; col < weave.cols; col++) {
-        const x0 = Math.round(ox + col * cellSize)
-        const x1 = Math.round(ox + (col + 1) * cellSize)
-        const y0 = Math.round(oy + row * cellSize)
-        const y1 = Math.round(oy + (row + 1) * cellSize)
+        const x0 = Math.round(this.x + col * colSize)
+        const x1 = Math.round(this.x + (col + 1) * colSize)
+        const y0 = Math.round(this.y + row * rowSize)
+        const y1 = Math.round(this.y + (row + 1) * rowSize)
         const warpUp = weave.drawdown[row][col]
         ctx.fillStyle = warpUp
           ? weave.warpColors[col % weave.warpColors.length]
@@ -82,7 +81,6 @@ class MyCell extends GridCell {
       }
     }
   }
-
 
   draw(canvas, theme) {
     const { v } = shortcuts(this.grid.utils)
@@ -121,13 +119,13 @@ class MyCell extends GridCell {
           threading: [1, 2, 3, 4],
           treadling: [1, 2, 3, 4],
           tieup: [
-            [true, true, false, false],
-            [false, true, true, false],
-            [false, false, true, true],
-            [true, false, false, true]
+            [true, true, true, false],
+            [false, true, true, true],
+            [true, false, true, true],
+            [true, true, false, true],
           ],
-          warpColors: [this.color, theme.white],
-          weftColors: [theme.white, this.color],
+          warpColors: [this.color],
+          weftColors: [theme.white],
         }))
         break
       case 3:
@@ -144,16 +142,36 @@ class MyCell extends GridCell {
         break
       case 4:
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 2, 3, 4],
-          treadling: [1, 2, 3, 4],
+          threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
+          treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
           tieup: [
-            [true, false, false, false],
-            [false, false, false, true],
-            [false, false, true, false],
-            [false, true, false, false]
+            [false, false, true, true],
+            [false, true, true, false],
+            [true, true, false, false],
+            [true, false, false, true],
           ],
-          warpColors: [this.color, theme.white],
-          weftColors: [theme.white, this.color],
+          warpColors: [theme.white],
+          weftColors: [this.color],
+        }))
+        break
+      case 5:
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 2, 3, 4, 1, 2, 3, 4],
+          treadling: [1, 2, 3, 4, 1, 2, 3, 4],
+          tieup: [
+            [false, false, true, true],
+            [false, true, true, false],
+            [true, true, false, false],
+            [true, false, false, true],
+          ],
+          warpColors: [
+            theme.white, theme.white, theme.white, theme.white,
+            this.color, this.color, this.color, this.color,
+          ],
+          weftColors: [
+            this.color, this.color, this.color, this.color,
+            theme.white, theme.white, theme.white, theme.white,
+          ],
         }))
         break
 
@@ -202,7 +220,7 @@ export function draw(context) {
   const terminals = grid.subdivide({
     maxLevel: 1,
     rule: (cell, level) => {
-      if (level === 0) return squareDivisions(cell.width, cell.height, 20)
+      if (level === 0) return squareDivisions(cell.width, cell.height, 15)
       return false
     }
   })
