@@ -329,6 +329,101 @@ const GRIDWAVE_CONTROLS: ProjectControlDefinition[] = [
   },
 ]
 
+const GRID5_CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'slider',
+    key: 'sampleMultiplier',
+    label: 'Sample multiplier',
+    group: 'Sample',
+    default: 3,
+    min: 0,
+    max: 10,
+    step: 1,
+  },
+  {
+    type: 'slider',
+    key: 'scale',
+    label: 'Scale',
+    group: 'Sample',
+    default: .001,
+    min: 0.0001,
+    max: 0.001,
+    step: 0.0001,
+  },
+  {
+  type: 'slider',
+  key: 'offset',
+  label: 'Offset',
+  group: 'Sample',
+  default: 1000,
+  min: 1000,
+  max: 10000,
+  step: 1000,
+  },
+  {
+    type: 'slider',
+    key: 'stretchX',
+    label: 'Stretch X',
+    group: 'Sample',
+    default: 1.0,
+    min: 0.1,
+    max: 10.0,
+    step: 0.1,
+  },
+  {
+    type: 'slider',
+    key: 'stretchY',
+    label: 'Stretch Y',
+    group: 'Sample',
+    default: 1.0,
+    min: 0.1,
+    max: 10.0,
+    step: 0.1,
+  },
+  {
+    type: 'slider',
+    key: 'amplitude',
+    label: 'Amplitude',
+    group: 'Sample',
+    default: 1.0,
+    min: 0.1,
+    max: 10.0,
+    step: 0.1,
+  },
+  {
+    type: 'slider',
+    key: 'octaves',
+    label: 'Octaves',
+    group: 'Sample',
+    default: 3,
+    min: 1,
+    max: 10,
+    step: 1,
+  },
+  {
+    type: 'slider',
+    key: 'lacunarity',
+    label: 'Lacunarity',
+    group: 'Sample',
+    default: 1.1,
+    min: 0.1,
+    max: 10.0,
+    step: 0.1,
+  },
+  {
+    type: 'slider',
+    key: 'persistence',
+    label: 'Persistence',
+    group: 'Sample',
+    default: 0.9,
+    min: 0.1,
+    max: 10.0,
+    step: 0.1,
+  },
+]
+
+
+
 const metadata = {
   "id": "grid-almighty",
   "title": "Grid Almighty",
@@ -379,6 +474,14 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full', padding: '0' },
     module: './sketches/grid-4.js',
     controls: GRIDWAVE_CONTROLS,
+  },
+  {
+    id: 'grid-5',
+    label: 'Grid 5',
+    technique: 'canvas2d',
+    container: { mode: 'full', padding: '0' },
+    module: './sketches/grid-5.js',
+    controls: GRID5_CONTROLS,
   }
 ]
 
