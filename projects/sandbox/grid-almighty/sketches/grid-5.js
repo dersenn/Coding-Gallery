@@ -198,10 +198,9 @@ export function draw(context) {
   const grid = new MyGrid({ 
     cols: 1, 
     rows: rndInt(1, 4), 
-    width: 
-    canvas.w, 
-    height: 
-    canvas.h, 
+    width: canvas.w, 
+    height: canvas.h, 
+    fit: 'contain',
     utils 
   })
 
