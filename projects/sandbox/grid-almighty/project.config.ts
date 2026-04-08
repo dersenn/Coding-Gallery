@@ -331,12 +331,27 @@ const GRIDWAVE_CONTROLS: ProjectControlDefinition[] = [
 
 const GRID5_CONTROLS: ProjectControlDefinition[] = [
   {
-    type: 'toggle',
-    key: 'drawBackground',
-    label: 'Draw background',
-    group: 'Layering',
+    type: 'group',
+    id: 'grid5-color',
+    label: 'Color',
     order: 0,
-    default: false,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'toggle',
+        key: 'drawBackground',
+        label: 'Draw background',
+        order: 0,
+        default: false,
+      },
+      {
+        type: 'toggle',
+        key: 'shuffleColors',
+        label: 'Shuffle colors',
+        order: 1,
+        default: false,
+      },
+    ],
   },
   {
     type: 'group',
@@ -498,6 +513,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full', padding: '0' },
     module: './sketches/grid-5.js',
     controls: GRID5_CONTROLS,
+    prefersTheme: 'light',
   }
 ]
 

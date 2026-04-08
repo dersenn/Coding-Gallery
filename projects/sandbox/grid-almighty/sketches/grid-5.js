@@ -88,7 +88,7 @@ class MyCell extends GridCell {
   }
 
   draw(canvas, theme) {
-    const { v } = shortcuts(this.grid.utils)
+    const { v, shuffle } = shortcuts(this.grid.utils)
     const r = this.width / 2
     const bucket = Math.min(Math.floor(this.noise * theme.palette.length), theme.palette.length - 1)
 
@@ -194,11 +194,11 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, theme, utils, controls: c } = context
-  const { v, map, simplex2, pick, rndInt } = shortcuts(utils)
+  const { v, map, simplex2, pick, rndInt, shuffle } = shortcuts(utils)
 
   if (!canvas) return
 
-  const palette = theme.palette
+  const palette = c.shuffleColors ? shuffle(theme.palette) : theme.palette
 
   const grid = new MyGrid({ 
     cols: 1, 

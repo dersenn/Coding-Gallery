@@ -40,20 +40,26 @@ export const lightTheme: ThemeTokens = {
   palette: ['#1d4ed8', '#9333ea', '#dc2626', '#ea580c', '#0f766e', '#4f46e5']
 }
 
+const tokensFromBase = (base: ThemeTokens): ThemeTokens => ({
+  ...base,
+  palette: [...base.palette]
+})
+
 export const resolveTheme = (
   override?: ThemeOverride,
   preference: ThemePreference = 'dark'
 ): ThemeTokens => {
   const baseTheme = preference === 'light' ? lightTheme : defaultTheme
-  if (!override) return baseTheme
+  const base = tokensFromBase(baseTheme)
+  if (!override) return base
 
   return {
-    background: override.background ?? baseTheme.background,
-    foreground: override.foreground ?? baseTheme.foreground,
-    annotation: override.annotation ?? baseTheme.annotation,
-    white: override.white ?? baseTheme.white,
-    black: override.black ?? baseTheme.black,
-    outline: override.outline ?? baseTheme.outline,
-    palette: override.palette?.length ? override.palette : baseTheme.palette
+    background: override.background ?? base.background,
+    foreground: override.foreground ?? base.foreground,
+    annotation: override.annotation ?? base.annotation,
+    white: override.white ?? base.white,
+    black: override.black ?? base.black,
+    outline: override.outline ?? base.outline,
+    palette: override.palette?.length ? [...override.palette] : base.palette
   }
 }

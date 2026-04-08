@@ -12,6 +12,7 @@ import { createSvgSketchRuntime } from '~/runtime/sketchRuntime.svg'
 import { createCanvas2dSketchRuntime } from '~/runtime/sketchRuntime.canvas2d'
 import { createP5SketchRuntime } from '~/runtime/sketchRuntime.p5'
 import { createLoopManager } from '~/runtime/loopManager'
+import { resolveTheme } from '~/utils/theme'
 
 interface InitFromProjectDefinitionArgs {
   definition: ProjectDefinition
@@ -201,8 +202,11 @@ export async function initFromProjectDefinition(
 
   const draw = () => {
     if (!layerManager) return
+    const activeSketch = layerById.get(controlState.activeSketch)
+    const pref = activeSketch?.prefersTheme ?? definition.prefersTheme ?? 'dark'
+    Object.assign(theme, resolveTheme(definition.theme, pref))
     layerManager.setActiveLayer(controlState.activeSketch)
-    if (layerById.get(controlState.activeSketch)?.technique !== 'p5') {
+    if (activeSketch?.technique !== 'p5') {
       utils.seed.reset()
     }
     layerManager.draw()

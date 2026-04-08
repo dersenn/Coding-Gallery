@@ -81,7 +81,7 @@ export function draw(context) {
             maxLevel: settings.subdivision.maxLevel,
             rule: (cell, level) => {
               if (!subdivideCondition(cell, level, settings, utils)) return false
-              const div = utils.seed.coinToss(settings.subdivision.subdivisionChance) ? 2 : 4   // e.g. mostly 2, sometimes 4
+              const div = utils.seed.coinToss(settings.subdivision.chance) ? 2 : 4   // e.g. mostly 2, sometimes 4
               return { cols: div, rows: div }
             }
           }

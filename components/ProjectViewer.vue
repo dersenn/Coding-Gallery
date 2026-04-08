@@ -57,10 +57,10 @@ const scopedProjectActions = ref<ScopedProjectActions>({
 const hasInjectedSvgAction = ref(false)
 const hasInjectedPngAction = ref(false)
 
-// Emit controls when module is loaded
 const emit = defineEmits<{
   controlsLoaded: [controls: ProjectControlDefinition[]]
   actionsLoaded: [actions: ProjectActionDefinition[]]
+  effectivePrefersTheme: [pref: 'dark' | 'light']
 }>()
 
 // Canonical project config + sketch-module loaders.
@@ -100,8 +100,6 @@ const hasCanvas2dTechnique = computed(() => {
   if (supported.includes('canvas2d')) return true
   return Boolean(props.project.tags?.includes('canvas2d'))
 })
-const themePreference = computed(() => props.project.prefersTheme ?? 'dark')
-const viewerBackground = computed(() => resolveTheme(undefined, themePreference.value).background)
 const defaultSketchId = computed(() => {
   const sketches = activeDefinition.value?.sketches ?? []
   return sketches.find((sketch) => sketch.defaultActive)?.id ?? sketches[0]?.id
@@ -111,6 +109,20 @@ const activeSketchId = computed(() => {
   if (typeof raw === 'string' && raw.length > 0) return raw
   return defaultSketchId.value
 })
+const effectivePrefersTheme = computed<'dark' | 'light'>(() => {
+  const definition = activeDefinition.value
+  if (!definition) {
+    return props.project.prefersTheme ?? 'dark'
+  }
+  const sketches = definition.sketches ?? []
+  const id = activeSketchId.value
+  if (typeof id !== 'string' || id.length === 0) {
+    return definition.prefersTheme ?? 'dark'
+  }
+  const sketch = sketches.find((s) => s.id === id)
+  return sketch?.prefersTheme ?? definition.prefersTheme ?? 'dark'
+})
+const viewerBackground = computed(() => resolveTheme(undefined, effectivePrefersTheme.value).background)
 const runtimeCapabilities = computed<RuntimeActionCapabilities>(() => {
   const definition = activeDefinition.value
   const sketches = definition?.sketches ?? []
@@ -160,6 +172,14 @@ watch(paused, (nextPaused) => {
 watch(activeSketchId, () => {
   setPauseEnabled(false)
 })
+
+watch(
+  effectivePrefersTheme,
+  (pref) => {
+    emit('effectivePrefersTheme', pref)
+  },
+  { immediate: true }
+)
 
 const createSvgDownloadFallback = () => {
   return () => {
@@ -280,7 +300,7 @@ const loadProject = async () => {
     })
     emitEffectiveControlsAndActions()
 
-    const theme = resolveTheme(definition.theme, themePreference.value)
+    const theme = resolveTheme(definition.theme, effectivePrefersTheme.value)
     cleanup = await initFromProjectDefinition({
       definition,
       container: containerRef.value,

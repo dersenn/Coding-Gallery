@@ -130,6 +130,8 @@ export interface ProjectSketchDefinition {
   technique: Technique
   container?: ContainerMode | ContainerConfig
   module: string
+  /** When set, overrides project `prefersTheme` while this sketch is active (chrome + tokens). */
+  prefersTheme?: 'dark' | 'light'
   controls?: ProjectControlDefinition[]
   actions?: ProjectActionDefinition[]
   defaultActive?: boolean

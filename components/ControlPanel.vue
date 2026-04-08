@@ -261,9 +261,7 @@ const runRandomise = () => {
     if (control.type === 'slider') {
       const range = control.randomRange ?? { min: control.min, max: control.max }
       const raw = range.min + Math.random() * (range.max - range.min)
-      const snapped = Math.round(raw / control.step) * control.step
-      const clamped = Math.min(range.max, Math.max(range.min, snapped))
-      updates.push({ key: control.key, value: clamped })
+      updates.push({ key: control.key, value: raw })
     } else if (control.type === 'select') {
       const pick = control.options[Math.floor(Math.random() * control.options.length)]
       if (pick) updates.push({ key: control.key, value: pick.value as string | number })

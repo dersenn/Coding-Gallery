@@ -23,6 +23,13 @@ const isControlGroup = (
   control: ProjectControlDefinition
 ): control is ControlGroupDefinition => control.type === 'group'
 
+export const snapToStep = (value: number, step: number, min: number, max: number): number => {
+  const snapped = Math.round(value / step) * step
+  const clamped = Math.min(max, Math.max(min, snapped))
+  const decimals = step.toString().split('.')[1]?.length ?? 0
+  return parseFloat(clamped.toFixed(decimals))
+}
+
 export const flattenControls = (
   controls?: ProjectControlDefinition[]
 ): ControlDefinition[] => {
@@ -107,16 +114,21 @@ export const useControls = () => {
     return String(value)
   }
 
+  const constrainControlValue = (control: ControlDefinition, value: ControlValue): ControlValue => {
+    if (control.type !== 'slider' || typeof value !== 'number') return value
+    return snapToStep(value, control.step, control.min, control.max)
+  }
+
   const buildControlValuesFromQuery = (controls: ControlDefinition[]): ControlValues => {
     const nextValues: ControlValues = {}
     controls.forEach((control) => {
-      nextValues[control.key] = control.default
+      nextValues[control.key] = constrainControlValue(control, control.default)
     })
 
     controls.forEach((control) => {
       const urlValue = route.query[control.key]
       if (urlValue !== undefined && urlValue !== null) {
-        nextValues[control.key] = parseControlValueFromQuery(control, urlValue as string | string[] | null)
+        nextValues[control.key] = constrainControlValue(control, parseControlValueFromQuery(control, urlValue as string | string[] | null))
       }
     })
 
@@ -153,12 +165,12 @@ export const useControls = () => {
     const nextLayerValues: Record<string, ControlValues> = {}
 
     sharedControls.forEach((control) => {
-      nextSharedValues[control.key] = control.default
+      nextSharedValues[control.key] = constrainControlValue(control, control.default)
     })
     Object.entries(layerControlsById).forEach(([sketchId, controls]) => {
       const layerDefaults: ControlValues = {}
       controls.forEach((control) => {
-        layerDefaults[control.key] = control.default
+        layerDefaults[control.key] = constrainControlValue(control, control.default)
       })
       nextLayerValues[sketchId] = layerDefaults
     })
@@ -166,7 +178,7 @@ export const useControls = () => {
     sharedControls.forEach((control) => {
       const urlValue = route.query[control.key]
       if (urlValue === undefined || urlValue === null) return
-      nextSharedValues[control.key] = parseControlValueFromQuery(control, urlValue as string | string[] | null)
+      nextSharedValues[control.key] = constrainControlValue(control, parseControlValueFromQuery(control, urlValue as string | string[] | null))
     })
 
     Object.entries(layerControlsById).forEach(([sketchId, controls]) => {
@@ -179,9 +191,9 @@ export const useControls = () => {
         if (!nextLayerValues[sketchId]) {
           nextLayerValues[sketchId] = {}
         }
-        nextLayerValues[sketchId]![control.key] = parseControlValueFromQuery(
+        nextLayerValues[sketchId]![control.key] = constrainControlValue(
           control,
-          sourceValue as string | string[] | null
+          parseControlValueFromQuery(control, sourceValue as string | string[] | null)
         )
       })
     })
@@ -219,6 +231,21 @@ export const useControls = () => {
       sharedLeaf,
       layerLeafById
     }
+  }
+
+  const resolveControlByKey = (key: string): ControlDefinition | undefined => {
+    const { sharedLeaf, layerLeafById } = flattenScopedSchema()
+    return (
+      sharedLeaf.find((c) => c.key === key) ??
+      Object.values(layerLeafById).flat().find((c) => c.key === key)
+    )
+  }
+
+  const applyControlConstraints = (key: string, value: ControlValue): ControlValue => {
+    if (typeof value !== 'number') return value
+    const control = resolveControlByKey(key)
+    if (!control || control.type !== 'slider') return value
+    return snapToStep(value, control.step, control.min, control.max)
   }
 
   const isSharedControlKey = (key: string) => {
@@ -309,39 +336,41 @@ export const useControls = () => {
     const nextActiveLayerId = key === 'activeSketch' && typeof value === 'string'
       ? value
       : activeSketchId
+    const constrained = applyControlConstraints(key, value)
     if (key === 'activeSketch' || isSharedControlKey(key)) {
-      scopedControlValues.value.shared[key] = value
+      scopedControlValues.value.shared[key] = constrained
     } else {
       const scopedLayerId = resolveControlLayerScope(key, activeSketchId)
       if (scopedLayerId) {
         if (!scopedControlValues.value.sketches[scopedLayerId]) {
           scopedControlValues.value.sketches[scopedLayerId] = {}
         }
-        scopedControlValues.value.sketches[scopedLayerId]![key] = value
+        scopedControlValues.value.sketches[scopedLayerId]![key] = constrained
       } else {
-        scopedControlValues.value.shared[key] = value
+        scopedControlValues.value.shared[key] = constrained
       }
     }
     applyEffectiveControlValues(nextActiveLayerId)
 
     // Persist to URL; default to push so browser back/forward can step controls.
-    void syncQueryWithControl(key, value, options?.history ?? 'push')
+    void syncQueryWithControl(key, constrained, options?.history ?? 'push')
   }
 
   const batchUpdateControls = (updates: Array<{ key: string; value: ControlValue }>) => {
     const activeSketchId = resolveScopedActiveLayer()
     for (const { key, value } of updates) {
+      const constrained = applyControlConstraints(key, value)
       if (key === 'activeSketch' || isSharedControlKey(key)) {
-        scopedControlValues.value.shared[key] = value
+        scopedControlValues.value.shared[key] = constrained
       } else {
         const scopedLayerId = resolveControlLayerScope(key, activeSketchId)
         if (scopedLayerId) {
           if (!scopedControlValues.value.sketches[scopedLayerId]) {
             scopedControlValues.value.sketches[scopedLayerId] = {}
           }
-          scopedControlValues.value.sketches[scopedLayerId]![key] = value
+          scopedControlValues.value.sketches[scopedLayerId]![key] = constrained
         } else {
-          scopedControlValues.value.shared[key] = value
+          scopedControlValues.value.shared[key] = constrained
         }
       }
     }
@@ -352,7 +381,7 @@ export const useControls = () => {
       const queryKey = isSharedControlKey(key)
         ? key
         : (activeSketchId ? toLayerQueryKey(activeSketchId, key) : key)
-      newQuery[queryKey] = serializeControlValueForQuery(value)
+      newQuery[queryKey] = serializeControlValueForQuery(applyControlConstraints(key, value))
     }
     void router.replace({ query: newQuery })
   }

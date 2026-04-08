@@ -1,7 +1,7 @@
 <template>
   <div
     class="fixed inset-0 overflow-hidden font-medium project-route"
-    :data-project-theme="projectTheme"
+    :data-project-theme="chromePrefersTheme"
   >
     <!-- Full-screen sketch (z-0) -->
     <ProjectViewer
@@ -12,6 +12,7 @@
       class="absolute inset-0"
       @controls-loaded="handleControlsLoaded"
       @actions-loaded="handleActionsLoaded"
+      @effective-prefers-theme="handleEffectivePrefersTheme"
     />
 
     <!-- Overlay navigation (top-left) -->
@@ -241,7 +242,19 @@ const backToGalleryLink = computed(() => {
     path: '/'
   }
 })
-const projectTheme = computed<'dark' | 'light'>(() => project.value?.prefersTheme ?? 'dark')
+const chromePrefersTheme = ref<'dark' | 'light'>('dark')
+
+watch(
+  project,
+  (next) => {
+    chromePrefersTheme.value = next?.prefersTheme ?? 'dark'
+  },
+  { immediate: true }
+)
+
+const handleEffectivePrefersTheme = (pref: 'dark' | 'light') => {
+  chromePrefersTheme.value = pref
+}
 
 // Handle controls loaded from module
 const handleControlsLoaded = (controls: ProjectControlDefinition[]) => {
