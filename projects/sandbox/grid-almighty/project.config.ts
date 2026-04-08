@@ -89,7 +89,7 @@ const GRID2_CONTROLS: ProjectControlDefinition[] = [
     order: 22,
     default: 2,
     min: 0,
-    max: 12,
+    max: 4,
     step: 1,
   },
   {
@@ -400,7 +400,7 @@ const GRID5_CONTROLS: ProjectControlDefinition[] = [
         label: 'Amplitude',
         default: 1.0,
         min: 0.1,
-        max: 10.0,
+        max: 5.0,
         step: 0.1,
         randomize: true,
       },

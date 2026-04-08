@@ -54,7 +54,12 @@ class MyCell extends GridCell {
       frequency *= ns.lacunarity
       amplitude *= ns.persistence
     }
-    return Math.max(0, Math.min(1, ((total * ns.amplitude) + 1) / 2))
+    return(total * ns.amplitude + 1) / 2
+  }
+
+  normalizeNoise(min, max, amplitude) {
+    const normalized = max > min ? (this.noise - min) / (max - min) : 0.5
+    this.noise = Math.pow(normalized, 1 / amplitude)
   }
 
   assignColor(colors) {
@@ -228,10 +233,15 @@ export function draw(context) {
     canvas.background(theme.background)
   }
 
+  terminals.forEach(cell => { cell.noise = cell.noiseSample(noiseSettings) })
+
+  const min = Math.min(...terminals.map(cell => cell.noise))
+  const max = Math.max(...terminals.map(cell => cell.noise))
+
   terminals.forEach(cell => {
-    cell.noise = cell.noiseSample(noiseSettings)
+    cell.normalizeNoise(min, max, noiseSettings.amplitude)
     cell.assignColor(palette)
-    cell.draw(canvas, theme, palette)
+    cell.draw(canvas, theme)
   })
 
 
