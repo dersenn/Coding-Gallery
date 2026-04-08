@@ -328,6 +328,35 @@ export const useControls = () => {
     void syncQueryWithControl(key, value, options?.history ?? 'push')
   }
 
+  const batchUpdateControls = (updates: Array<{ key: string; value: ControlValue }>) => {
+    const activeSketchId = resolveScopedActiveLayer()
+    for (const { key, value } of updates) {
+      if (key === 'activeSketch' || isSharedControlKey(key)) {
+        scopedControlValues.value.shared[key] = value
+      } else {
+        const scopedLayerId = resolveControlLayerScope(key, activeSketchId)
+        if (scopedLayerId) {
+          if (!scopedControlValues.value.sketches[scopedLayerId]) {
+            scopedControlValues.value.sketches[scopedLayerId] = {}
+          }
+          scopedControlValues.value.sketches[scopedLayerId]![key] = value
+        } else {
+          scopedControlValues.value.shared[key] = value
+        }
+      }
+    }
+    applyEffectiveControlValues(activeSketchId)
+
+    const newQuery = { ...route.query }
+    for (const { key, value } of updates) {
+      const queryKey = isSharedControlKey(key)
+        ? key
+        : (activeSketchId ? toLayerQueryKey(activeSketchId, key) : key)
+      newQuery[queryKey] = serializeControlValueForQuery(value)
+    }
+    void router.replace({ query: newQuery })
+  }
+
   const commitControl = (key: string) => {
     const value = controlValues.value[key]
     if (value === undefined) return
@@ -445,6 +474,7 @@ export const useControls = () => {
     initializeScopedControls,
     initializeControls,
     updateControl,
+    batchUpdateControls,
     commitControl,
     resetControls,
     resetSketchControls,

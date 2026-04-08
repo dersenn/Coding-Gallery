@@ -1,12 +1,21 @@
 <template>
   <div class="control-panel h-full flex flex-col p-4 font-medium text-sm">
-    <div v-if="showResetAll" class="mb-4">
+    <div v-if="showResetAll || hasRandomizableControls" class="mb-4 flex gap-2">
       <button
+        v-if="showResetAll"
         type="button"
-        class="control-btn w-full px-3 py-2 rounded-md transition-colors"
+        class="control-btn flex-1 px-3 py-2 rounded-md transition-colors"
         @click="emit('action', 'reset-all-controls')"
       >
         Reset All
+      </button>
+      <button
+        v-if="hasRandomizableControls"
+        type="button"
+        class="control-btn flex-1 px-3 py-2 rounded-md transition-colors"
+        @click="runRandomise()"
+      >
+        Randomise
       </button>
     </div>
 
@@ -45,8 +54,21 @@
               class="flex items-center justify-between font-medium mb-2"
             >
               <span>{{ control.label }}</span>
-              <span v-if="control.type === 'slider'" class="font-medium">
-                {{ controlValues[control.key] }}
+              <span class="flex items-center gap-2">
+                <span v-if="control.type === 'slider'" class="font-medium">
+                  {{ controlValues[control.key] }}
+                </span>
+                <UButton
+                  v-if="(control.type === 'slider' || control.type === 'select') && control.randomize"
+                  :icon="isLocked(control.key) ? 'i-heroicons-lock-closed' : 'i-heroicons-lock-open'"
+                  :title="isLocked(control.key) ? 'Unlock' : 'Lock'"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :class="isLocked(control.key) ? 'opacity-100' : 'opacity-40'"
+                  class="control-text-muted hover:opacity-100 transition-opacity"
+                  @click.prevent="toggleLock(control.key)"
+                />
               </span>
             </label>
 
@@ -65,15 +87,28 @@
             </div>
 
             <!-- Toggle -->
-            <label v-else-if="control.type === 'toggle'" class="flex items-center gap-2 cursor-pointer font-medium">
-              <input
-                type="checkbox"
-                :checked="controlValues[control.key] as boolean"
-                @change="updateControl(control.key, ($event.target as HTMLInputElement).checked)"
-                class="w-5 h-5 rounded cursor-pointer accent-foreground"
+            <div v-else-if="control.type === 'toggle'" class="flex items-center justify-between">
+              <label class="flex items-center gap-2 cursor-pointer font-medium">
+                <input
+                  type="checkbox"
+                  :checked="controlValues[control.key] as boolean"
+                  @change="updateControl(control.key, ($event.target as HTMLInputElement).checked)"
+                  class="w-5 h-5 rounded cursor-pointer accent-foreground"
+                />
+                <span v-if="!control.hideLabel" class="font-medium">{{ control.label }}</span>
+              </label>
+              <UButton
+                v-if="control.randomize"
+                :icon="isLocked(control.key) ? 'i-heroicons-lock-closed' : 'i-heroicons-lock-open'"
+                :title="isLocked(control.key) ? 'Unlock' : 'Lock'"
+                size="xs"
+                color="neutral"
+                variant="ghost"
+                :class="isLocked(control.key) ? 'opacity-100' : 'opacity-40'"
+                class="control-text-muted hover:opacity-100 transition-opacity"
+                @click="toggleLock(control.key)"
               />
-              <span v-if="!control.hideLabel" class="font-medium">{{ control.label }}</span>
-            </label>
+            </div>
 
             <!-- Select -->
             <select
@@ -179,8 +214,12 @@ import type {
   ControlOptionDefinition,
   ControlValue,
   ProjectActionDefinition,
-  ProjectControlDefinition
+  ProjectControlDefinition,
+  SelectControlDefinition,
+  SliderControlDefinition,
+  ToggleControlDefinition
 } from '~/types/project'
+import { flattenControls } from '~/composables/useControls'
 
 const props = defineProps<{
   controls: ProjectControlDefinition[]
@@ -189,9 +228,52 @@ const props = defineProps<{
   showResetAll?: boolean
 }>()
 
-const { controlValues, updateControl, commitControl } = useControls()
+const { controlValues, updateControl, batchUpdateControls, commitControl } = useControls()
 const showResetAll = computed(() => props.showResetAll ?? false)
 const openSections = ref<Record<string, boolean>>({})
+
+const lockedKeys = ref(new Set<string>())
+
+const randomizableControls = computed(() =>
+  flattenControls(props.controls).filter(
+    (c): c is SliderControlDefinition | SelectControlDefinition | ToggleControlDefinition =>
+      (c.type === 'slider' || c.type === 'select' || c.type === 'toggle') && !!c.randomize
+  )
+)
+
+const hasRandomizableControls = computed(() => randomizableControls.value.length > 0)
+
+const toggleLock = (key: string) => {
+  const next = new Set(lockedKeys.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  lockedKeys.value = next
+}
+
+const isLocked = (key: string) => lockedKeys.value.has(key)
+
+const runRandomise = () => {
+  const updates: Array<{ key: string; value: import('~/types/project').ControlValue }> = []
+
+  for (const control of randomizableControls.value) {
+    if (isLocked(control.key)) continue
+
+    if (control.type === 'slider') {
+      const range = control.randomRange ?? { min: control.min, max: control.max }
+      const raw = range.min + Math.random() * (range.max - range.min)
+      const snapped = Math.round(raw / control.step) * control.step
+      const clamped = Math.min(range.max, Math.max(range.min, snapped))
+      updates.push({ key: control.key, value: clamped })
+    } else if (control.type === 'select') {
+      const pick = control.options[Math.floor(Math.random() * control.options.length)]
+      if (pick) updates.push({ key: control.key, value: pick.value as string | number })
+    } else if (control.type === 'toggle') {
+      updates.push({ key: control.key, value: Math.random() < 0.5 })
+    }
+  }
+
+  if (updates.length) batchUpdateControls(updates)
+}
 const panelStateStorageKey = computed(() => {
   if (!props.panelStateKey) return null
   return `controlSections:${props.panelStateKey}`

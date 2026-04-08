@@ -35,17 +35,21 @@ export interface SliderControlDefinition extends BaseControlDefinition {
   min: number
   max: number
   step: number
+  randomize?: boolean
+  randomRange?: { min: number; max: number }
 }
 
 export interface ToggleControlDefinition extends BaseControlDefinition {
   type: 'toggle'
   default: boolean
+  randomize?: boolean
 }
 
 export interface SelectControlDefinition extends BaseControlDefinition {
   type: 'select'
   default: string | number
   options: ControlOptionDefinition[]
+  randomize?: boolean
 }
 
 export interface ColorControlDefinition extends BaseControlDefinition {

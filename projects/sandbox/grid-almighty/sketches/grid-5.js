@@ -224,6 +224,10 @@ export function draw(context) {
     }
   })
 
+  if (c.drawBackground) {
+    canvas.background(theme.background)
+  }
+
   terminals.forEach(cell => {
     cell.noise = cell.noiseSample(noiseSettings)
     cell.assignColor(palette)
