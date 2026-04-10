@@ -74,10 +74,10 @@ class MyCell extends GridCell {
 
     for (let row = 0; row < weave.rows; row++) {
       for (let col = 0; col < weave.cols; col++) {
-        const x0 = Math.round(this.x + col * colSize)
-        const x1 = Math.round(this.x + (col + 1) * colSize)
-        const y0 = Math.round(this.y + row * rowSize)
-        const y1 = Math.round(this.y + (row + 1) * rowSize)
+        const x0 = canvas.snapX(this.x + col * colSize)
+        const x1 = canvas.snapX(this.x + (col + 1) * colSize)
+        const y0 = canvas.snapY(this.y + row * rowSize)
+        const y1 = canvas.snapY(this.y + (row + 1) * rowSize)
         const warpUp = weave.drawdown[row][col]
         ctx.fillStyle = warpUp
           ? weave.warpColors[col % weave.warpColors.length]
@@ -145,20 +145,20 @@ class MyCell extends GridCell {
           weftColors: [this.color, 'transparent'],
         }))
         break
-      case 4:
-        this.drawWeave(canvas, buildWeave({
-          threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
-          treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
-          tieup: [
-            [false, false, true, true],
-            [false, true, true, false],
-            [true, true, false, false],
-            [true, false, false, true],
-          ],
-          warpColors: ['transparent'],
-          weftColors: [this.color],
-        }))
-        break
+      // case 4:
+      //   this.drawWeave(canvas, buildWeave({
+      //     threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
+      //     treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
+      //     tieup: [
+      //       [false, false, true, true],
+      //       [false, true, true, false],
+      //       [true, true, false, false],
+      //       [true, false, false, true],
+      //     ],
+      //     warpColors: ['transparent'],
+      //     weftColors: [this.color],
+      //   }))
+      //   break
       case 5:
         this.drawWeave(canvas, buildWeave({
           threading: [1, 2, 3, 4, 1, 2, 3, 4],
@@ -181,7 +181,12 @@ class MyCell extends GridCell {
         break
 
       default:
-        canvas.rect(this.tl(), this.width, this.height, theme.black, 'transparent', 0)
+        const grad = canvas.linearGradient(this.tl(), this.tr(), [
+          [0, '#ff0000'],
+          [1, '#0000ff']
+        ])
+        canvas.rect(this.tl(), this.width, this.height, grad, 'transparent', 0)
+        // canvas.rect(this.tl(), this.width, this.height, theme.black, 'transparent', 0)
     }
   }
 }

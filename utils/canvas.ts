@@ -230,6 +230,18 @@ export class Canvas {
     }
   }
 
+  snapX(x: number): number {
+    const t = this.ctx.getTransform()
+    if (!isAxisAligned(t) || t.a <= 0) return x
+    return (Math.round(canonicalEdge(t.a * x + t.e)) - t.e) / t.a
+  }
+
+  snapY(y: number): number {
+    const t = this.ctx.getTransform()
+    if (!isAxisAligned(t) || t.d <= 0) return y
+    return (Math.round(canonicalEdge(t.d * y + t.f)) - t.f) / t.d
+  }
+
   resize(width: number, height: number): void {
     this.w = clampDimension(width)
     this.h = clampDimension(height)
