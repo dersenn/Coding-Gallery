@@ -110,18 +110,24 @@ class MyCell extends GridCell {
           weftColors: ['transparent', this.color],
         }))
         break
-      case 1:
-        this.drawWeave(canvas, buildWeave({
-          threading: [1, 2],
-          treadling: [1, 2],
-          tieup: [
-            [true, false],
-            [false, true]
-          ],
-          warpColors: ['transparent', 'transparent'],
-          weftColors: [this.color, this.color],
-        }))
+      case 1: {
+        // this.drawWeave(canvas, buildWeave({
+        //   threading: [1, 2],
+        //   treadling: [1, 2],
+        //   tieup: [
+        //     [true, false],
+        //     [false, true]
+        //   ],
+        //   warpColors: ['transparent', 'transparent'],
+        //   weftColors: [this.color, this.color],
+        // }))
+        const fill = canvas.linearGradient(this.tl(), this.tr(), [
+          [0, this.color],
+          [1, 'transparent'],
+        ])
+        canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)
         break
+        }
       case 2:
         this.drawWeave(canvas, buildWeave({
           threading: [1, 2, 3, 4],
@@ -185,20 +191,22 @@ class MyCell extends GridCell {
 
       default:
         const base = Color.parse(this.color)
-        const grad = canvas.linearGradient(this.tl(), this.tr(), [
-          [0, base],
-          [1, base.withAlpha(0)],
-        ])
-        canvas.rect(this.tl(), this.width, this.height, grad, 'transparent', 0)
-        // canvas.rect(this.tl(), this.width, this.height, theme.black, 'transparent', 0)
+        const fill = canvas.grainFill(
+          (octx, w, h) => {
+            const grad = octx.createLinearGradient(0, 0, w, 0)
+            grad.addColorStop(0, base.toCss())
+            grad.addColorStop(1, base.withAlpha(0).toCss())
+            octx.fillStyle = grad
+            octx.fillRect(0, 0, w, h)
+          },
+          this.tl(),
+          this.width, this.height,
+          { intensity: .5 }
+        )
+        canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)
     }
   }
 }
-
-
-
-
-
 
 
 export function draw(context) {

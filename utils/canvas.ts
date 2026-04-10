@@ -13,6 +13,8 @@ export interface CanvasCreateConfig {
 }
 
 export type CanvasFill = string | CanvasGradient | CanvasPattern
+export type CanvasRectSnapMode = 'device' | 'none'
+export type CanvasStrokeAlign = 'center' | 'inside'
 
 export interface CanvasStyle {
   fill?: CanvasFill | null
@@ -34,9 +36,6 @@ export interface CanvasExportOptions {
   projectId?: string
   seed?: string | number
 }
-
-export type CanvasRectSnapMode = 'device' | 'none'
-export type CanvasStrokeAlign = 'center' | 'inside'
 
 export interface CanvasRectOptions {
   snap?: CanvasRectSnapMode
@@ -61,6 +60,18 @@ export interface CanvasCellBoundsLike {
 export interface CanvasDefaultStyle extends CanvasStyle {
   background?: string
   text?: string
+}
+
+export interface GrainOptions {
+  alpha?: number
+  blend?: GlobalCompositeOperation
+  animated?: boolean
+  rng?: () => number
+}
+
+export interface GrainFillOptions {
+  intensity?: number
+  rng?: () => number
 }
 
 interface CanvasDefaults {
@@ -165,6 +176,7 @@ export class Canvas {
   ctx: CanvasRenderingContext2D
   def: CanvasDefaults
   rectSnapDefault: CanvasRectSnapMode
+  private grainCache: HTMLCanvasElement | null = null
 
   private resolvePixelRatio(value: CanvasCreateConfig['pixelRatio']): number {
     if (typeof value === 'number') {
@@ -577,6 +589,82 @@ export class Canvas {
       stops
     )
   }
+
+  grain(at: Vec, width: number, height: number, options: GrainOptions = {}): void {
+    const {
+      alpha = 0.08,
+      blend = 'overlay',
+      animated = false,
+      rng = Math.random
+    } = options
+
+    const w = Math.ceil(width)
+    const h = Math.ceil(height)
+
+    const needsRebuild = animated
+      || !this.grainCache
+      || this.grainCache.width !== w
+      || this.grainCache.height !== h
+
+    if (needsRebuild) {
+      const offscreen = this.grainCache ?? document.createElement('canvas')
+      offscreen.width = w
+      offscreen.height = h
+      const octx = offscreen.getContext('2d')!
+      const data = octx.createImageData(w, h)
+      for (let i = 0; i < data.data.length; i += 4) {
+        const val = rng() * 255
+        data.data[i] = val
+        data.data[i + 1] = val
+        data.data[i + 2] = val
+        data.data[i + 3] = 255
+      }
+      octx.putImageData(data, 0, 0)
+      this.grainCache = offscreen
+    }
+
+    this.withContext(ctx => {
+      ctx.globalAlpha = alpha
+      ctx.globalCompositeOperation = blend
+      ctx.drawImage(this.grainCache!, at.x, at.y)
+    })
+  }
+
+
+
+
+  grainFill(
+    draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void,
+    at: Vec,
+    width: number,
+    height: number,
+    options: GrainFillOptions = {}
+  ): CanvasPattern {
+    const { intensity = 0.15, rng = Math.random } = options
+    const w = Math.ceil(width)
+    const h = Math.ceil(height)
+
+    const offscreen = document.createElement('canvas')
+    offscreen.width = w
+    offscreen.height = h
+    const octx = offscreen.getContext('2d')!
+
+    draw(octx, w, h)
+
+    const imageData = octx.getImageData(0, 0, w, h)
+    const pixels = imageData.data
+    for (let i = 3; i < pixels.length; i += 4) {
+      const current = pixels[i] ?? 255
+      pixels[i] = Math.round(current * (1 - intensity + rng() * intensity * 2))
+    }
+    octx.putImageData(imageData, 0, 0)
+
+    const pattern = this.ctx.createPattern(offscreen, 'no-repeat')!
+    pattern.setTransform(new DOMMatrix().translate(this.snapX(at.x), this.snapY(at.y)))
+    return pattern
+  }
+
+  
 
   save(options: CanvasExportOptions = {}): void {
     const { projectId, seed } = options
