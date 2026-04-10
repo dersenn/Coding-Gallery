@@ -1,5 +1,5 @@
 import { Vec } from './generative'
-import { Color } from './color'
+import { Color, type GradientStop } from './color'
 
 export interface CanvasCreateConfig {
   parent: HTMLElement
@@ -12,9 +12,11 @@ export interface CanvasCreateConfig {
   defaults?: CanvasDefaultStyle
 }
 
+export type CanvasFill = string | CanvasGradient | CanvasPattern
+
 export interface CanvasStyle {
-  fill?: string | null
-  stroke?: string | null
+  fill?: CanvasFill | null
+  stroke?: CanvasFill | null
   strokeW?: number
   lineCap?: CanvasLineCap
   lineJoin?: CanvasLineJoin
@@ -62,8 +64,8 @@ export interface CanvasDefaultStyle extends CanvasStyle {
 }
 
 interface CanvasDefaults {
-  fill: string
-  stroke: string
+  fill: CanvasFill
+  stroke: CanvasFill
   strokeW: number
   lineCap: CanvasLineCap
   lineJoin: CanvasLineJoin
@@ -121,6 +123,14 @@ const resolveCssColor = (value: string | null | undefined): string | undefined =
   const parsed = Color.parse(value)
   if (!parsed) return undefined
   return parsed.toCss('rgba')
+}
+
+const resolveStopColor = (color: string | Color): string =>
+  color instanceof Color ? color.toCss() : color
+
+const applyStops = (gradient: CanvasGradient, stops: GradientStop[]): CanvasGradient => {
+  stops.forEach(([pos, color]) => gradient.addColorStop(pos, resolveStopColor(color)))
+  return gradient
 }
 
 const resolveCanvasDefaults = (
@@ -246,11 +256,11 @@ export class Canvas {
     this.ctx.restore()
   }
 
-  fill(fill: string | null): void {
+  fill(fill: CanvasFill | null): void {
     this.def.fill = fill ?? 'transparent'
   }
 
-  stroke(stroke: string | null): void {
+  stroke(stroke: CanvasFill | null): void {
     this.def.stroke = stroke ?? 'transparent'
   }
 
@@ -261,7 +271,7 @@ export class Canvas {
   line(
     a: Vec,
     b: Vec,
-    stroke: string = this.def.stroke,
+    stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): void {
     this.ctx.save()
@@ -276,8 +286,8 @@ export class Canvas {
   circle(
     at: Vec,
     r: number = 5,
-    fill: string = this.def.fill,
-    stroke: string = this.def.stroke,
+    fill: CanvasFill = this.def.fill,
+    stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): void {
     this.ctx.save()
@@ -294,8 +304,8 @@ export class Canvas {
     rx: number,
     ry: number,
     rotation: number = 0,
-    fill: string = this.def.fill,
-    stroke: string = this.def.stroke,
+    fill: CanvasFill = this.def.fill,
+    stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): void {
     this.ctx.save()
@@ -311,8 +321,8 @@ export class Canvas {
     at: Vec,
     width: number,
     height: number,
-    fill: string = this.def.fill,
-    stroke: string = this.def.stroke,
+    fill: CanvasFill = this.def.fill,
+    stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW,
     options: CanvasRectOptions = {}
   ): void {
@@ -342,8 +352,8 @@ export class Canvas {
     center: Vec,
     width: number,
     height: number,
-    fill: string = this.def.fill,
-    stroke: string = this.def.stroke,
+    fill: CanvasFill = this.def.fill,
+    stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW,
     options: CanvasRectOptions = {}
   ): void {
@@ -370,7 +380,7 @@ export class Canvas {
     height: number,
     cols: number,
     rows: number,
-    stroke: string = this.def.stroke,
+    stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW,
     options: CanvasGridLinesOptions = {}
   ): void {
@@ -424,7 +434,7 @@ export class Canvas {
    */
   cellEdges(
     cells: CanvasCellBoundsLike[],
-    stroke: string = this.def.stroke,
+    stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW,
     options: CanvasCellEdgesOptions = {}
   ): void {
@@ -543,6 +553,34 @@ export class Canvas {
     this.ctx.save()
     draw(this.ctx)
     this.ctx.restore()
+  }
+
+  linearGradient(from: Vec, to: Vec, stops: GradientStop[]): CanvasGradient {
+    return applyStops(
+      this.ctx.createLinearGradient(from.x, from.y, to.x, to.y),
+      stops
+    )
+  }
+
+  radialGradient(
+    center: Vec,
+    outerRadius: number,
+    stops: GradientStop[],
+    innerRadius: number = 0,
+    focalPoint?: Vec
+  ): CanvasGradient {
+    const focal = focalPoint ?? center
+    return applyStops(
+      this.ctx.createRadialGradient(focal.x, focal.y, innerRadius, center.x, center.y, outerRadius),
+      stops
+    )
+  }
+
+  conicGradient(center: Vec, stops: GradientStop[], startAngle: number = 0): CanvasGradient {
+    return applyStops(
+      this.ctx.createConicGradient(startAngle, center.x, center.y),
+      stops
+    )
   }
 
   save(options: CanvasExportOptions = {}): void {

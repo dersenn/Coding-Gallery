@@ -1,6 +1,8 @@
 export type ColorArray = [number, number, number] | [number, number, number, number]
 export type ColorInput = string | ColorArray | Color
 export type CssColorFormat = 'hex' | 'rgba' | 'rgb' | 'hsl' | 'hsla'
+export type GradientStop = [number, string | Color]
+
 
 const clampByte = (value: number): number => {
   return Math.max(0, Math.min(255, Math.round(value)))
