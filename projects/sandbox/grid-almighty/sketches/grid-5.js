@@ -68,9 +68,11 @@ class MyCell extends GridCell {
   }
 
   drawWeave(canvas, weave) {
-    const { v } = shortcuts(this.grid.utils)
+    const { v, rnd, curve } = shortcuts(this.grid.utils)
     const colSize = this.width / weave.cols
     const rowSize = this.height / weave.rows
+    const spacing = Math.max(1, Math.ceil(Math.min(colSize, rowSize) / 80))
+    const margin = Math.max(0.04, Math.min(0.12, spacing / Math.min(colSize, rowSize)))
 
     for (let row = 0; row < weave.rows; row++) {
       for (let col = 0; col < weave.cols; col++) {
@@ -78,17 +80,42 @@ class MyCell extends GridCell {
         const fill = warpUp
           ? weave.warpColors[col % weave.warpColors.length]
           : weave.weftColors[row % weave.weftColors.length]
-        canvas.rect(
+
+        if (fill === 'transparent') continue
+
+        canvas.halftone(
           v(this.x + col * colSize, this.y + row * rowSize),
-          colSize,
-          rowSize,
+          colSize, rowSize,
           fill,
-          'transparent',
-          0
+          (nx) => 1 - curve.easeIn(nx),
+          { spacing, rng: rnd }
         )
       }
     }
   }
+
+  // drawWeave(canvas, weave) {
+  //   const { v } = shortcuts(this.grid.utils)
+  //   const colSize = this.width / weave.cols
+  //   const rowSize = this.height / weave.rows
+
+  //   for (let row = 0; row < weave.rows; row++) {
+  //     for (let col = 0; col < weave.cols; col++) {
+  //       const warpUp = weave.drawdown[row][col]
+  //       const fill = warpUp
+  //         ? weave.warpColors[col % weave.warpColors.length]
+  //         : weave.weftColors[row % weave.weftColors.length]
+  //       canvas.rect(
+  //         v(this.x + col * colSize, this.y + row * rowSize),
+  //         colSize,
+  //         rowSize,
+  //         fill,
+  //         'transparent',
+  //         0
+  //       )
+  //     }
+  //   }
+  // }
 
   draw(canvas, theme) {
     const { v, shuffle } = shortcuts(this.grid.utils)
@@ -121,11 +148,14 @@ class MyCell extends GridCell {
         //   warpColors: ['transparent', 'transparent'],
         //   weftColors: [this.color, this.color],
         // }))
-        const fill = canvas.linearGradient(this.tl(), this.tr(), [
-          [0, this.color],
-          [1, 'transparent'],
-        ])
-        canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)
+        const { rnd } = shortcuts(this.grid.utils)
+        const { curve } = shortcuts(this.grid.utils)
+        canvas.halftone(
+          this.tl(), this.width, this.height,
+          this.color,
+          (_, ny) => curve.easeIn(ny),// top → bottom
+          { spacing: Math.max(1, Math.ceil(this.width / 80)), rng: rnd }
+        )
         break
         }
       case 2:
@@ -195,7 +225,7 @@ class MyCell extends GridCell {
         canvas.halftone(
           this.tl(), this.width, this.height,
           this.color,
-          (nx) => 1 - curve.easeOut(nx),
+          (nx) => 1 - curve.easeIn(nx),
           { spacing: Math.max(1, Math.ceil(this.width / 80)), rng: rnd }
         )
         break
