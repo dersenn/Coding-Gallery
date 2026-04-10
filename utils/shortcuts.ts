@@ -30,6 +30,7 @@ export function shortcuts(utils: GenerativeUtils) {
     dist: utils.math.dist, // dist(x1, y1, x2, y2) => number
     rad: utils.math.rad, // rad(degrees) => radians
     deg: utils.math.deg, // deg(radians) => degrees
+    curve: utils.math.curve, // curve(type)(t) => number
 
     // Vector shortcuts - single letter for convenience
     v: utils.vec.create, // v(x, y, z?) => Vec

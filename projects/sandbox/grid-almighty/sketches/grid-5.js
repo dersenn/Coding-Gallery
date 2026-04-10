@@ -191,10 +191,11 @@ class MyCell extends GridCell {
 
       default:
         const { rnd } = shortcuts(this.grid.utils)
+        const { curve } = shortcuts(this.grid.utils)
         canvas.halftone(
           this.tl(), this.width, this.height,
           this.color,
-          (nx) => 1 - nx,
+          (nx) => 1 - curve.easeOut(nx),
           { spacing: Math.max(1, Math.ceil(this.width / 80)), rng: rnd }
         )
         break

@@ -210,6 +210,13 @@ export interface GenerativeUtils {
     dist3D: (x1: number, y1: number, z1: number, x2: number, y2: number, z2: number) => number
     rad: (deg: number) => number
     deg: (rad: number) => number
+    curve: {
+      linear: (t: number) => number
+      easeIn: (t: number) => number
+      easeOut: (t: number) => number
+      log: (t: number) => number
+      exp: (t: number) => number
+    }
     divLength: {
       (a: Vec, b: Vec, nSeg: number, incStartEnd?: boolean): Vec[]
       (a: Vec, b: Vec, nSeg: number, options?: DivLengthOptions): Vec[]
@@ -594,6 +601,13 @@ export function createGenerativeUtils(seedString?: string): GenerativeUtils {
       },
       deg: (rad: number) => {
         return rad / (Math.PI / 180)
+      },
+      curve: {
+        linear:  (t: number) => t,
+        easeIn:  (t: number) => t * t,
+        easeOut: (t: number) => 1 - (1 - t) * (1 - t),
+        log:     (t: number) => Math.log1p(t * (Math.E - 1)),
+        exp:     (t: number) => (Math.exp(t) - 1) / (Math.E - 1),
       },
       divLength,
     },
