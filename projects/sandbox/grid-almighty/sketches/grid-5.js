@@ -1,10 +1,57 @@
 import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
-import { buildWeave, renderWeave } from '~/utils/weave'
+import { buildWeave } from '~/utils/weave'
 
+// ─── Weave “gap” helpers (recent passes) ─────────────────────────────────────
+// Each terminal cell picks a weave pattern from `bucket` (noise → palette index).
+// Slots that used to be only `transparent` now often use `gap`: same weave logic,
+// but the second ink is either transparent, a light HSL tint, or a dark HSL shade
+// — see gapForBucket() for which bucket gets which (tweak the switch there).
+// drawWeave(..., { halftoneDirection: 'tb' }) only on `default`: horizontal stripes
+// read cleaner when halftone density eases top→bottom; other cases stay 'lr'.
 
+/** Lighten via HSL (utilities: color.parse / color.fromHsl — reuse) */
+function tintColor(utils, input, lightnessMix = 0.38) {
+  const c = utils.color.parse(input)
+  if (!c || c.a === 0) return input
+  const [h, s, l] = c.toHslTuple()
+  const l2 = Math.min(100, l + (100 - l) * lightnessMix)
+  return utils.color.fromHsl(h, s, l2, c.a).toHex()
+}
 
+/** Darken via HSL toward black (reuse) */
+function shadeColor(utils, input, darknessMix = 0.52) {
+  const c = utils.color.parse(input)
+  if (!c || c.a === 0) return input
+  const [h, s, l] = c.toHslTuple()
+  const l2 = Math.max(4, l * (1 - darknessMix))
+  return utils.color.fromHsl(h, Math.min(100, s * 1.12), l2, c.a).toHex()
+}
 
+/**
+ * Second ink for weave warp/weft arrays (`gap` in draw()).
+ * Bucket = floor(noise * palette.length), same index that selects the switch case.
+ *
+ * | buckets | gap        |
+ * | 0, 3    | light tint |
+ * | 1, 5    | transparent (true knockout) |
+ * | 2, 4+, default | dark shade |
+ */
+function gapForBucket(utils, baseColor, bucket) {
+  const gapLight = tintColor(utils, baseColor)
+  const gapDark = shadeColor(utils, baseColor)
+  switch (bucket) {
+    case 1:
+    case 5:
+      return 'transparent'
+    case 0:
+    case 3:
+      return gapLight
+    case 2:
+    default:
+      return gapDark
+  }
+}
 
 function squareDivisions(width, height, divisions) {
   if (width <= height) {
@@ -67,12 +114,18 @@ class MyCell extends GridCell {
     this.color = colors[i]
   }
 
-  drawWeave(canvas, weave) {
+  // canvas.halftone passes density(nx, ny); 'lr' eases on nx, 'tb' on ny (see utils/canvas halftone).
+  drawWeave(canvas, weave, options = {}) {
+    const { halftoneDirection = 'lr' } = options
     const { v, rnd, curve } = shortcuts(this.grid.utils)
     const colSize = this.width / weave.cols
     const rowSize = this.height / weave.rows
     const spacing = Math.max(1, Math.ceil(Math.min(colSize, rowSize) / 80))
-    const margin = Math.max(0.04, Math.min(0.12, spacing / Math.min(colSize, rowSize)))
+
+    const density =
+      halftoneDirection === 'tb'
+        ? (_nx, ny) => 1 - curve.easeIn(ny)
+        : (nx, _ny) => 1 - curve.easeIn(nx)
 
     for (let row = 0; row < weave.rows; row++) {
       for (let col = 0; col < weave.cols; col++) {
@@ -87,40 +140,18 @@ class MyCell extends GridCell {
           v(this.x + col * colSize, this.y + row * rowSize),
           colSize, rowSize,
           fill,
-          (nx) => 1 - curve.easeIn(nx),
+          density,
           { spacing, rng: rnd }
         )
       }
     }
   }
 
-  // drawWeave(canvas, weave) {
-  //   const { v } = shortcuts(this.grid.utils)
-  //   const colSize = this.width / weave.cols
-  //   const rowSize = this.height / weave.rows
-
-  //   for (let row = 0; row < weave.rows; row++) {
-  //     for (let col = 0; col < weave.cols; col++) {
-  //       const warpUp = weave.drawdown[row][col]
-  //       const fill = warpUp
-  //         ? weave.warpColors[col % weave.warpColors.length]
-  //         : weave.weftColors[row % weave.weftColors.length]
-  //       canvas.rect(
-  //         v(this.x + col * colSize, this.y + row * rowSize),
-  //         colSize,
-  //         rowSize,
-  //         fill,
-  //         'transparent',
-  //         0
-  //       )
-  //     }
-  //   }
-  // }
-
   draw(canvas, theme) {
     const { v, shuffle } = shortcuts(this.grid.utils)
     const r = this.width / 2
     const bucket = Math.min(Math.floor(this.noise * theme.palette.length), theme.palette.length - 1)
+    const gap = gapForBucket(this.grid.utils, this.color, bucket) // second ink; not row-based
 
     switch (bucket) {
       case 0:
@@ -133,29 +164,21 @@ class MyCell extends GridCell {
             [false, false, true, false],
             [false, false, false, true],
           ],
-          warpColors: [this.color, 'transparent'],
-          weftColors: ['transparent', this.color],
+          warpColors: [this.color, gap],
+          weftColors: [gap, this.color],
         }))
         break
       case 1: {
-        // this.drawWeave(canvas, buildWeave({
-        //   threading: [1, 2],
-        //   treadling: [1, 2],
-        //   tieup: [
-        //     [true, false],
-        //     [false, true]
-        //   ],
-        //   warpColors: ['transparent', 'transparent'],
-        //   weftColors: [this.color, this.color],
-        // }))
-        const { rnd } = shortcuts(this.grid.utils)
-        const { curve } = shortcuts(this.grid.utils)
-        canvas.halftone(
-          this.tl(), this.width, this.height,
-          this.color,
-          (_, ny) => curve.easeIn(ny),// top → bottom
-          { spacing: Math.max(1, Math.ceil(this.width / 80)), rng: rnd }
-        )
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 2],
+          treadling: [1, 2],
+          tieup: [
+            [true, false],
+            [false, true]
+          ],
+          warpColors: [gap, gap],
+          weftColors: [this.color, this.color],
+        }))
         break
         }
       case 2:
@@ -169,7 +192,7 @@ class MyCell extends GridCell {
             [true, true, false, true],
           ],
           warpColors: [this.color],
-          weftColors: ['transparent'],
+          weftColors: [gap],
         }))
         break
       case 3:
@@ -180,24 +203,24 @@ class MyCell extends GridCell {
             [true, false],
             [false, true]
           ],
-          warpColors: ['transparent', this.color],
-          weftColors: [this.color, 'transparent'],
+          warpColors: [gap, this.color],
+          weftColors: [this.color, gap],
         }))
         break
-      case 4:
-        this.drawWeave(canvas, buildWeave({
-          threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
-          treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
-          tieup: [
-            [false, false, true, true],
-            [false, true, true, false],
-            [true, true, false, false],
-            [true, false, false, true],
-          ],
-          warpColors: ['transparent'],
-          weftColors: [this.color],
-        }))
-        break
+      // case 4:
+      //   this.drawWeave(canvas, buildWeave({
+      //     threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
+      //     treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
+      //     tieup: [
+      //       [false, false, true, true],
+      //       [false, true, true, false],
+      //       [true, true, false, false],
+      //       [true, false, false, true],
+      //     ],
+      //     warpColors: ['transparent'],
+      //     weftColors: [this.color],
+      //   }))
+      //   break
       case 5:
         this.drawWeave(canvas, buildWeave({
           threading: [1, 2, 3, 4, 1, 2, 3, 4],
@@ -209,24 +232,31 @@ class MyCell extends GridCell {
             [true, false, false, true],
           ],
           warpColors: [
-            'transparent', 'transparent', 'transparent', 'transparent',
+            gap, gap, gap, gap,
             this.color, this.color, this.color, this.color,
           ],
           weftColors: [
             this.color, this.color, this.color, this.color,
-            'transparent', 'transparent', 'transparent', 'transparent',
+            gap, gap, gap, gap,
           ],
         }))
         break
 
       default:
-        const { rnd } = shortcuts(this.grid.utils)
-        const { curve } = shortcuts(this.grid.utils)
-        canvas.halftone(
-          this.tl(), this.width, this.height,
-          this.color,
-          (nx) => 1 - curve.easeIn(nx),
-          { spacing: Math.max(1, Math.ceil(this.width / 80)), rng: rnd }
+        // 1-shaft treadling [1,2,…] → horizontal bands in drawdown; halftone 'tb' matches stripe direction
+        this.drawWeave(
+          canvas,
+          buildWeave({
+            threading: [1],
+            treadling: [1, 2, 1, 2],
+            tieup: [
+              [true],
+              [false],
+            ],
+            warpColors: [this.color],
+            weftColors: [gap],
+          }),
+          { halftoneDirection: 'tb' }
         )
         break
     }
