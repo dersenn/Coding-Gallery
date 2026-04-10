@@ -68,21 +68,24 @@ class MyCell extends GridCell {
   }
 
   drawWeave(canvas, weave) {
+    const { v } = shortcuts(this.grid.utils)
     const colSize = this.width / weave.cols
     const rowSize = this.height / weave.rows
-    const ctx = canvas.ctx
 
     for (let row = 0; row < weave.rows; row++) {
       for (let col = 0; col < weave.cols; col++) {
-        const x0 = canvas.snapX(this.x + col * colSize)
-        const x1 = canvas.snapX(this.x + (col + 1) * colSize)
-        const y0 = canvas.snapY(this.y + row * rowSize)
-        const y1 = canvas.snapY(this.y + (row + 1) * rowSize)
         const warpUp = weave.drawdown[row][col]
-        ctx.fillStyle = warpUp
+        const fill = warpUp
           ? weave.warpColors[col % weave.warpColors.length]
           : weave.weftColors[row % weave.weftColors.length]
-        ctx.fillRect(x0, y0, x1 - x0, y1 - y0)
+        canvas.rect(
+          v(this.x + col * colSize, this.y + row * rowSize),
+          colSize,
+          rowSize,
+          fill,
+          'transparent',
+          0
+        )
       }
     }
   }
@@ -181,9 +184,10 @@ class MyCell extends GridCell {
         break
 
       default:
+        const base = Color.parse(this.color)
         const grad = canvas.linearGradient(this.tl(), this.tr(), [
-          [0, '#ff0000'],
-          [1, '#0000ff']
+          [0, base],
+          [1, base.withAlpha(0)],
         ])
         canvas.rect(this.tl(), this.width, this.height, grad, 'transparent', 0)
         // canvas.rect(this.tl(), this.width, this.height, theme.black, 'transparent', 0)

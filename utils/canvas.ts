@@ -262,10 +262,8 @@ export class Canvas {
   }
 
   background(fill: string = this.def.background): void {
-    this.ctx.save()
     this.ctx.fillStyle = fill
     this.ctx.fillRect(0, 0, this.w, this.h)
-    this.ctx.restore()
   }
 
   fill(fill: CanvasFill | null): void {
@@ -286,13 +284,11 @@ export class Canvas {
     stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): void {
-    this.ctx.save()
     applyStyle(this.ctx, { stroke, strokeW, fill: 'transparent', lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     this.ctx.beginPath()
     this.ctx.moveTo(a.x, a.y)
     this.ctx.lineTo(b.x, b.y)
     this.ctx.stroke()
-    this.ctx.restore()
   }
 
   circle(
@@ -302,13 +298,11 @@ export class Canvas {
     stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): void {
-    this.ctx.save()
     applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     this.ctx.beginPath()
     this.ctx.arc(at.x, at.y, Math.max(0, r), 0, Math.PI * 2)
     if (fill !== 'transparent') this.ctx.fill()
     if (stroke !== 'transparent' && strokeW > 0) this.ctx.stroke()
-    this.ctx.restore()
   }
 
   ellipse(
@@ -320,13 +314,11 @@ export class Canvas {
     stroke: CanvasFill = this.def.stroke,
     strokeW: number = this.def.strokeW
   ): void {
-    this.ctx.save()
     applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     this.ctx.beginPath()
     this.ctx.ellipse(at.x, at.y, Math.max(0, rx), Math.max(0, ry), rotation, 0, Math.PI * 2)
     if (fill !== 'transparent') this.ctx.fill()
     if (stroke !== 'transparent' && strokeW > 0) this.ctx.stroke()
-    this.ctx.restore()
   }
 
   rect(
@@ -340,7 +332,6 @@ export class Canvas {
   ): void {
     const bounds = this.resolveRectBounds(at, width, height, options)
     const strokeAlign = options.strokeAlign ?? 'center'
-    this.ctx.save()
     applyStyle(this.ctx, { fill, stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     if (fill !== 'transparent') {
       this.ctx.fillRect(bounds.x, bounds.y, bounds.width, bounds.height)
@@ -357,7 +348,6 @@ export class Canvas {
         this.ctx.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height)
       }
     }
-    this.ctx.restore()
   }
 
   rectC(
@@ -406,7 +396,6 @@ export class Canvas {
     const colStep = bounds.width / safeCols
     const rowStep = bounds.height / safeRows
 
-    this.ctx.save()
     applyStyle(this.ctx, { fill: 'transparent', stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     this.ctx.beginPath()
 
@@ -435,7 +424,6 @@ export class Canvas {
     }
 
     this.ctx.stroke()
-    this.ctx.restore()
   }
 
   /**
@@ -502,7 +490,6 @@ export class Canvas {
       registerEdge(left, top, left, bottom)
     }
 
-    this.ctx.save()
     applyStyle(this.ctx, { fill: 'transparent', stroke, strokeW, lineCap: this.def.lineCap, lineJoin: this.def.lineJoin })
     this.ctx.beginPath()
 
@@ -539,7 +526,6 @@ export class Canvas {
     }
 
     this.ctx.stroke()
-    this.ctx.restore()
   }
 
   text(
@@ -548,17 +534,14 @@ export class Canvas {
     fill: string = this.def.text,
     options: CanvasTextOptions = {}
   ): void {
-    this.ctx.save()
     this.ctx.fillStyle = fill
     this.ctx.textAlign = options.align ?? 'start'
     this.ctx.textBaseline = options.baseline ?? 'alphabetic'
-
     const fontSize = options.fontSize ?? 12
     const fontWeight = options.fontWeight ?? '400'
     const fontFamily = options.fontFamily ?? 'system-ui, sans-serif'
     this.ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`
     this.ctx.fillText(value, at.x, at.y)
-    this.ctx.restore()
   }
 
   withContext(draw: (ctx: CanvasRenderingContext2D) => void): void {
