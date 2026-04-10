@@ -190,20 +190,14 @@ class MyCell extends GridCell {
         break
 
       default:
-        const base = Color.parse(this.color)
-        const fill = canvas.grainFill(
-          (octx, w, h) => {
-            const grad = octx.createLinearGradient(0, 0, w, 0)
-            grad.addColorStop(0, base.toCss())
-            grad.addColorStop(1, base.withAlpha(0).toCss())
-            octx.fillStyle = grad
-            octx.fillRect(0, 0, w, h)
-          },
-          this.tl(),
-          this.width, this.height,
-          { intensity: .5 }
+        const { rnd } = shortcuts(this.grid.utils)
+        canvas.halftone(
+          this.tl(), this.width, this.height,
+          this.color,
+          (nx) => 1 - nx,
+          { spacing: Math.max(1, Math.ceil(this.width / 80)), rng: rnd }
         )
-        canvas.rect(this.tl(), this.width, this.height, fill, 'transparent', 0)
+        break
     }
   }
 }

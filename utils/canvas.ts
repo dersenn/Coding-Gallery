@@ -74,6 +74,11 @@ export interface GrainFillOptions {
   rng?: () => number
 }
 
+export interface HalftoneOptions {
+  spacing?: number
+  rng?: () => number
+}
+
 interface CanvasDefaults {
   fill: CanvasFill
   stroke: CanvasFill
@@ -630,9 +635,6 @@ export class Canvas {
     })
   }
 
-
-
-
   grainFill(
     draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void,
     at: Vec,
@@ -664,7 +666,31 @@ export class Canvas {
     return pattern
   }
 
-  
+  halftone(
+    at: Vec,
+    width: number,
+    height: number,
+    color: string,
+    density: (nx: number, ny: number) => number,
+    options: HalftoneOptions = {}
+  ): void {
+    const { spacing = 4, rng = Math.random } = options
+    const w = Math.ceil(width)
+    const h = Math.ceil(height)
+    const ox = this.snapX(at.x)
+    const oy = this.snapY(at.y)
+
+    this.withContext(ctx => {
+      ctx.fillStyle = color
+      for (let py = 0; py < h; py += spacing) {
+        for (let px = 0; px < w; px += spacing) {
+          if (rng() < density(px / w, py / h)) {
+            ctx.fillRect(ox + px, oy + py, spacing, spacing)
+          }
+        }
+      }
+    })
+  }
 
   save(options: CanvasExportOptions = {}): void {
     const { projectId, seed } = options
