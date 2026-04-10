@@ -184,20 +184,20 @@ class MyCell extends GridCell {
           weftColors: [this.color, 'transparent'],
         }))
         break
-      // case 4:
-      //   this.drawWeave(canvas, buildWeave({
-      //     threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
-      //     treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
-      //     tieup: [
-      //       [false, false, true, true],
-      //       [false, true, true, false],
-      //       [true, true, false, false],
-      //       [true, false, false, true],
-      //     ],
-      //     warpColors: ['transparent'],
-      //     weftColors: [this.color],
-      //   }))
-      //   break
+      case 4:
+        this.drawWeave(canvas, buildWeave({
+          threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
+          treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
+          tieup: [
+            [false, false, true, true],
+            [false, true, true, false],
+            [true, true, false, false],
+            [true, false, false, true],
+          ],
+          warpColors: ['transparent'],
+          weftColors: [this.color],
+        }))
+        break
       case 5:
         this.drawWeave(canvas, buildWeave({
           threading: [1, 2, 3, 4, 1, 2, 3, 4],
@@ -244,7 +244,7 @@ export function draw(context) {
 
   const grid = new MyGrid({ 
     cols: 1, 
-    rows: rndInt(1, 4), 
+    rows: rndInt(2, 4), 
     width: canvas.w, 
     height: canvas.h, 
     fit: 'contain',
