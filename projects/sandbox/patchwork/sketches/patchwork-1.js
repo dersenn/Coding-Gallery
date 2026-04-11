@@ -266,15 +266,20 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, theme, utils, controls: c } = context
-  const { v, map, simplex2, pick, rndInt, shuffle } = shortcuts(utils)
+  const { rndInt, shuffle } = shortcuts(utils)
 
   if (!canvas) return
 
   const palette = c.shuffleColors ? shuffle(theme.palette) : theme.palette
 
-  const grid = new MyGrid({ 
-    cols: 1, 
-    rows: rndInt(2, 4), 
+  const portrait = canvas.h > canvas.w
+  const splits = rndInt(2, 4)
+  const cols = portrait ? 1 : splits
+  const rows = portrait ? splits : 1
+
+  const grid = new MyGrid({
+    cols,
+    rows,
     width: canvas.w, 
     height: canvas.h, 
     fit: 'contain',
