@@ -99,22 +99,6 @@
     "entryFile": "/projects/sandbox/bezier-lab/index.ts"
   },
   {
-    "id": "legacy-3d",
-    "title": "Legacy 3D",
-    "description": "C4TA WEBGL p5.js migration archive — cube field and dandelion sphere",
-    "date": "2022-01",
-    "tags": [
-      "p5js",
-      "legacy-migration",
-      "webgl",
-      "3d",
-      "c4ta"
-    ],
-    "hidden": false,
-    "configFile": "/projects/c4ta/legacy-3d/project.config.ts",
-    "entryFile": "/projects/c4ta/legacy-3d/index.ts"
-  },
-  {
     "id": "vera",
     "title": "Vera",
     "description": "Overlapping tile-line composition with switchable Vera 1 and Vera 2 variants (migrated from C4TA SVG)",
@@ -129,20 +113,6 @@
     "prefersTheme": "light",
     "configFile": "/projects/c4ta/svg/vera/project.config.ts",
     "entryFile": "/projects/c4ta/svg/vera/index.ts"
-  },
-  {
-    "id": "legacy-p5",
-    "title": "Legacy P5",
-    "description": "C4TA p5.js migration archive — trails, polygon, and grid sketches",
-    "date": "2021-10",
-    "tags": [
-      "p5js",
-      "legacy-migration",
-      "c4ta"
-    ],
-    "hidden": false,
-    "configFile": "/projects/c4ta/legacy-p5/project.config.ts",
-    "entryFile": "/projects/c4ta/legacy-p5/index.ts"
   },
   {
     "id": "canvas2d-sketch-template",
@@ -267,5 +237,35 @@
     "noControls": true,
     "configFile": "/projects/c4ta/p5/type-in-space/project.config.ts",
     "entryFile": "/projects/c4ta/p5/type-in-space/index.ts"
+  },
+  {
+    "id": "legacy-3d",
+    "title": "Legacy 3D",
+    "description": "C4TA WEBGL p5.js migration archive — cube field and dandelion sphere",
+    "date": "2022-01",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "webgl",
+      "3d",
+      "c4ta"
+    ],
+    "hidden": true,
+    "configFile": "/projects/c4ta/legacy-3d/project.config.ts",
+    "entryFile": "/projects/c4ta/legacy-3d/index.ts"
+  },
+  {
+    "id": "legacy-p5",
+    "title": "Legacy P5",
+    "description": "C4TA p5.js migration archive — trails, polygon, and grid sketches",
+    "date": "2021-10",
+    "tags": [
+      "p5js",
+      "legacy-migration",
+      "c4ta"
+    ],
+    "hidden": true,
+    "configFile": "/projects/c4ta/legacy-p5/project.config.ts",
+    "entryFile": "/projects/c4ta/legacy-p5/index.ts"
   }
 ]
