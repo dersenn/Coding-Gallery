@@ -118,7 +118,7 @@ const metadata = {
     "3d",
     "c4ta"
   ],
-  "hidden": false
+  "hidden": true
 } satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const definition: ProjectDefinition = {
