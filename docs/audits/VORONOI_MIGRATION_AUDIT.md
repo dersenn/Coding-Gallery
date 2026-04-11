@@ -29,3 +29,6 @@ Scope: `projects/svg/voronoi/index.ts`
 - Chosen path: use existing framework utilities + custom algorithm for Delaunay selection.
 - Classification: keep / replace now / replace later as listed above.
 - Rationale: rendering and geometry primitives are framework concerns; triangulation logic is sketch-specific domain behavior.
+
+### post-migration notes
+- 2026-04-11: Converted from `init(container, context)` to modern `draw(context)` contract. Removed `resolveContainer`, `new SVG()`, and `registerAction`. Sketch is now a single `sketches[]` entry in `project.config.ts`; bootstrap handles action wiring. Legacy `index.ts` replaced with stub. Geometry functions (`allTriangles`, `findCircumcircle`, `satisfiesDelaunayCondition`) retained as plain JS in `sketches/voronoi.js`.

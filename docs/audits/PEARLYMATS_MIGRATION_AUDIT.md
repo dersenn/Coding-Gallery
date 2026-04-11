@@ -51,3 +51,6 @@ Scope: active sketch `projects/svg/pearlymats/index.ts`
 - Classification: keep | replace now | replace later
 - Rationale (only if custom near overlap): ...
 ```
+
+### post-migration notes
+- 2026-04-11: Converted from `init(container, context)` to modern `draw(context)` contract. Removed `resolveContainer`, `new SVG()`, `onControlChange`, `registerAction`, and `syncControlState`. Grid is now rebuilt fresh on each `draw()` call (no mutation-based resize detection needed). localStorage persistence for custom palette moved into `draw()` body — runs on every control change when `palettePreset === 'custom'`. `PearlyCell extends GridCell` class defined inside `draw()` to close over `svg` and `simplex2`. All palette constants and `readPersistedCustomPalette` live in `project.config.ts` to preserve the `DEFAULT_CUSTOM_PALETTE` control default. TypeScript source in `index.ts` replaced with stub; sketch in `sketches/pearlymats.js` is plain JS.

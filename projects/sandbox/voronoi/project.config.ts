@@ -1,7 +1,28 @@
-import type { ProjectDefinition, ProjectModule } from "~/types/project"
-import * as legacyModuleExports from "./index"
+import type {
+  ProjectActionDefinition,
+  ProjectControlDefinition,
+  ProjectDefinition,
+  ProjectSketchDefinition
+} from '~/types/project'
 
-const legacyModule = legacyModuleExports as unknown as Partial<ProjectModule>
+const SKETCHES: ProjectSketchDefinition[] = [
+  {
+    id: 'voronoi',
+    label: 'Voronoi',
+    technique: 'svg',
+    container: { mode: 'full' },
+    module: './sketches/voronoi.js',
+    actions: [{ key: 'download-svg', label: 'Download SVG' }],
+    defaultActive: true,
+  }
+]
+
+const CONTAINER = { mode: 'full' as const }
+const TECHNIQUES = ['svg'] as const
+const DEFAULT_TECHNIQUE = 'svg' as const
+
+const CONTROLS: ProjectControlDefinition[] = []
+const ACTIONS: ProjectActionDefinition[] = []
 
 const metadata = {
   "id": "voronoi",
@@ -15,20 +36,17 @@ const metadata = {
   ],
   "noControls": true,
   "hidden": false
-} satisfies Omit<ProjectDefinition, "init" | "controls" | "actions" | "theme" | "container" | "supportedTechniques" | "defaultTechnique" | "sketches">
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const definition: ProjectDefinition = {
   ...metadata,
-  techniques: legacyModule.supportedTechniques ?? [],
-  defaultTechnique: legacyModule.defaultTechnique,
+  techniques: [...TECHNIQUES],
+  defaultTechnique: DEFAULT_TECHNIQUE,
   libraries: [],
-  init: legacyModule.init as ProjectDefinition["init"],
-  controls: legacyModule.controls,
-  actions: legacyModule.actions,
-  theme: legacyModule.theme,
-  container: legacyModule.container,
-  supportedTechniques: legacyModule.supportedTechniques,
-  sketches: legacyModule.sketches
+  controls: CONTROLS,
+  actions: ACTIONS,
+  container: CONTAINER,
+  sketches: SKETCHES
 }
 
 export default definition

@@ -57,7 +57,7 @@
   {
     "id": "pearlymats",
     "title": "Pearly Mats",
-    "description": "Pearly Mats",
+    "description": "Noise-based bead grid with circular cutoff and multi-preset palette system",
     "date": "2026-02",
     "tags": [
       "svg",

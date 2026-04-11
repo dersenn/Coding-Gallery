@@ -1,7 +1,51 @@
-import type { ProjectDefinition, ProjectModule } from "~/types/project"
-import * as legacyModuleExports from "./index"
+import type {
+  ProjectActionDefinition,
+  ProjectControlDefinition,
+  ProjectDefinition,
+  ProjectSketchDefinition
+} from '~/types/project'
 
-const legacyModule = legacyModuleExports as unknown as Partial<ProjectModule>
+const VERA_CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'composition',
+    label: 'Composition',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'checkbox-group',
+        label: 'Sketches',
+        key: 'enabledLayers',
+        default: ['vera1'],
+        options: [
+          { label: 'Vera 1', value: 'vera1' },
+          { label: 'Vera 2', value: 'vera2' }
+        ]
+      }
+    ]
+  }
+]
+
+const SKETCHES: ProjectSketchDefinition[] = [
+  {
+    id: 'vera',
+    label: 'Vera',
+    technique: 'svg',
+    container: 'square',
+    module: './sketches/vera.js',
+    controls: VERA_CONTROLS,
+    actions: [{ key: 'download-svg', label: 'Download SVG' }],
+    defaultActive: true,
+  }
+]
+
+const CONTAINER = 'square' as const
+const TECHNIQUES = ['svg'] as const
+const DEFAULT_TECHNIQUE = 'svg' as const
+
+const CONTROLS: ProjectControlDefinition[] = []
+const ACTIONS: ProjectActionDefinition[] = []
 
 const metadata = {
   "id": "vera",
@@ -16,20 +60,17 @@ const metadata = {
   ],
   "prefersTheme": "light",
   "hidden": false
-} satisfies Omit<ProjectDefinition, "init" | "controls" | "actions" | "theme" | "container" | "supportedTechniques" | "defaultTechnique" | "sketches">
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const definition: ProjectDefinition = {
   ...metadata,
-  techniques: legacyModule.supportedTechniques ?? [],
-  defaultTechnique: legacyModule.defaultTechnique,
+  techniques: [...TECHNIQUES],
+  defaultTechnique: DEFAULT_TECHNIQUE,
   libraries: [],
-  init: legacyModule.init as ProjectDefinition["init"],
-  controls: legacyModule.controls,
-  actions: legacyModule.actions,
-  theme: legacyModule.theme,
-  container: legacyModule.container,
-  supportedTechniques: legacyModule.supportedTechniques,
-  sketches: legacyModule.sketches
+  controls: CONTROLS,
+  actions: ACTIONS,
+  container: CONTAINER,
+  sketches: SKETCHES
 }
 
 export default definition
