@@ -329,129 +329,6 @@ const GRIDWAVE_CONTROLS: ProjectControlDefinition[] = [
   },
 ]
 
-const GRID5_CONTROLS: ProjectControlDefinition[] = [
-  {
-    type: 'group',
-    id: 'grid5-color',
-    label: 'Color',
-    order: 0,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'toggle',
-        key: 'drawBackground',
-        label: 'Draw background',
-        order: 0,
-        default: false,
-      },
-      {
-        type: 'toggle',
-        key: 'shuffleColors',
-        label: 'Shuffle colors',
-        order: 1,
-        default: false,
-      },
-    ],
-  },
-  {
-    type: 'group',
-    id: 'grid5-sample',
-    label: 'Noise Sample',
-    order: 0,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'slider',
-        key: 'sampleMultiplier',
-        label: 'Sample multiplier',
-        default: 3,
-        min: 0,
-        max: 10,
-        step: 1,
-        randomize: true,
-      },
-      {
-        type: 'slider',
-        key: 'scale',
-        label: 'Scale',
-        default: .001,
-        min: 0.0001,
-        max: 0.001,
-        step: 0.0001,
-        randomize: true,
-      },
-      {
-        type: 'slider',
-        key: 'offset',
-        label: 'Offset',
-        default: 1000,
-        min: 1000,
-        max: 10000,
-        step: 1000,
-      },
-      {
-        type: 'slider',
-        key: 'stretchX',
-        label: 'Stretch X',
-        default: 1.0,
-        min: 0.1,
-        max: 10.0,
-        step: 0.1,
-        randomize: true,
-      },
-      {
-        type: 'slider',
-        key: 'stretchY',
-        label: 'Stretch Y',
-        default: 1.0,
-        min: 0.1,
-        max: 10.0,
-        step: 0.1,
-        randomize: true,
-      },
-      {
-        type: 'slider',
-        key: 'amplitude',
-        label: 'Amplitude',
-        default: 1.0,
-        min: 0.1,
-        max: 5.0,
-        step: 0.1,
-        randomize: true,
-      },
-      {
-        type: 'slider',
-        key: 'octaves',
-        label: 'Octaves',
-        default: 3,
-        min: 1,
-        max: 10,
-        step: 1,
-        randomize: true,
-      },
-      {
-        type: 'slider',
-        key: 'lacunarity',
-        label: 'Lacunarity',
-        default: 1.1,
-        min: 0.1,
-        max: 10.0,
-        step: 0.1,
-        randomize: true,
-      },
-      {
-        type: 'slider',
-        key: 'persistence',
-        label: 'Persistence',
-        default: 0.9,
-        min: 0.1,
-        max: 10.0,
-        step: 0.1,
-        randomize: true,
-      },
-    ],
-  },
-]
 
 
 
@@ -506,18 +383,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     module: './sketches/grid-4.js',
     controls: GRIDWAVE_CONTROLS,
   },
-  {
-    id: 'grid-5',
-    label: 'Grid 5',
-    technique: 'canvas2d',
-    container: { mode: 'full', padding: '0' },
-    module: './sketches/grid-5.js',
-    controls: GRID5_CONTROLS,
-    prefersTheme: 'light',
-  }
 ]
-
-
 
 
 
@@ -532,13 +398,6 @@ const definition: ProjectDefinition = {
   container: CONTAINER,
   sketches: SKETCHES
 }
-
-
-
-
-
-
-
 
 
 

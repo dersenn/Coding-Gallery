@@ -1,5 +1,19 @@
 [
   {
+    "id": "patchwork",
+    "title": "Patchwork",
+    "description": "Patchwork",
+    "date": "2026-04",
+    "tags": [
+      "canvas2d",
+      "grid",
+      "noise"
+    ],
+    "hidden": false,
+    "configFile": "/projects/sandbox/patchwork/project.config.ts",
+    "entryFile": "/projects/sandbox/patchwork/index.ts"
+  },
+  {
     "id": "all-that-noise",
     "title": "All That Noise",
     "description": "All That Noise",
