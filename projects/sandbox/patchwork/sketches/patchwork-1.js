@@ -84,8 +84,10 @@ class MyCell extends GridCell {
     const cx = this.x + this.width / 2
     const cy = this.y + this.height / 2
     const rootCell = this.parent ?? this
-    const offsetX = rootCell.index * ns.offset
-    const offsetY = rootCell.index * ns.offset
+    const delta = rootCell.index * ns.offset
+    // align strip-phase offset with top-level split axis (rows → Y, cols → X)
+    const offsetX = ns.portrait ? 0 : delta
+    const offsetY = ns.portrait ? delta : 0
 
     this.sampleSize = this.width * ns.sampleMultiplier
 
@@ -290,6 +292,7 @@ export function draw(context) {
     sampleMultiplier: c.sampleMultiplier,
     scale: c.scale,
     offset: c.offset,
+    portrait,
     stretchX: c.stretchX,
     stretchY: c.stretchY,
     amplitude: c.amplitude,
