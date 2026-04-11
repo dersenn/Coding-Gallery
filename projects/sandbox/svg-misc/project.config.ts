@@ -14,7 +14,7 @@ const metadata = {
     "svg",
     "misc"
   ],
-  "hidden": false
+  "hidden": true
 } satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
 
 const CONTAINER = { mode: 'full' as const }

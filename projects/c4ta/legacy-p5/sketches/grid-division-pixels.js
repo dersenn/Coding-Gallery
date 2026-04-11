@@ -1,10 +1,9 @@
-import type { CleanupFunction, ProjectContext, ProjectControlDefinition } from '~/types/project'
 import { Grid, shortcuts, resolveContainer } from '~/types/project'
 import p5 from 'p5'
 import { syncControlState } from '~/composables/useControls'
 
 /**
- * Grid Division Pixels 3 (C4TA p5 migration)
+ * Grid Division Pixels (C4TA p5 migration)
  *
  * Intent:
  * - Preserve recursive 2x2 subdivision visuals plus moving-container accumulation.
@@ -12,69 +11,21 @@ import { syncControlState } from '~/composables/useControls'
  * What is being tested/preserved:
  * - Chance-based recursive branch stopping.
  * - Temporal layering effect from repeatedly stamping a shifted recursive container.
- *
- * Non-goals:
- * - Not a deterministic static tiling export by default; accumulation over time is core behavior.
  */
-export const controls: ProjectControlDefinition[] = [
-  {
-    type: 'group',
-    id: 'grid',
-    label: 'Grid',
-    collapsible: true,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'slider',
-        label: 'Levels',
-        key: 'levels',
-        default: 2,
-        min: 1,
-        max: 5,
-        step: 1
-      },
-      {
-        type: 'slider',
-        label: 'Branch Subdivide Chance',
-        key: 'branchStopChance',
-        default: 50,
-        min: 0,
-        max: 100,
-        step: 1
-      },
-      {
-        type: 'slider',
-        label: 'Frame Rate',
-        key: 'fps',
-        default: 3,
-        min: 1,
-        max: 24,
-        step: 1
-      }
-    ]
-  }
-]
-
-export const container = 'full'
-
-export async function init(
-  container: HTMLElement,
-  context: ProjectContext
-): Promise<CleanupFunction> {
+export async function init(container, context) {
   const { controls, utils, theme, onControlChange } = context
   const { rndInt } = shortcuts(utils)
 
   const controlState = {
-    levels: controls.levels as number,
-    branchStopChance: controls.branchStopChance as number,
-    fps: controls.fps as number
+    levels: controls.levels,
+    branchStopChance: controls.branchStopChance,
+    fps: controls.fps
   }
 
   const rootCols = 2
   const rootRows = 2
   const activePalette = theme.palette.slice(0, 3)
 
-  // Step 1: sample from the active theme palette for each tile fill.
   const randomColor = () => {
     const index = rndInt(0, Math.max(0, activePalette.length - 1))
     return activePalette[index] ?? theme.foreground
@@ -83,8 +34,7 @@ export async function init(
   const { el, width, height } = resolveContainer(container, 'full')
 
   const sketch = new p5((p) => {
-    // Step 2: render recursive terminal nodes from a 2x2 subdivision tree.
-    const drawRecursiveTiles = (x: number, y: number, w: number, h: number) => {
+    const drawRecursiveTiles = (x, y, w, h) => {
       const grid = new Grid({
         cols: rootCols,
         rows: rootRows,
@@ -102,7 +52,6 @@ export async function init(
         subdivisionRows: rootRows
       })
 
-      // Parent-preserving subdivide: terminals can be mixed levels (including root).
       p.noStroke()
       for (const cell of terminals) {
         p.fill(randomColor())
@@ -110,7 +59,6 @@ export async function init(
       }
     }
 
-    // Step 3: draw a moving recursive container each frame (legacy accumulation behavior).
     const drawMovingContainer = () => {
       const levels = Math.max(1, Math.floor(controlState.levels))
       const maxDivisionsX = rootCols ** (levels + 1)
@@ -132,14 +80,12 @@ export async function init(
     }
 
     p.setup = () => {
-      // Step 4: initialize canvas and paint the base recursive grid once.
       p.createCanvas(width, height)
       p.frameRate(Math.max(1, Math.floor(controlState.fps)))
       drawRecursiveTiles(0, 0, p.width, p.height)
     }
 
     p.draw = () => {
-      // Keep legacy accumulation behavior: draw moving recursive container each frame.
       drawMovingContainer()
     }
 
@@ -150,7 +96,6 @@ export async function init(
     }
 
     onControlChange((newControls) => {
-      // Step 5: apply control updates and redraw the base sketch deterministically.
       const prevFps = controlState.fps
       syncControlState(controlState, newControls)
 
