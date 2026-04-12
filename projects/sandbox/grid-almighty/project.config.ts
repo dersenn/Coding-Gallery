@@ -5,7 +5,7 @@ import type {
   ProjectSketchDefinition,
 } from '~/types/project'
 
-const GRID2_CONTROLS: ProjectControlDefinition[] = [
+const GRID_DIVISION_2_CONTROLS: ProjectControlDefinition[] = [
   {
     type: 'group',
     id: 'grid2-color',
@@ -35,9 +35,9 @@ const GRID2_CONTROLS: ProjectControlDefinition[] = [
     label: 'Cols',
     group: 'Grid',
     order: 10,
-    default: 1,
+    default: 3,
     min: 1,
-    max: 24,
+    max: 12,
     step: 1,
   },
   {
@@ -46,9 +46,9 @@ const GRID2_CONTROLS: ProjectControlDefinition[] = [
     label: 'Rows',
     group: 'Grid',
     order: 11,
-    default: 1,
+    default: 3,
     min: 1,
-    max: 24,
+    max: 12,
     step: 1,
   },
   {
@@ -243,72 +243,6 @@ const GRID2_CONTROLS: ProjectControlDefinition[] = [
 ]
 
 
-const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
-  {
-    type: 'group',
-    id: 'noiseAnim',
-    label: 'Noise Animation',
-    collapsible: true,
-    defaultOpen: true,
-    controls: [
-      {
-        type: 'slider',
-        label: 'Columns',
-        key: 'noise_anim_cols',
-        default: 64,
-        min: 8,
-        max: 180,
-        step: 1
-      },
-      {
-        type: 'slider',
-        label: 'Rows',
-        key: 'noise_anim_rows',
-        default: 64,
-        min: 8,
-        max: 180,
-        step: 1
-      },
-      {
-        type: 'slider',
-        label: 'Noise Scale',
-        key: 'noise_anim_scale',
-        default: 0.065,
-        min: 0.005,
-        max: 0.2,
-        step: 0.001
-      },
-      {
-        type: 'slider',
-        label: 'Time Scale',
-        key: 'noise_anim_time_scale',
-        default: 0.0006,
-        min: 0.00001,
-        max: 0.003,
-        step: 0.00001
-      },
-      {
-        type: 'slider',
-        label: 'Warp',
-        key: 'noise_anim_warp',
-        default: 0.18,
-        min: 0,
-        max: 0.6,
-        step: 0.01
-      },
-      {
-        type: 'slider',
-        label: 'Contrast',
-        key: 'noise_anim_contrast',
-        default: 1,
-        min: 0.1,
-        max: 3,
-        step: 0.05
-      }
-    ]
-  }
-]
-
 const GRIDWAVE_CONTROLS: ProjectControlDefinition[] = [
   {
     type: 'group',
@@ -396,8 +330,6 @@ const GRIDWAVE_CONTROLS: ProjectControlDefinition[] = [
 ]
 
 
-
-
 const GROWTH_CONTROLS: ProjectControlDefinition[] = [
   {
     type: 'group',
@@ -473,6 +405,7 @@ const GROWTH_CONTROLS: ProjectControlDefinition[] = [
     ]
   }
 ]
+
 
 const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
   {
@@ -605,6 +538,74 @@ const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
+
+const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'noiseAnim',
+    label: 'Noise Animation',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      {
+        type: 'slider',
+        label: 'Columns',
+        key: 'noise_anim_cols',
+        default: 64,
+        min: 8,
+        max: 180,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Rows',
+        key: 'noise_anim_rows',
+        default: 64,
+        min: 8,
+        max: 180,
+        step: 1
+      },
+      {
+        type: 'slider',
+        label: 'Noise Scale',
+        key: 'noise_anim_scale',
+        default: 0.065,
+        min: 0.005,
+        max: 0.2,
+        step: 0.001
+      },
+      {
+        type: 'slider',
+        label: 'Time Scale',
+        key: 'noise_anim_time_scale',
+        default: 0.0006,
+        min: 0.00001,
+        max: 0.003,
+        step: 0.00001
+      },
+      {
+        type: 'slider',
+        label: 'Warp',
+        key: 'noise_anim_warp',
+        default: 0.18,
+        min: 0,
+        max: 0.6,
+        step: 0.01
+      },
+      {
+        type: 'slider',
+        label: 'Contrast',
+        key: 'noise_anim_contrast',
+        default: 1,
+        min: 0.1,
+        max: 3,
+        step: 0.05
+      }
+    ]
+  }
+]
+
+
 const NOISY_AUTOMATA_ACTIONS: ProjectActionDefinition[] = [
   {
     key: 'download-png',
@@ -640,43 +641,35 @@ const ACTIONS: ProjectActionDefinition[] = []
 
 const SKETCHES: ProjectSketchDefinition[] = [
   {
-    id: 'noise-core',
-    label: 'Noise Core',
-    technique: 'canvas2d',
-    container: { mode: 'full' },
-    module: './sketches/noise-core.js',
-    controls: NOISE_CORE_CONTROLS,
-  },
-  {
-    id: 'grid-1',
-    label: 'Grid 1',
+    id: 'grid-division-1',
+    label: 'Grid Division 1',
     technique: 'canvas2d',
     container: { mode: '1:1', padding: '9vmin' },
-    module: './sketches/grid-1.js',
+    module: './sketches/grid-division-1.js',
   },
   {
-    id: 'grid-2',
-    label: 'Grid 2',
+    id: 'grid-division-2',
+    label: 'Grid Division 2',
     technique: 'canvas2d',
     container: { mode: 'full', padding: '0' },
-    module: './sketches/grid-2.js',
-    controls: GRID2_CONTROLS,
+    module: './sketches/grid-division-2.js',
+    controls: GRID_DIVISION_2_CONTROLS,
   },
   {
-    id: 'grid-3',
-    label: 'Grid 3',
+    id: 'grid-wave',
+    label: 'Grid Wave',
     technique: 'canvas2d',
     container: { mode: 'full', padding: '0' },
-    module: './sketches/grid-3.js',
+    module: './sketches/grid-wave.js',
     controls: GRIDWAVE_CONTROLS,
   },
   {
-    id: 'grid-4',
-    label: 'Grid 4',
+    id: 'grid-fade',
+    label: 'Grid Fade',
     technique: 'canvas2d',
-    container: { mode: 'full', padding: '0' },
-    module: './sketches/grid-4.js',
-    controls: GRIDWAVE_CONTROLS,
+    container: { mode: '2:3', padding: '3vmin' },
+    module: './sketches/grid-fade.js',
+    prefersTheme: 'light',
   },
   {
     id: 'noisy-automata',
@@ -689,16 +682,22 @@ const SKETCHES: ProjectSketchDefinition[] = [
   },
   {
     id: 'grid-growth-canvas',
-    label: 'Grid Growth (Canvas2D)',
+    label: 'Grid Growth',
     technique: 'canvas2d',
     container: { mode: 'full' },
-    module: './sketches/grid-canvas.js',
+    module: './sketches/grid-growth.js',
     controls: GROWTH_CONTROLS,
     actions: GROWTH_CANVAS_ACTIONS,
   },
+  {
+    id: 'noise-core',
+    label: 'Noise Core',
+    technique: 'canvas2d',
+    container: { mode: 'full' },
+    module: './sketches/noise-core.js',
+    controls: NOISE_CORE_CONTROLS,
+  },
 ]
-
-
 
 
 const definition: ProjectDefinition = {
@@ -711,8 +710,6 @@ const definition: ProjectDefinition = {
   container: CONTAINER,
   sketches: SKETCHES
 }
-
-
 
 
 export default definition

@@ -12,20 +12,20 @@ import { buildWeave } from '~/utils/weave'
 
 /** Lighten via HSL (utilities: color.parse / color.fromHsl — reuse) */
 function tintColor(utils, input, lightnessMix = 0.38) {
-  const c = utils.color.parse(input)
-  if (!c || c.a === 0) return input
-  const [h, s, l] = c.toHslTuple()
+  const col = utils.color.parse(input)
+  if (!col || col.a === 0) return input
+  const [h, s, l] = col.toHslTuple()
   const l2 = Math.min(100, l + (100 - l) * lightnessMix)
-  return utils.color.fromHsl(h, s, l2, c.a).toHex()
+  return utils.color.fromHsl(h, s, l2, col.a).toHex()
 }
 
 /** Darken via HSL toward black (reuse) */
 function shadeColor(utils, input, darknessMix = 0.52) {
-  const c = utils.color.parse(input)
-  if (!c || c.a === 0) return input
-  const [h, s, l] = c.toHslTuple()
+  const col = utils.color.parse(input)
+  if (!col || col.a === 0) return input
+  const [h, s, l] = col.toHslTuple()
   const l2 = Math.max(4, l * (1 - darknessMix))
-  return utils.color.fromHsl(h, Math.min(100, s * 1.12), l2, c.a).toHex()
+  return utils.color.fromHsl(h, Math.min(100, s * 1.12), l2, col.a).toHex()
 }
 
 /**

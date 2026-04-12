@@ -74,10 +74,29 @@ export interface GrainFillOptions {
   rng?: () => number
 }
 
+export type HalftoneDitherMode = 'stochastic' | 'ordered'
+
 export interface HalftoneOptions {
   spacing?: number
   rng?: () => number
+  /**
+   * `stochastic` (default): `rng() < density` per sample (same as legacy halftone).
+   * `ordered`: 8×8 Bayer threshold, no per-dot RNG — deterministic crosshatch-like dither.
+   */
+  dither?: HalftoneDitherMode
 }
+
+/** 8×8 Bayer index matrix (0–63). */
+const BAYER8: readonly number[][] = [
+  [0, 48, 12, 60, 3, 51, 15, 63],
+  [32, 16, 44, 28, 35, 19, 47, 31],
+  [8, 56, 4, 52, 11, 59, 7, 55],
+  [40, 24, 36, 20, 43, 27, 39, 23],
+  [3, 35, 11, 43, 1, 33, 9, 41],
+  [51, 19, 59, 27, 49, 17, 57, 25],
+  [15, 47, 7, 39, 13, 45, 5, 37],
+  [63, 31, 55, 23, 61, 29, 53, 21],
+]
 
 interface CanvasDefaults {
   fill: CanvasFill
@@ -182,6 +201,10 @@ export class Canvas {
   def: CanvasDefaults
   rectSnapDefault: CanvasRectSnapMode
   private grainCache: HTMLCanvasElement | null = null
+  private halftoneScratch: HTMLCanvasElement | null = null
+  private halftoneImageData: ImageData | null = null
+  private halftoneImageDataW = 0
+  private halftoneImageDataH = 0
 
   private resolvePixelRatio(value: CanvasCreateConfig['pixelRatio']): number {
     if (typeof value === 'number') {
@@ -674,21 +697,79 @@ export class Canvas {
     density: (nx: number, ny: number) => number,
     options: HalftoneOptions = {}
   ): void {
-    const { spacing = 4, rng = Math.random } = options
+    const { spacing = 4, rng = Math.random, dither = 'stochastic' } = options
     const w = Math.ceil(width)
     const h = Math.ceil(height)
+    if (w <= 0 || h <= 0) return
+
+    const parsed = Color.parse(color)
+    if (!parsed || parsed.a <= 0) return
+
     const ox = this.snapX(at.x)
     const oy = this.snapY(at.y)
+    const r = parsed.r
+    const g = parsed.g
+    const b = parsed.b
+    const aByte = Math.round(parsed.a * 255)
 
-    this.withContext(ctx => {
-      ctx.fillStyle = color
-      for (let py = 0; py < h; py += spacing) {
-        for (let px = 0; px < w; px += spacing) {
-          if (rng() < density(px / w, py / h)) {
-            ctx.fillRect(ox + px, oy + py, spacing, spacing)
+    if (!this.halftoneScratch) {
+      this.halftoneScratch = document.createElement('canvas')
+    }
+    if (this.halftoneScratch.width < w) {
+      this.halftoneScratch.width = w
+    }
+    if (this.halftoneScratch.height < h) {
+      this.halftoneScratch.height = h
+    }
+
+    let imageData = this.halftoneImageData
+    if (!imageData || this.halftoneImageDataW !== w || this.halftoneImageDataH !== h) {
+      imageData = new ImageData(w, h)
+      this.halftoneImageData = imageData
+      this.halftoneImageDataW = w
+      this.halftoneImageDataH = h
+    }
+
+    const data = imageData.data
+    data.fill(0)
+
+    const invW = 1 / w
+    const invH = 1 / h
+
+    for (let py = 0; py < h; py += spacing) {
+      for (let px = 0; px < w; px += spacing) {
+        const d = density(px * invW, py * invH)
+        let on: boolean
+        if (dither === 'ordered') {
+          const ix = (Math.floor(px / spacing) % 8 + 8) % 8
+          const iy = (Math.floor(py / spacing) % 8 + 8) % 8
+          const t = (BAYER8[iy]![ix]! + 0.5) / 64
+          on = d > t
+        } else {
+          on = rng() < d
+        }
+        if (!on) continue
+
+        const yMax = Math.min(py + spacing, h)
+        const xMax = Math.min(px + spacing, w)
+        for (let yy = py; yy < yMax; yy++) {
+          let i = (yy * w + px) * 4
+          for (let xx = px; xx < xMax; xx++) {
+            data[i] = r
+            data[i + 1] = g
+            data[i + 2] = b
+            data[i + 3] = aByte
+            i += 4
           }
         }
       }
+    }
+
+    const sctx = this.halftoneScratch.getContext('2d')!
+    sctx.putImageData(imageData, 0, 0)
+
+    this.withContext(ctx => {
+      ctx.drawImage(this.halftoneScratch!, 0, 0, w, h, ox, oy, w, h)
     })
   }
 
