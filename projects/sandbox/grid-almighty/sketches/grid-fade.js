@@ -27,7 +27,7 @@ class MyCell extends GridCell {
       this.width, this.height,
       fill,
       density,
-      { spacing: 4, rng: rnd }
+      { spacing: 1, rng: rnd }
     )
 
   }

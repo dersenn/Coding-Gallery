@@ -667,7 +667,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     id: 'grid-fade',
     label: 'Grid Fade',
     technique: 'canvas2d',
-    container: { mode: '2:3', padding: '3vmin' },
+    container: { mode: 'full', padding: '0' },
     module: './sketches/grid-fade.js',
     prefersTheme: 'light',
   },

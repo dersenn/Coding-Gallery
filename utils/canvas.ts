@@ -84,6 +84,8 @@ export interface HalftoneOptions {
    * `ordered`: 8×8 Bayer threshold, no per-dot RNG — deterministic crosshatch-like dither.
    */
   dither?: HalftoneDitherMode
+  /** Same as `Canvas.rect` / `resolveRectBounds` — default follows canvas `rectSnap`. */
+  snap?: CanvasRectSnapMode
 }
 
 /** 8×8 Bayer index matrix (0–63). */
@@ -689,89 +691,147 @@ export class Canvas {
     return pattern
   }
 
-  halftone(
-    at: Vec,
-    width: number,
-    height: number,
-    color: string,
-    density: (nx: number, ny: number) => number,
-    options: HalftoneOptions = {}
-  ): void {
-    const { spacing = 4, rng = Math.random, dither = 'stochastic' } = options
-    const w = Math.ceil(width)
-    const h = Math.ceil(height)
-    if (w <= 0 || h <= 0) return
+halftone(
+  at: Vec,
+  width: number,
+  height: number,
+  color: string,
+  density: (nx: number, ny: number) => number,
+  options: HalftoneOptions = {}
+): void {
+  const { spacing = 4, rng = Math.random, dither = 'stochastic', snap } = options
+  const rectOpts = snap !== undefined ? { snap } : undefined
+  const bounds = this.resolveRectBounds(at, width, height, rectOpts)
+  const t = this.ctx.getTransform()
+  const axisOk = isAxisAligned(t) && t.a > 0 && t.d > 0
 
-    const parsed = Color.parse(color)
-    if (!parsed || parsed.a <= 0) return
+  let destX: number
+  let destY: number
+  let destW: number
+  let destH: number
+  let wPx: number
+  let hPx: number
+  let destFromDevicePx = false
+  let leftPxForDraw = 0
+  let topPxForDraw = 0
 
-    const ox = this.snapX(at.x)
-    const oy = this.snapY(at.y)
-    const r = parsed.r
-    const g = parsed.g
-    const b = parsed.b
-    const aByte = Math.round(parsed.a * 255)
+  if (axisOk) {
+    destX = bounds.x
+    destY = bounds.y
+    destW = bounds.width
+    destH = bounds.height
+    const leftPx = Math.round(canonicalEdge(t.a * bounds.x + t.e))
+    const rightPx = Math.max(leftPx + 1, Math.round(canonicalEdge(t.a * (bounds.x + bounds.width) + t.e)))
+    const topPx = Math.round(canonicalEdge(t.d * bounds.y + t.f))
+    const bottomPx = Math.max(topPx + 1, Math.round(canonicalEdge(t.d * (bounds.y + bounds.height) + t.f)))
+    wPx = Math.max(1, rightPx - leftPx)
+    hPx = Math.max(1, bottomPx - topPx)
+    destFromDevicePx = true
+    leftPxForDraw = leftPx
+    topPxForDraw = topPx
+  } else {
+    destX = this.snapX(at.x)
+    destY = this.snapY(at.y)
+    destW = Math.max(1, Math.ceil(width))
+    destH = Math.max(1, Math.ceil(height))
+    wPx = Math.max(1, Math.ceil(width))
+    hPx = Math.max(1, Math.ceil(height))
+  }
 
-    if (!this.halftoneScratch) {
-      this.halftoneScratch = document.createElement('canvas')
-    }
-    if (this.halftoneScratch.width < w) {
-      this.halftoneScratch.width = w
-    }
-    if (this.halftoneScratch.height < h) {
-      this.halftoneScratch.height = h
-    }
+  if (wPx <= 0 || hPx <= 0) return
 
-    let imageData = this.halftoneImageData
-    if (!imageData || this.halftoneImageDataW !== w || this.halftoneImageDataH !== h) {
-      imageData = new ImageData(w, h)
-      this.halftoneImageData = imageData
-      this.halftoneImageDataW = w
-      this.halftoneImageDataH = h
-    }
+  const parsed = Color.parse(color)
+  if (!parsed || parsed.a <= 0) return
 
-    const data = imageData.data
-    data.fill(0)
+  const r = parsed.r
+  const g = parsed.g
+  const b = parsed.b
+  const aByte = Math.round(parsed.a * 255)
 
-    const invW = 1 / w
-    const invH = 1 / h
+  if (!this.halftoneScratch) {
+    this.halftoneScratch = document.createElement('canvas')
+  }
+  // FIX 1: size scratch to exactly wPx × hPx — avoids iOS Safari drawImage
+  // source-clip bugs that occur when the scratch canvas is larger than the read region.
+  if (this.halftoneScratch.width !== wPx) this.halftoneScratch.width = wPx
+  if (this.halftoneScratch.height !== hPx) this.halftoneScratch.height = hPx
 
-    for (let py = 0; py < h; py += spacing) {
-      for (let px = 0; px < w; px += spacing) {
-        const d = density(px * invW, py * invH)
-        let on: boolean
-        if (dither === 'ordered') {
-          const ix = (Math.floor(px / spacing) % 8 + 8) % 8
-          const iy = (Math.floor(py / spacing) % 8 + 8) % 8
-          const t = (BAYER8[iy]![ix]! + 0.5) / 64
-          on = d > t
-        } else {
-          on = rng() < d
-        }
-        if (!on) continue
+  let imageData = this.halftoneImageData
+  if (!imageData || this.halftoneImageDataW !== wPx || this.halftoneImageDataH !== hPx) {
+    imageData = new ImageData(wPx, hPx)
+    this.halftoneImageData = imageData
+    this.halftoneImageDataW = wPx
+    this.halftoneImageDataH = hPx
+  }
 
-        const yMax = Math.min(py + spacing, h)
-        const xMax = Math.min(px + spacing, w)
-        for (let yy = py; yy < yMax; yy++) {
-          let i = (yy * w + px) * 4
-          for (let xx = px; xx < xMax; xx++) {
-            data[i] = r
-            data[i + 1] = g
-            data[i + 2] = b
-            data[i + 3] = aByte
-            i += 4
-          }
+  const data = imageData.data
+  data.fill(0)
+
+  const safeSpacing = Math.max(1, spacing)
+  const stepX =
+    safeSpacing <= 1 ? 1 : Math.max(1, Math.round((safeSpacing * wPx) / Math.max(1e-12, destW)))
+  const stepY =
+    safeSpacing <= 1 ? 1 : Math.max(1, Math.round((safeSpacing * hPx) / Math.max(1e-12, destH)))
+  const invWp = 1 / wPx
+  const invHp = 1 / hPx
+
+  for (let py = 0; py < hPx; py += stepY) {
+    for (let px = 0; px < wPx; px += stepX) {
+      const nx = (px + 0.5) * invWp
+      const ny = (py + 0.5) * invHp
+      const d = density(nx, ny)
+      let on: boolean
+      if (dither === 'ordered') {
+        const lx = nx * destW
+        const ly = ny * destH
+        const ix = (Math.floor(lx / safeSpacing) % 8 + 8) % 8
+        const iy = (Math.floor(ly / safeSpacing) % 8 + 8) % 8
+        const thresh = (BAYER8[iy]![ix]! + 0.5) / 64
+        on = d > thresh
+      } else {
+        // FIX 2: removed hiResStochastic Bayer jitter — the 8-device-px period
+        // created visible horizontal bands on mobile DPR ≥ 2. Pure stochastic
+        // is sufficient; more device pixels per cell means better averaging anyway.
+        on = rng() < d
+      }
+      if (!on) continue
+
+      const xMax = Math.min(px + stepX, wPx)
+      const yMax = Math.min(py + stepY, hPx)
+      for (let yy = py; yy < yMax; yy++) {
+        let i = (yy * wPx + px) * 4
+        for (let xx = px; xx < xMax; xx++) {
+          data[i] = r
+          data[i + 1] = g
+          data[i + 2] = b
+          data[i + 3] = aByte
+          i += 4
         }
       }
     }
-
-    const sctx = this.halftoneScratch.getContext('2d')!
-    sctx.putImageData(imageData, 0, 0)
-
-    this.withContext(ctx => {
-      ctx.drawImage(this.halftoneScratch!, 0, 0, w, h, ox, oy, w, h)
-    })
   }
+
+  const sctx = this.halftoneScratch.getContext('2d')!
+  sctx.putImageData(imageData, 0, 0)
+
+  this.withContext(ctx => {
+    const prevSmooth = ctx.imageSmoothingEnabled
+    const prevQuality = ctx.imageSmoothingQuality
+    ctx.imageSmoothingEnabled = false
+    ctx.imageSmoothingQuality = 'low'
+    if (destFromDevicePx) {
+      const dx = (leftPxForDraw - t.e) / t.a
+      const dy = (topPxForDraw - t.f) / t.d
+      const dw = wPx / t.a
+      const dh = hPx / t.d
+      ctx.drawImage(this.halftoneScratch!, 0, 0, wPx, hPx, dx, dy, dw, dh)
+    } else {
+      ctx.drawImage(this.halftoneScratch!, 0, 0, wPx, hPx, destX, destY, destW, destH)
+    }
+    ctx.imageSmoothingQuality = prevQuality
+    ctx.imageSmoothingEnabled = prevSmooth
+  })
+}
 
   save(options: CanvasExportOptions = {}): void {
     const { projectId, seed } = options
