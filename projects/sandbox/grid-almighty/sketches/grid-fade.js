@@ -13,12 +13,12 @@ class MyCell extends GridCell {
   }
 
   draw(canvas, theme) {
-    const { curve, rnd, v } = shortcuts(this.grid.utils)
-    const halftoneDirection = 'tb'
-    const density =
-      halftoneDirection === 'tb'
-        ? (_nx, ny) => 1 - curve.easeIn(ny)
-        : (nx, _ny) => 1 - curve.easeIn(nx)
+    const { curve, rnd } = shortcuts(this.grid.utils)
+    // Alternate top→bottom vs bottom→top halftone fade by cell parity (local row/col).
+    const topToBottom = (this.row + this.col) % 2 === 0
+    const density = topToBottom
+      ? (_nx, ny) => 1 - curve.easeIn(ny)
+      : (_nx, ny) => curve.easeOut(ny)
 
     const fill = this.col % 2 === 0 && this.row % 2 === 0 ? theme.palette[1] : theme.palette[3]
 
