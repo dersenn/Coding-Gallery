@@ -27,7 +27,7 @@ class MyCell extends GridCell {
       this.width, this.height,
       fill,
       density,
-      { spacing: 1, rng: rnd }
+      { spacing: 0.5, rng: rnd }
     )
 
   }
@@ -35,12 +35,12 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, theme, utils, controls: c } = context
-  const { rndInt } = shortcuts(utils)
+  const { rndInt, pick } = shortcuts(utils)
 
   if (!canvas) return
 
-  const cols = c.cols ?? rndInt(2, 4)
-  const rows = c.rows ?? rndInt(2, 4)
+  const cols = c.cols ?? pick([2, 4, 6, 8])
+  const rows = c.rows ?? pick([2, 4, 6, 8])
 
   const grid = new MyGrid({
     cols,
