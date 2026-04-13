@@ -20,7 +20,7 @@
 /* Sketch transitions - crossfade */
 .sketch-enter-active,
 .sketch-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.15s ease;
 }
 .sketch-enter-from,
 .sketch-leave-to {
