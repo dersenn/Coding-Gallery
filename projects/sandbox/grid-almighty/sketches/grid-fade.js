@@ -39,8 +39,8 @@ export function draw(context) {
 
   if (!canvas) return
 
-  const cols = c.cols ?? pick([2, 4, 6, 8])
-  const rows = c.rows ?? pick([2, 4, 6, 8])
+  const cols = c.cols ?? pick([1, 2, 4, 6, 8])
+  const rows = c.rows ?? pick([1, 2, 4, 6, 8])
 
   const grid = new MyGrid({
     cols,
