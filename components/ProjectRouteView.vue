@@ -185,23 +185,10 @@ const hasSvgDownloadAction = computed(() => {
 const hasPngDownloadAction = computed(() => {
   return visibleActions.value.some((action) => action.key === 'download-png')
 })
-const doReload = async () => {
-  viewerInstanceKey.value += 1
-  const randomReloadSelection = getPearlymatsReloadColorSelection()
-  if (randomReloadSelection) {
-    await router.push({
-      query: {
-        ...route.query,
-        selectedPaletteIndices: randomReloadSelection
-      }
-    })
-  }
-}
 
 const shortcutHints = computed(() => {
   const hints: Array<{ key: string; label: string; action: () => void }> = [
     { key: 'n', label: 'new seed', action: () => { void handleControlAction('new-seed') } },
-    { key: 'r', label: 'reload', action: () => { void doReload() } }
   ]
   if (pauseEnabled.value) {
     hints.push({ key: 'space', label: paused.value ? 'play' : 'pause', action: togglePause })
@@ -310,57 +297,6 @@ const handleControlAction = async (key: string) => {
   actionRequest.value = { key, nonce: actionNonce.value }
 }
 
-const getRandomIndices = (availableCount: number, selectionCount: number): string[] => {
-  const max = Math.max(0, Math.floor(availableCount))
-  const target = Math.min(Math.max(0, Math.floor(selectionCount)), max)
-  const pool = Array.from({ length: max }, (_, index) => index)
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[pool[i], pool[j]] = [pool[j]!, pool[i]!]
-  }
-  return pool.slice(0, target).sort((a, b) => a - b).map(String)
-}
-
-const getPearlymatsReloadColorSelection = (): string[] | null => {
-  if (project.value?.id !== 'pearlymats') return null
-
-  const controls = flattenControls(loadedControls.value)
-  const colorCheckboxGroup = controls.find(
-    (control): control is CheckboxGroupControlDefinition =>
-      control.type === 'checkbox-group' && control.key === 'selectedPaletteIndices'
-  )
-  if (!colorCheckboxGroup) return null
-  const selectedValues = controlValues.value.selectedPaletteIndices
-  const selectedCountFromState = Array.isArray(selectedValues) ? selectedValues.length : 0
-  const defaultSelectionCount = Array.isArray(colorCheckboxGroup.default)
-    ? colorCheckboxGroup.default.length
-    : 0
-  const targetSelectionCount = selectedCountFromState > 0
-    ? selectedCountFromState
-    : (defaultSelectionCount > 0 ? defaultSelectionCount : 3)
-
-  let availableCount = colorCheckboxGroup.options.length
-  if (colorCheckboxGroup.visibleCountFromSelectKey && colorCheckboxGroup.visibleCountBySelectValue) {
-    const paletteControl = controls.find(
-      (control): control is SelectControlDefinition =>
-        control.type === 'select' && control.key === colorCheckboxGroup.visibleCountFromSelectKey
-    )
-    const queryPaletteValue = route.query[colorCheckboxGroup.visibleCountFromSelectKey]
-    const currentPaletteValue = Array.isArray(queryPaletteValue)
-      ? queryPaletteValue[0]
-      : queryPaletteValue
-    const resolvedPaletteValue = currentPaletteValue ?? paletteControl?.default
-    const mappedCount = resolvedPaletteValue !== undefined
-      ? colorCheckboxGroup.visibleCountBySelectValue[String(resolvedPaletteValue)]
-      : undefined
-    if (mappedCount !== undefined) {
-      availableCount = Math.max(0, Math.floor(mappedCount))
-    }
-  }
-
-  return getRandomIndices(availableCount, targetSelectionCount)
-}
-
 const handleKeyboardShortcut = async (event: KeyboardEvent) => {
   // Preserve browser/system shortcuts such as Cmd+R / Ctrl+R.
   if (event.metaKey || event.ctrlKey || event.altKey) {
@@ -379,12 +315,6 @@ const handleKeyboardShortcut = async (event: KeyboardEvent) => {
   if (pauseEnabled.value && event.code === 'Space') {
     event.preventDefault()
     togglePause()
-    return
-  }
-
-  if (event.key.toLowerCase() === 'r') {
-    event.preventDefault()
-    void doReload()
     return
   }
 
