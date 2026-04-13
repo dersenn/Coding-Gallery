@@ -13,16 +13,16 @@ class MyCell extends GridCell {
     super(config)
   }
 
-  draw(canvas, theme) {
-    const { curve, rnd } = shortcuts(this.grid.utils)
+  draw(canvas, colors, maxLevel) {
+    const { curve, rnd, shuffle } = shortcuts(this.grid.utils)
     // Alternate top→bottom vs bottom→top halftone fade by cell parity (local row/col).
     const topToBottom = (this.row + this.col) % 2 === 0
     const density = topToBottom
       ? (_nx, ny) => 1 - curve.easeIn(ny)
       : (_nx, ny) => curve.easeOut(ny)
 
-    let fill = this.col % 2 === 0 && this.row % 2 === 0 ? theme.palette[this.level] : theme.palette[3]
-    // fill = theme.palette[this.level]
+    const fill = this.col % 2 === 0 && this.row % 2 === 0 ? colors[this.level] : colors[maxLevel + 1]
+    // const fill = theme.palette[this.level]
 
     canvas.halftone(
       this.tl(),
@@ -37,13 +37,16 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { rndInt, pick, coin } = shortcuts(utils)
+  const { rndInt, pick, coin, pickMany } = shortcuts(utils)
 
   if (!canvas) return
 
   const cols = c.cols ?? pick([2, 4, 6])
   const rows = c.rows ?? pick([2, 4, 6])
-
+  const maxLevel = c.maxLevel ?? 1
+  
+  const colors = pickMany(lightTheme.palette, maxLevel + 2)
+  
   const grid = new MyGrid({
     cols,
     rows,
@@ -55,7 +58,7 @@ export function draw(context) {
   })
 
   const terminals = grid.subdivide({
-    maxLevel: 1,
+    maxLevel,
     // condition: () => coin(50),
     rule: (cell) => {
       if (coin(50)) return false
@@ -65,8 +68,9 @@ export function draw(context) {
 
   canvas.background(lightTheme.background)
 
+
   terminals.forEach(cell => {
-    cell.draw(canvas, lightTheme)
+    cell.draw(canvas, colors, maxLevel)
   })
 
   // canvas.cellEdges(terminals, theme.annotation, 1, { strokeAlign: 'center', includeOuter: false })
