@@ -175,6 +175,7 @@ const controlsForPanel = computed(() =>
   )
 )
 const handleSketchSelect = (sketchId: string) => {
+  viewerInstanceKey.value += 1
   void router.push({ query: { ...route.query, activeSketch: sketchId } })
 }
 
