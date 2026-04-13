@@ -239,6 +239,61 @@ parent background stays correct throughout. This is only clean once:
 
 ---
 
+## Grid and subdivision (`utils/grid.ts`)
+
+### Composable subdivide config: `condition` (when) vs split geometry (how)
+
+- ID: `grid-subdivide-when-vs-how`
+- Status: `in-design`
+- Priority: **medium**
+- Area: `utils/grid.ts`, `docs/GRID_CELL_EXTENSION.md`, sketches calling `Grid.subdivide`
+
+**Problem**  
+`Grid.subdivide` / `subdivideRecursive` currently treat `rule` as an all-in-one
+hook: return `false` to stop (when) or `{ cols, rows }` to split (how). When
+`rule` is present, `condition`, `chance`, and `subdivisionCols` / `subdivisionRows`
+are ignored. That diverges from the natural mental model **when** vs **how** and
+surprises authors who pass both (for example `grid-fade.js` had a `condition`
+alongside `rule` with no effect).
+
+**Desired direction (authoring contract)**  
+Align `SubdivideConfig` with an explicit bundle similar to sketch-local
+`subdivisionConfig`:
+
+- `maxLevel` — unchanged.
+- `subdivisionCols` / `subdivisionRows` (or `subcols` / `subrows`) — defaults
+  documented clearly (today defaults lean on root grid counts when omitted;
+  clarify per-depth vs parent semantics if we change behavior).
+- `chance` — unchanged when no `condition`.
+- `condition(cell, level)` — when present, **overrides** `chance` for the
+  subdivide-or-not decision (document precedence).
+- **How-only** callback (consider renaming away from `rule` to avoid collision with
+  cellular-automata “rules” in sketches): e.g. `split` / `layout` /
+  `subdivisionDimensions(cell, level) => { cols, rows }`, invoked **only** when
+  the when-step said yes; fixed `subdivisionCols` / `Rows` apply when no such
+  callback is provided.
+
+Nested `new Grid` per split is **not** required for a richer how-API: extra layout
+options can still be a plain object merged into `createSubdivisionChildren` as
+long as the splitter knows how to apply them. Today only `{ cols, rows }` is
+needed internally.
+
+**Current usage (audit baseline)**  
+Call sites under `projects/` that use `Grid.subdivide`: template
+`_svg-example`, legacy `grid-division-pixels`, and sketches `grid-fade`,
+`grid-wave`, `grid-division-1`, `grid-division-2`, `patchwork-1`. Of those,
+`rule` appears in five sketch files; `condition` in a live path only in
+`grid-division-1` (non-`useRule` branch) and `grid-division-2` (`fixedGrid` mode).
+Any contract change must migrate or dual-support these paths.
+
+**Files affected**  
+- `utils/grid.ts` — `SubdivideConfig`, `subdivide`, `subdivideRecursive`
+- Sketches above — remove dead `condition` + `rule` pairs, adopt new names
+- `docs/GRID_CELL_EXTENSION.md` — subdivision extension notes if they reference
+  `rule` semantics
+
+---
+
 ## Controls and actions UX
 
 ### Sketch-scoped actions and defaults for multi-tech projects

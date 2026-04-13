@@ -21,7 +21,8 @@ class MyCell extends GridCell {
       ? (_nx, ny) => 1 - curve.easeIn(ny)
       : (_nx, ny) => curve.easeOut(ny)
 
-    const fill = this.col % 2 === 0 && this.row % 2 === 0 ? theme.palette[1] : theme.palette[3]
+    let fill = this.col % 2 === 0 && this.row % 2 === 0 ? theme.palette[this.level] : theme.palette[3]
+    // fill = theme.palette[this.level]
 
     canvas.halftone(
       this.tl(),
@@ -36,12 +37,12 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { rndInt, pick } = shortcuts(utils)
+  const { rndInt, pick, coin } = shortcuts(utils)
 
   if (!canvas) return
 
-  const cols = c.cols ?? pick([1, 2, 4, 6, 8])
-  const rows = c.rows ?? pick([1, 2, 4, 6, 8])
+  const cols = c.cols ?? pick([2, 4, 6])
+  const rows = c.rows ?? pick([2, 4, 6])
 
   const grid = new MyGrid({
     cols,
@@ -55,9 +56,10 @@ export function draw(context) {
 
   const terminals = grid.subdivide({
     maxLevel: 1,
-    chance: 50,
+    // condition: () => coin(50),
     rule: (cell) => {
-      return { cols: rndInt(1, 6), rows: rndInt(1, rows)}
+      if (coin(50)) return false
+      return { cols: rndInt(1, cols), rows: rndInt(1, rows)}
     }
   })
 

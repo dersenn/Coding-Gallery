@@ -107,19 +107,4 @@ export function draw(context) {
     }
     return
   }
-
-  /* If subdivision is disabled, draw the grid. */
-  // grid.forEach((cell) => {
-  //   cell.draw(canvas, theme)
-  // })
-  // canvas.gridLines(
-  //   utils.vec.create(frame.x, frame.y),
-  //   frame.width,
-  //   frame.height,
-  //   grid.cols,
-  //   grid.rows,
-  //   theme.foreground,
-  //   1,
-  //   { strokeAlign: 'inside', includeOuter: false }
-  // )
 }

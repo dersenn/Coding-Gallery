@@ -1,17 +1,29 @@
 import type { GenerativeUtils, Vec } from './generative'
 
 /**
- * Shorthand function exports for hand-coding convenience
- * 
- * Usage:
- * ```ts
- * import { shortcuts } from '~/utils/shortcuts'
- * 
- * const { v, rnd, map, lerp } = shortcuts(utils)
- * 
- * const center = v(width / 2, height / 2)
- * const randomX = rnd() * width
- * const mappedValue = map(noise, 0, 1, -100, 100)
+ * Flat aliases onto {@link GenerativeUtils} for sketch and framework code.
+ *
+ * **Seeding:** Always call `shortcuts(context.utils)` (or another sketch-scoped
+ * `utils` instance). Do not build a standalone `GenerativeUtils` and pass it here,
+ * or random/noise streams will not match the gallery seed.
+ *
+ * **Groups returned** (each entry delegates to the same-named area under `utils`):
+ * - **Random:** `rnd`, `rndInt`, `rndRange`, `coin` → `utils.seed.*`
+ * - **Math:** `map`, `lerp`, `clamp`, `norm`, `dist`, `rad`, `deg`, `curve`, `divLength` → `utils.math.*`
+ * - **Vectors:** `v`, `vDist`, `vLerp`, `vMid`, `vDot`, `vAng` → `utils.vec.*`
+ * - **Noise:** `noise2`, `noise3`, `simplex2`, `simplex3` → `utils.noise.*`
+ * - **Arrays:** `shuffle`, `pick`, `pickMany` → `utils.array.*`
+ * - **Layout helpers:** `Grid`, `Cell` → `utils.grid.create`, `utils.cell.create`
+ * - **Color:** `clr` → `utils.color.parse`
+ * - **Types / style:** `Vec` is the same factory as `v` (`utils.vec.create`), useful when
+ *   you want `new Vec(...)`-shaped wording in annotations; prefer `v` at call sites.
+ *
+ * @param utils - The generative utility bundle (normally `context.utils` in sketches).
+ * @returns A plain object of bound functions; see {@link Shortcuts}.
+ *
+ * @example Sketch draw()
+ * ```js
+ * const { v, rnd, map, coin } = shortcuts(utils)
  * ```
  */
 export function shortcuts(utils: GenerativeUtils) {
@@ -64,5 +76,5 @@ export function shortcuts(utils: GenerativeUtils) {
   }
 }
 
-// Type for shortcut return value
+/** Inferred type of the object returned by {@link shortcuts}. */
 export type Shortcuts = ReturnType<typeof shortcuts>

@@ -1,6 +1,19 @@
 import { Vec } from './generative'
 import { Color, type GradientStop } from './color'
 
+/**
+ * Canvas 2D helper used by the `canvas2d` sketch runtime (`context.canvas`).
+ *
+ * - **Units:** `w` and `h` are logical **CSS pixels**; the element’s backing store uses
+ *   {@link Canvas.pixelRatio} so drawing stays sharp on HiDPI screens.
+ * - **Rects:** Prefer {@link Canvas.rect} / {@link Canvas.rectC} over raw `ctx.fillRect`
+ *   for consistent seam control and optional **device-pixel snapping**
+ *   ({@link CanvasRectOptions.snap} / {@link Canvas.rectSnapDefault}).
+ * - **Style:** {@link Canvas.fill}, {@link Canvas.stroke}, and {@link Canvas.strokeWeight}
+ *   update default paint on {@link Canvas.def}; primitives default to those when you omit
+ *   color arguments.
+ */
+
 export interface CanvasCreateConfig {
   parent: HTMLElement
   id: string
@@ -74,8 +87,11 @@ export interface GrainFillOptions {
   rng?: () => number
 }
 
+/** Options for {@link Canvas.halftone}. */
 export interface HalftoneOptions {
+  /** Dot pitch in **logical pixels** (default `4`). */
   spacing?: number
+  /** Seeded `() => [0, 1)` for deterministic dither; defaults to `Math.random`. */
   rng?: () => number
 }
 
@@ -170,16 +186,30 @@ const resolveCanvasDefaults = (
   }
 }
 
+/**
+ * Owns one `<canvas>`, its 2D context, logical dimensions, and default styles.
+ * Sketch code typically receives an instance as `canvas` in `draw(context)`.
+ */
 export class Canvas {
+  /** Host element the canvas node is appended to. */
   parent: HTMLElement
+  /** DOM id assigned to the canvas element. */
   id: string
+  /** Logical width in CSS pixels. */
   w: number
+  /** Logical height in CSS pixels. */
   h: number
+  /** Device pixel ratio applied between logical size and bitmap size. */
   pixelRatio: number
+  /** Center of the logical canvas `(w/2, h/2)`. */
   c: Vec
+  /** The underlying `<canvas>` element. */
   el: HTMLCanvasElement
+  /** 2D rendering context (logical units after constructor `resize`). */
   ctx: CanvasRenderingContext2D
+  /** Default fill, stroke, stroke weight, background, and text colors. */
   def: CanvasDefaults
+  /** Default rect snap mode when per-call `options.snap` is omitted. */
   rectSnapDefault: CanvasRectSnapMode
   private grainCache: HTMLCanvasElement | null = null
 
@@ -192,6 +222,10 @@ export class Canvas {
     return Number.isFinite(dpr) && dpr > 0 ? dpr : 1
   }
 
+  /**
+   * Creates the canvas, appends it to `setup.parent`, applies DPR scaling, and
+   * seeds {@link Canvas.def} from computed styles plus optional `setup.defaults`.
+   */
   constructor(setup: CanvasCreateConfig) {
     this.parent = setup.parent
     this.id = setup.id
@@ -247,18 +281,21 @@ export class Canvas {
     }
   }
 
+  /** Snap a logical **x** to the device pixel grid when the current transform is axis-aligned. */
   snapX(x: number): number {
     const t = this.ctx.getTransform()
     if (!isAxisAligned(t) || t.a <= 0) return x
     return (Math.round(canonicalEdge(t.a * x + t.e)) - t.e) / t.a
   }
 
+  /** Snap a logical **y** to the device pixel grid when the current transform is axis-aligned. */
   snapY(y: number): number {
     const t = this.ctx.getTransform()
     if (!isAxisAligned(t) || t.d <= 0) return y
     return (Math.round(canonicalEdge(t.d * y + t.f)) - t.f) / t.d
   }
 
+  /** Resize logical dimensions and rebuild the backing store transform. */
   resize(width: number, height: number): void {
     this.w = clampDimension(width)
     this.h = clampDimension(height)
@@ -274,27 +311,33 @@ export class Canvas {
     applyStyle(this.ctx, this.def)
   }
 
+  /** Clear the full logical bitmap (transparent pixels when the context is created with alpha). */
   clear(): void {
     this.ctx.clearRect(0, 0, this.w, this.h)
   }
 
+  /** Paint the entire logical canvas with a solid color (defaults to {@link Canvas.def}.background). */
   background(fill: string = this.def.background): void {
     this.ctx.fillStyle = fill
     this.ctx.fillRect(0, 0, this.w, this.h)
   }
 
+  /** Set default fill for subsequent primitives (`null` → transparent). */
   fill(fill: CanvasFill | null): void {
     this.def.fill = fill ?? 'transparent'
   }
 
+  /** Set default stroke for subsequent primitives (`null` → transparent). */
   stroke(stroke: CanvasFill | null): void {
     this.def.stroke = stroke ?? 'transparent'
   }
 
+  /** Set default stroke width in **logical pixels**. */
   strokeWeight(weight: number): void {
     this.def.strokeW = weight
   }
 
+  /** Stroke a segment from `a` to `b` in logical space. */
   line(
     a: Vec,
     b: Vec,
@@ -308,6 +351,7 @@ export class Canvas {
     this.ctx.stroke()
   }
 
+  /** Draw a circle centered at `at` with radius `r` (logical pixels). */
   circle(
     at: Vec,
     r: number = 5,
@@ -322,6 +366,7 @@ export class Canvas {
     if (stroke !== 'transparent' && strokeW > 0) this.ctx.stroke()
   }
 
+  /** Draw an axis-aligned ellipse centered at `at`. */
   ellipse(
     at: Vec,
     rx: number,
@@ -338,6 +383,10 @@ export class Canvas {
     if (stroke !== 'transparent' && strokeW > 0) this.ctx.stroke()
   }
 
+  /**
+   * Fill and/or stroke an axis-aligned rectangle with top-left at `at`.
+   * Honors {@link CanvasRectOptions.snap} and {@link CanvasRectOptions.strokeAlign}.
+   */
   rect(
     at: Vec,
     width: number,
@@ -367,6 +416,7 @@ export class Canvas {
     }
   }
 
+  /** Same as {@link Canvas.rect} but positioned by **center** instead of top-left. */
   rectC(
     center: Vec,
     width: number,
@@ -545,6 +595,7 @@ export class Canvas {
     this.ctx.stroke()
   }
 
+  /** Draw single-line text at `at` using {@link CanvasTextOptions} for alignment and font. */
   text(
     value: string,
     at: Vec,
@@ -561,12 +612,14 @@ export class Canvas {
     this.ctx.fillText(value, at.x, at.y)
   }
 
+  /** `ctx.save()`, run `draw`, then `ctx.restore()` — safe for temporary transforms/styles. */
   withContext(draw: (ctx: CanvasRenderingContext2D) => void): void {
     this.ctx.save()
     draw(this.ctx)
     this.ctx.restore()
   }
 
+  /** Build a linear gradient in logical space; pass result as `fill` or `stroke`. */
   linearGradient(from: Vec, to: Vec, stops: GradientStop[]): CanvasGradient {
     return applyStops(
       this.ctx.createLinearGradient(from.x, from.y, to.x, to.y),
@@ -574,6 +627,7 @@ export class Canvas {
     )
   }
 
+  /** Build a radial gradient in logical space. */
   radialGradient(
     center: Vec,
     outerRadius: number,
@@ -588,6 +642,7 @@ export class Canvas {
     )
   }
 
+  /** Build a conic gradient around `center` starting at `startAngle` (radians). */
   conicGradient(center: Vec, stops: GradientStop[], startAngle: number = 0): CanvasGradient {
     return applyStops(
       this.ctx.createConicGradient(startAngle, center.x, center.y),
@@ -595,6 +650,10 @@ export class Canvas {
     )
   }
 
+  /**
+   * Composite a grayscale noise tile into a region (cached unless `animated` or size changes).
+   * Use sketch `rng` in options for deterministic grain.
+   */
   grain(at: Vec, width: number, height: number, options: GrainOptions = {}): void {
     const {
       alpha = 0.08,
@@ -635,6 +694,10 @@ export class Canvas {
     })
   }
 
+  /**
+   * Run `draw` on an offscreen buffer, jitter alpha, then return a {@link CanvasPattern}
+   * anchored at `at` for use as a fill.
+   */
   grainFill(
     draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void,
     at: Vec,
@@ -666,34 +729,42 @@ export class Canvas {
     return pattern
   }
 
-halftone(
-  at: Vec,
-  width: number,
-  height: number,
-  color: string,
-  density: (nx: number, ny: number) => number,
-  options: HalftoneOptions = {}
-): void {
-  const { spacing = 4, rng = Math.random } = options
-  const w = Math.ceil(width)
-  const h = Math.ceil(height)
-  const ox = this.snapX(at.x)
-  const oy = this.snapY(at.y)
+  /**
+   * Stochastic halftone: for each dot site, draws a square if `rng() < density(nx, ny)`.
+   *
+   * `density` receives **normalized** coordinates in roughly `[0, 1)`: `nx = px / width`,
+   * `ny = py / height` for the sample grid inside the rect. Return values are treated as
+   * probabilities (typical range `0…1`; values outside still work mathematically).
+   */
+  halftone(
+    at: Vec,
+    width: number,
+    height: number,
+    color: string,
+    density: (nx: number, ny: number) => number,
+    options: HalftoneOptions = {}
+  ): void {
+    const { spacing = 4, rng = Math.random } = options
+    const w = Math.ceil(width)
+    const h = Math.ceil(height)
+    const ox = this.snapX(at.x)
+    const oy = this.snapY(at.y)
 
-  this.withContext(ctx => {
-    ctx.fillStyle = color
-    const path = new Path2D()
-    for (let py = 0; py < h; py += spacing) {
-      for (let px = 0; px < w; px += spacing) {
-        if (rng() < density(px / w, py / h)) {
-          path.rect(ox + px, oy + py, spacing, spacing)
+    this.withContext(ctx => {
+      ctx.fillStyle = color
+      const path = new Path2D()
+      for (let py = 0; py < h; py += spacing) {
+        for (let px = 0; px < w; px += spacing) {
+          if (rng() < density(px / w, py / h)) {
+            path.rect(ox + px, oy + py, spacing, spacing)
+          }
         }
       }
-    }
-    ctx.fill(path)
-  })
-}
+      ctx.fill(path)
+    })
+  }
 
+  /** Trigger a browser download of the current bitmap as PNG. */
   save(options: CanvasExportOptions = {}): void {
     const { projectId, seed } = options
     const baseName = projectId ?? this.id
@@ -707,10 +778,15 @@ halftone(
   }
 }
 
+/** Factory used by the runtime to attach a {@link Canvas} to the sketch container. */
 export const createCanvas2D = (config: CanvasCreateConfig): Canvas => {
   return new Canvas(config)
 }
 
+/**
+ * Low-level helper: `save` / `restore` around raw 2D context drawing.
+ * Prefer {@link Canvas.withContext} when you already hold a `Canvas` instance.
+ */
 export const draw = (
   target: Canvas | CanvasRenderingContext2D,
   callback: (ctx: CanvasRenderingContext2D) => void
