@@ -25,7 +25,7 @@ export function createSvgSketchRuntime(args: CreateSvgLayerRuntimeArgs): SingleA
     },
     destroy: () => {
       onDestroy?.()
-      svg.stage.remove()
+      // svg.stage.remove()
     }
   }
 }

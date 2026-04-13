@@ -8,14 +8,22 @@
 </template>
 
 <style>
-/* Page transition - crossfade */
+/* Page transitions - crossfade */
 .page-enter-active,
 .page-leave-active {
   transition: opacity 0.3s ease;
 }
-
 .page-enter-from,
 .page-leave-to {
+  opacity: 0;
+}
+/* Sketch transitions - crossfade */
+.sketch-enter-active,
+.sketch-leave-active {
+  transition: opacity 0.3s ease;
+}
+.sketch-enter-from,
+.sketch-leave-to {
   opacity: 0;
 }
 </style>

@@ -332,7 +332,7 @@ export function singleActiveSketchManager<LayerId extends string>(
         window.cancelAnimationFrame(resizeRafId)
       }
       activeRuntime?.destroy()
-      layerContainer.remove()
+      // layerContainer.remove()
     }
   }
 }

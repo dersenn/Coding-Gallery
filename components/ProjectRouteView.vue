@@ -4,16 +4,18 @@
     :data-project-theme="chromePrefersTheme"
   >
     <!-- Full-screen sketch (z-0) -->
-    <ProjectViewer
-      v-if="project"
-      :key="viewerInstanceKey"
-      :project="project"
-      :action-request="actionRequest"
-      class="absolute inset-0"
-      @controls-loaded="handleControlsLoaded"
-      @actions-loaded="handleActionsLoaded"
-      @effective-prefers-theme="handleEffectivePrefersTheme"
-    />
+    <Transition name="page" mode="out-in">
+      <ProjectViewer
+        v-if="project"
+        :key="viewerInstanceKey"
+        :project="project"
+        :action-request="actionRequest"
+        class="absolute inset-0"
+        @controls-loaded="handleControlsLoaded"
+        @actions-loaded="handleActionsLoaded"
+        @effective-prefers-theme="handleEffectivePrefersTheme"
+      />
+    </Transition>
 
     <!-- Overlay navigation (top-left) -->
     <div class="absolute top-0 left-0 z-10">
@@ -183,6 +185,7 @@ const hasPngDownloadAction = computed(() => {
   return visibleActions.value.some((action) => action.key === 'download-png')
 })
 const doReload = async () => {
+  viewerInstanceKey.value += 1
   const randomReloadSelection = getPearlymatsReloadColorSelection()
   if (randomReloadSelection) {
     await router.push({
@@ -192,7 +195,6 @@ const doReload = async () => {
       }
     })
   }
-  viewerInstanceKey.value += 1
 }
 
 const shortcutHints = computed(() => {
@@ -293,13 +295,13 @@ const handleControlAction = async (key: string) => {
   if (key === 'new-seed') {
     const seed = createSeed()
     utils.seed.set(seed)
+    viewerInstanceKey.value += 1
     await router.push({
       query: {
         ...route.query,
         seed
       }
     })
-    viewerInstanceKey.value += 1
     return
   }
 

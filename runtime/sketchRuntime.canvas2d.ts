@@ -31,7 +31,7 @@ export function createCanvas2dSketchRuntime(
     },
     destroy: () => {
       onDestroy?.()
-      canvas.el.remove()
+      // canvas.el.remove()
     }
   }
 }

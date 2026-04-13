@@ -160,7 +160,6 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full', padding: '0' },
     module: './sketches/patchwork-1.js',
     controls: PATCHWORK_1_CONTROLS,
-    prefersTheme: 'light',
   }
 ]
 
