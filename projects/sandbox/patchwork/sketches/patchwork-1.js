@@ -1,6 +1,7 @@
 import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 import { buildWeave } from '~/utils/weave'
+import { lightTheme } from '~/utils/theme'
 
 // ─── Weave “gap” helpers (recent passes) ─────────────────────────────────────
 // Each terminal cell picks a weave pattern from `bucket` (noise → palette index).
@@ -272,7 +273,7 @@ export function draw(context) {
 
   if (!canvas) return
 
-  const palette = c.shuffleColors ? shuffle(theme.palette) : theme.palette
+  const palette = c.shuffleColors ? shuffle(lightTheme.palette) : lightTheme.palette
 
   const portrait = canvas.h > canvas.w
   const splits = rndInt(2, 4)
@@ -310,7 +311,7 @@ export function draw(context) {
   })
 
   if (c.drawBackground) {
-    canvas.background(theme.background)
+    canvas.background(lightTheme.background)
   }
 
   terminals.forEach(cell => { cell.noise = cell.noiseSample(noiseSettings) })
@@ -321,7 +322,7 @@ export function draw(context) {
   terminals.forEach(cell => {
     cell.normalizeNoise(min, max, noiseSettings.amplitude)
     cell.assignColor(palette)
-    cell.draw(canvas, theme)
+    cell.draw(canvas, lightTheme)
   })
 
 

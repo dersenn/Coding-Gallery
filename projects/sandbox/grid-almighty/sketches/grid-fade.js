@@ -1,5 +1,6 @@
 import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
+import { lightTheme } from '~/utils/theme'
 
 class MyGrid extends Grid {
   createCell(config) {
@@ -34,7 +35,7 @@ class MyCell extends GridCell {
 }
 
 export function draw(context) {
-  const { canvas, theme, utils, controls: c } = context
+  const { canvas, utils, controls: c } = context
   const { rndInt, pick } = shortcuts(utils)
 
   if (!canvas) return
@@ -60,8 +61,10 @@ export function draw(context) {
     }
   })
 
+  canvas.background(lightTheme.background)
+
   terminals.forEach(cell => {
-    cell.draw(canvas, theme)
+    cell.draw(canvas, lightTheme)
   })
 
   // canvas.cellEdges(terminals, theme.annotation, 1, { strokeAlign: 'center', includeOuter: false })

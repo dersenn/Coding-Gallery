@@ -669,7 +669,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     technique: 'canvas2d',
     container: { mode: 'full', padding: '0' },
     module: './sketches/grid-fade.js',
-    prefersTheme: 'light',
+    // prefersTheme: 'light',
   },
   {
     id: 'noisy-automata',
