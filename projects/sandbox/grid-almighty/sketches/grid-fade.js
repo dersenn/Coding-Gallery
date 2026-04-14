@@ -13,13 +13,14 @@ class MyCell extends GridCell {
     super(config)
   }
 
-  draw(canvas, colors, maxLevel) {
+  draw(canvas, colors, maxLevel, spacing) {
     const { curve, rnd, shuffle } = shortcuts(this.grid.utils)
     // Alternate top→bottom vs bottom→top halftone fade by cell parity (local row/col).
     const topToBottom = (this.row + this.col) % 2 === 0
     const density = topToBottom
-      ? (_nx, ny) => 1 - curve.easeIn(ny)
-      : (_nx, ny) => curve.easeOut(ny)
+      ? (nx, ny) => 1 - curve.easeIn(ny)
+      : (nx, ny) => curve.easeIn(nx)
+      // : (nx, ny) => Math.pow(4.0 * ny * (1.0 - ny), 0.5)
 
     const fill = this.col % 2 === 0 && this.row % 2 === 0 ? colors[this.level] : colors[maxLevel + 1]
     // const fill = theme.palette[this.level]
@@ -29,7 +30,7 @@ class MyCell extends GridCell {
       this.width, this.height,
       fill,
       density,
-      { spacing: 1, rng: rnd }
+      { spacing, rng: rnd }
     )
 
   }
@@ -46,6 +47,9 @@ export function draw(context) {
   const maxLevel = c.maxLevel ?? 1
 
   const colors = pickMany(lightTheme.palette, maxLevel + 2)
+
+  let spacing = c.spacing ?? 1
+  spacing = canvas.pixelRatio < 2 ? spacing : spacing / 2
   
   const grid = new MyGrid({
     cols,
@@ -68,9 +72,8 @@ export function draw(context) {
 
   canvas.background(lightTheme.background)
 
-
   terminals.forEach(cell => {
-    cell.draw(canvas, colors, maxLevel)
+    cell.draw(canvas, colors, maxLevel, spacing)
   })
 
   // canvas.cellEdges(terminals, theme.annotation, 1, { strokeAlign: 'center', includeOuter: false })

@@ -720,7 +720,6 @@ const SKETCHES: ProjectSketchDefinition[] = [
     module: './sketches/grid-print-svg.js',
     actions: PRINT_ACTIONS,
   }
-
 ]
 
 
