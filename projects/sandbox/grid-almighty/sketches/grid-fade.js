@@ -29,7 +29,7 @@ class MyCell extends GridCell {
       this.width, this.height,
       fill,
       density,
-      { spacing: 0.5, rng: rnd }
+      { spacing: 1, rng: rnd }
     )
 
   }
@@ -44,7 +44,7 @@ export function draw(context) {
   const cols = c.cols ?? pick([2, 4, 6])
   const rows = c.rows ?? pick([2, 4, 6])
   const maxLevel = c.maxLevel ?? 1
-  
+
   const colors = pickMany(lightTheme.palette, maxLevel + 2)
   
   const grid = new MyGrid({
