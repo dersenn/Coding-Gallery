@@ -15,6 +15,8 @@
  *   // `padding` is the resolved px value — usable for grid gaps, margins, etc.
  */
 
+import type { PrintContractConfig } from '~/utils/print'
+
 /** Sizing mode for resolveContainer.
  * - 'full'        — fills the container (default)
  * - 'square'      — centered square (Math.min of available width/height)
@@ -31,6 +33,7 @@ export interface ContainerConfig {
    * The browser resolves the unit; the returned `padding` field is always in px.
    */
   padding?: number | string
+  print?: PrintContractConfig
 }
 
 export interface ContainerResult {

@@ -697,6 +697,13 @@ const SKETCHES: ProjectSketchDefinition[] = [
     module: './sketches/noise-core.js',
     controls: NOISE_CORE_CONTROLS,
   },
+  {
+    id: 'grid-print',
+    label: 'Grid Print',
+    technique: 'canvas2d',
+    container: { mode: 'full', print: { width: 100, height: 100 } },
+    module: './sketches/grid-print.js',
+  }
 ]
 
 

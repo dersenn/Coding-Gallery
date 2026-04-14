@@ -1,5 +1,7 @@
 import { Vec } from './generative'
 import { Color, type GradientStop } from './color'
+import { type PrintContractConfig, type PrintContract, createPrintContract } from './print'
+
 
 /**
  * Canvas 2D helper used by the `canvas2d` sketch runtime (`context.canvas`).
@@ -23,6 +25,7 @@ export interface CanvasCreateConfig {
   pixelRatio?: number | 'auto'
   rectSnap?: CanvasRectSnapMode
   defaults?: CanvasDefaultStyle
+  print?: PrintContractConfig   // opt-in: enables print resolution mode
 }
 
 export type CanvasFill = string | CanvasGradient | CanvasPattern
@@ -211,6 +214,9 @@ export class Canvas {
   def: CanvasDefaults
   /** Default rect snap mode when per-call `options.snap` is omitted. */
   rectSnapDefault: CanvasRectSnapMode
+
+  print: PrintContract | null = null
+
   private grainCache: HTMLCanvasElement | null = null
 
   private resolvePixelRatio(value: CanvasCreateConfig['pixelRatio']): number {
@@ -227,6 +233,17 @@ export class Canvas {
    * seeds {@link Canvas.def} from computed styles plus optional `setup.defaults`.
    */
   constructor(setup: CanvasCreateConfig) {
+    if (setup.print) {
+      const contract = createPrintContract(setup.print)
+      this.print = contract
+      setup = {
+        ...setup,
+        width:      contract.trimWidth,
+        height:     contract.trimHeight,
+        pixelRatio: 1,   // DPI is already baked in; no DPR on top
+        rectSnap:   setup.rectSnap ?? 'none',
+      }
+    }
     this.parent = setup.parent
     this.id = setup.id
     this.pixelRatio = this.resolvePixelRatio(setup.pixelRatio ?? 'auto')
@@ -301,13 +318,23 @@ export class Canvas {
     this.h = clampDimension(height)
     this.c = new Vec(this.w / 2, this.h / 2)
 
-    // Keep logical drawing units in CSS pixels, but scale backing store for DPR.
-    this.el.width = Math.max(1, Math.round(this.w * this.pixelRatio))
-    this.el.height = Math.max(1, Math.round(this.h * this.pixelRatio))
-    this.el.style.width = `${this.w}px`
-    this.el.style.height = `${this.h}px`
-
-    this.ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0)
+    if (this.print) {
+      // backing store is full bleed; logical space is trim area
+      this.el.width  = this.print.canvasWidth
+      this.el.height = this.print.canvasHeight
+      this.el.style.width       = '100%'
+      this.el.style.height      = 'auto'
+      this.el.style.aspectRatio = `${this.print.canvasWidth} / ${this.print.canvasHeight}`
+      // origin = trim corner; bleed is negative/overflow territory
+      this.ctx.setTransform(1, 0, 0, 1, this.print.trimX, this.print.trimY)
+    } else {
+      // existing behavior unchanged
+      this.el.width  = Math.max(1, Math.round(this.w * this.pixelRatio))
+      this.el.height = Math.max(1, Math.round(this.h * this.pixelRatio))
+      this.el.style.width  = `${this.w}px`
+      this.el.style.height = `${this.h}px`
+      this.ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0)
+    }
     applyStyle(this.ctx, this.def)
   }
 

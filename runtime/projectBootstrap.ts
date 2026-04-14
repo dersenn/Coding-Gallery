@@ -108,6 +108,7 @@ export async function initFromProjectDefinition(
       }
 
       if (sketch.technique === 'canvas2d') {
+        const containerConfig = typeof sketch.container === 'object' ? sketch.container : undefined
         let canvasEl: HTMLElement | null = null
         const loopManager = createLoopManager(
           () => canvasEl?.isConnected ?? true,
@@ -118,6 +119,7 @@ export async function initFromProjectDefinition(
           width: layerWidth,
           height: layerHeight,
           runtimeName: `${definition.id}-${sketch.id}`,
+          print: containerConfig?.print,
           onDraw: (canvas) => {
             canvasEl = canvas.el
             const augmentedRuntime = runtime ? { ...runtime, loop: loopManager.register } : undefined
