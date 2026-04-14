@@ -96,11 +96,13 @@ export async function initFromProjectDefinition(
       }
 
       if (sketch.technique === 'svg') {
+        const containerConfig = typeof sketch.container === 'object' ? sketch.container : undefined
         return createSvgSketchRuntime({
           parent,
           width: layerWidth,
           height: layerHeight,
           runtimeName: `${definition.id}-${sketch.id}`,
+          print: containerConfig?.print,
           onDraw: (svg) => {
             drawWithModule(svg)
           }

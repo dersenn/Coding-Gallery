@@ -319,13 +319,11 @@ export class Canvas {
     this.c = new Vec(this.w / 2, this.h / 2)
 
     if (this.print) {
-      // backing store is full bleed; logical space is trim area
-      this.el.width  = this.print.canvasWidth
+      this.el.width = this.print.canvasWidth
       this.el.height = this.print.canvasHeight
-      this.el.style.width       = '100%'
-      this.el.style.height      = 'auto'
-      this.el.style.aspectRatio = `${this.print.canvasWidth} / ${this.print.canvasHeight}`
-      // origin = trim corner; bleed is negative/overflow territory
+      this.el.style.width = '100%'
+      this.el.style.height = '100%'
+      this.el.style.display = 'block'
       this.ctx.setTransform(1, 0, 0, 1, this.print.trimX, this.print.trimY)
     } else {
       // existing behavior unchanged

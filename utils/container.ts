@@ -15,6 +15,7 @@
  *   // `padding` is the resolved px value — usable for grid gaps, margins, etc.
  */
 
+import { createPrintContract } from '~/utils/print'
 import type { PrintContractConfig } from '~/utils/print'
 
 /** Sizing mode for resolveContainer.
@@ -173,6 +174,33 @@ export function resolveContainer(
   const resolvedPadding = parseFloat(cs.paddingTop)
   const availW = container.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
   const availH = container.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+
+  if (cfg.print) {
+    const contract = createPrintContract(cfg.print)
+    const ratio = contract.canvasWidth / contract.canvasHeight
+
+    let width: number, height: number
+    if (availW / availH > ratio) {
+      height = availH
+      width = height * ratio
+    } else {
+      width = availW
+      height = width / ratio
+    }
+
+    container.style.display = 'flex'
+    container.style.alignItems = 'center'
+    container.style.justifyContent = 'center'
+
+    const wrapper = document.createElement('div')
+    wrapper.style.width = `${width}px`
+    wrapper.style.height = `${height}px`
+    wrapper.style.flexShrink = '0'
+    container.appendChild(wrapper)
+
+    return { width, height, padding: resolvedPadding, el: wrapper }
+  }
+
 
   if (mode === 'full') {
     return { width: availW, height: availH, padding: resolvedPadding, el: container }

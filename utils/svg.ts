@@ -13,6 +13,7 @@ export interface SVGConfig {
   id: string
   width?: number
   height?: number
+  print?: PrintContractConfig
 }
 
 export interface SVGTextOptions {
@@ -33,6 +34,7 @@ export class SVG {
   h: number
   c: Vec // center point
   stage: SVGSVGElement
+  print?: PrintContract
   els: SVGElement[]
   def: {
     fill: string
@@ -46,6 +48,11 @@ export class SVG {
     this.mime = { type: 'image/svg+xml' }
     this.parent = setup.parent
     this.id = setup.id
+    if (setup.print) {
+      const contract = createPrintContract({ ...setup.print, target: 'svg' })
+      this.print = contract
+      setup = { ...setup, width: contract.trimWidth, height: contract.trimHeight }
+    }
     this.w = setup.width ? setup.width : this.parent.clientWidth
     this.h = setup.height ? setup.height : this.parent.clientHeight
     this.c = new Vec(this.w / 2, this.h / 2)
@@ -67,9 +74,18 @@ export class SVG {
     stage.setAttribute('id', this.id)
     stage.setAttribute('xmlns', this.ns)
     stage.setAttribute('xmlns:xlink', this.xl)
-    stage.setAttribute('width', this.w.toString())
-    stage.setAttribute('height', this.h.toString())
-    stage.setAttribute('viewBox', `0 0 ${this.w} ${this.h}`)
+   if (this.print) {
+      stage.setAttribute('width',   `${this.print.canvasWidth}mm`)
+      stage.setAttribute('height',  `${this.print.canvasHeight}mm`)
+      stage.setAttribute('viewBox', this.print.svgViewBox)
+      stage.style.width  = '100%'
+      stage.style.height = '100%'
+      stage.style.display = 'block'
+    } else {
+      stage.setAttribute('width', this.w.toString())
+      stage.setAttribute('height', this.h.toString())
+      stage.setAttribute('viewBox', `0 0 ${this.w} ${this.h}`)
+    }
     this.parent.append(stage)
     return stage
   }
@@ -278,6 +294,18 @@ export class SVG {
     textEl.textContent = text
     this.stage.append(textEl)
     return textEl
+  }
+
+  drawTrimBox(color = '#0077ff', strokeWidth = this.print!.pt(0.6)): SVGRectElement {
+    const { trimWidth, trimHeight } = this.print!
+    return this.rect(
+      new Vec(0, 0),
+      trimWidth,
+      trimHeight,
+      'transparent',
+      color,
+      strokeWidth
+    )
   }
 }
 

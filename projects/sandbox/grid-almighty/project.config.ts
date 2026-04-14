@@ -620,6 +620,13 @@ const GROWTH_CANVAS_ACTIONS: ProjectActionDefinition[] = [
   }
 ]
 
+const PRINT_ACTIONS: ProjectActionDefinition[] = [
+  {
+    key: 'download-png',
+    label: 'Download PNG'
+  }
+]
+
 const metadata = {
   "id": "grid-almighty",
   "title": "Grid Almighty",
@@ -701,9 +708,19 @@ const SKETCHES: ProjectSketchDefinition[] = [
     id: 'grid-print',
     label: 'Grid Print',
     technique: 'canvas2d',
-    container: { mode: 'full', print: { width: 100, height: 100 } },
+    container: { print: { width: 210, height: 297, unit: 'mm', dpi: 300, bleed: 3 } },
     module: './sketches/grid-print.js',
+    actions: PRINT_ACTIONS,
+  },
+    {
+    id: 'grid-print-svg',
+    label: 'Grid Print SVG',
+    technique: 'svg',
+    container: { print: { width: 210, height: 297, unit: 'mm', dpi: 300, bleed: 3 } },
+    module: './sketches/grid-print-svg.js',
+    actions: PRINT_ACTIONS,
   }
+
 ]
 
 

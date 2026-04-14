@@ -6,13 +6,20 @@ interface CreateSvgLayerRuntimeArgs {
   width: number
   height: number
   runtimeName: string
+  print?: PrintContractConfig
   onDraw: (svg: SVG) => void
   onDestroy?: () => void
 }
 
 export function createSvgSketchRuntime(args: CreateSvgLayerRuntimeArgs): SingleActiveSketchRuntime {
-  const { parent, width, height, runtimeName, onDraw, onDestroy } = args
-  const svg = new SVG({ parent, id: runtimeName, width, height })
+  const { parent, width, height, runtimeName, print, onDraw, onDestroy } = args
+  const svg = new SVG({ 
+    parent, 
+    id: runtimeName, 
+    width, 
+    height,
+    print,
+  })
 
   return {
     technique: 'svg',

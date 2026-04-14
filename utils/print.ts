@@ -6,13 +6,15 @@ export type PrintUnit = 'mm' | 'pt' | 'in'
 export interface PrintContractConfig {
   width:  number
   height: number
-  unit?:  PrintUnit   // default 'mm'
-  dpi?:   number      // default 300
-  bleed?: number      // same unit as width/height, default 0
+  unit?:  PrintUnit
+  dpi?:   number
+  bleed?: number
+  target?: 'canvas' | 'svg'   // default 'canvas'
 }
 
 export interface TrimBoxOptions {
   color?: string
+  lineWidth?: number
   dash?:  number[]
   width?: number
 }
@@ -31,6 +33,7 @@ export interface PrintContract {
   bleedMM: number
   widthMM:  number
   heightMM: number
+  svgViewBox: string
   dpi: number
   // unit converters → logical print pixels
   mm:   (v: number) => number
@@ -59,16 +62,18 @@ export function printUnits(dpi: number) {
 }
 
 export function createPrintContract(config: PrintContractConfig): PrintContract {
-  const { width, height, unit = 'mm', dpi = 300, bleed = 0 } = config
+  const { width, height, unit = 'mm', dpi = 300, bleed = 0, target = 'canvas' } = config
+  const unitDpi = target === 'svg' ? MM_PER_INCH : dpi   // 25.4 makes mm(v)===v
   const wMM  = toMM(width,  unit)
   const hMM  = toMM(height, unit)
   const bMM  = toMM(bleed,  unit)
-  const bPx  = Math.round(bMM / MM_PER_INCH * dpi)
-  const tw   = Math.round(wMM / MM_PER_INCH * dpi)
-  const th   = Math.round(hMM / MM_PER_INCH * dpi)
+  const bPx  = Math.round(bMM / MM_PER_INCH * unitDpi)
+  const tw   = Math.round(wMM / MM_PER_INCH * unitDpi)
+  const th   = Math.round(hMM / MM_PER_INCH * unitDpi)
   const cw   = tw + bPx * 2
   const ch   = th + bPx * 2
-  const units = printUnits(dpi)
+  const units = printUnits(unitDpi)
+
 
   return {
     ...units,
@@ -77,16 +82,17 @@ export function createPrintContract(config: PrintContractConfig): PrintContract 
     trimX: bPx,      trimY: bPx,
     bleedPx: bPx,    bleedMM: bMM,
     widthMM: wMM,    heightMM: hMM,
+    svgViewBox: `-${bPx} -${bPx} ${cw} ${ch}`,
     dpi,
-    drawTrimBox(ctx, { color = '#0077ff', dash = [8, 4], width: lw = 1 } = {}) {
+    drawTrimBox(ctx, { color = '#0f0', dash = [8, 4], lineWidth } = {}) {
+      const lw = lineWidth ?? units.pt(0.6)
       ctx.save()
       ctx.setLineDash(dash)
       ctx.strokeStyle = color
       ctx.lineWidth = lw
-      // called after translate-to-trim, so draw at (0,0) in trim space
-      ctx.strokeRect(-bPx, -bPx, cw, ch)  // outer (bleed edge)
+      ctx.strokeRect(-bPx + lw/2, -bPx + lw/2, cw - lw, ch - lw)
       ctx.setLineDash([])
-      ctx.strokeRect(0, 0, tw, th)         // trim edge (dashed above, solid here? or same)
+      ctx.strokeRect(lw/2, lw/2, tw - lw, th - lw)
       ctx.restore()
     },
   }
