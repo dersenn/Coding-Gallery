@@ -9,7 +9,7 @@ export function draw(context) {
   if (!canvas) return
   const { mm, pt, trimWidth, trimHeight, drawTrimBox } = canvas.print
 
-  canvas.background(lightTheme.background)
+  canvas.background('#fff')
   // canvas.rect(v(mm(10), mm(10)), mm(50), mm(30), 'red')
 
   canvas.halftone(

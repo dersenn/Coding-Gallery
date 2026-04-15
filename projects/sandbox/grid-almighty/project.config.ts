@@ -279,6 +279,12 @@ const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
+const GRID_FADE_ACTIONS: ProjectActionDefinition[] = [
+  {
+    key: 'download-png',
+    label: 'Download PNG'
+  }
+]
 
 const NOISY_AUTOMATA_ACTIONS: ProjectActionDefinition[] = [
   {
@@ -294,7 +300,7 @@ const GROWTH_CANVAS_ACTIONS: ProjectActionDefinition[] = [
   }
 ]
 
-const PRINT_ACTIONS: ProjectActionDefinition[] = [
+const GRID_PRINT_ACTIONS: ProjectActionDefinition[] = [
   {
     key: 'download-png',
     label: 'Download PNG'
@@ -330,6 +336,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     technique: 'canvas2d',
     container: { mode: 'full', padding: '0' },
     module: './sketches/grid-fade.js',
+    actions: GRID_FADE_ACTIONS,
   },
   {
     id: 'grid-print',
@@ -337,7 +344,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     technique: 'canvas2d',
     container: { print: { width: 210, height: 297, unit: 'mm', dpi: 300, bleed: 3 } },
     module: './sketches/grid-print.js',
-    actions: PRINT_ACTIONS,
+    actions: GRID_PRINT_ACTIONS,
   },
   {
     id: 'noisy-automata',
