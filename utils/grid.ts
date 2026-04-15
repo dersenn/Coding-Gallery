@@ -116,6 +116,17 @@ export class GridCell extends Cell {
   }
 
   /**
+   * Return the size (cols/rows) of this cell's active neighbor context.
+   *
+   * - Root cells => root grid size
+   * - Recursive subdivision cells => local sibling subdivision size
+   */
+  contextSize(): { cols: number; rows: number } {
+    const { cols, rows } = this.resolveNeighborContext()
+    return { cols, rows }
+  }
+
+  /**
    * Check if this cell is on the edge of its active context.
    *
    * For root cells, this matches root-grid edge checks.
