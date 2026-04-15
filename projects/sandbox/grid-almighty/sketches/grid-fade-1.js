@@ -20,7 +20,7 @@ class MyCell extends GridCell {
     const topToBottom = (this.row + this.col) % 2 === 0
     const density = topToBottom
       ? (nx, ny) => 1 - curve.easeIn(ny)
-      : (nx, ny) => curve.easeIn(nx)
+      : (nx, ny) => curve.easeIn(ny)
       // : (nx, ny) => Math.pow(4.0 * ny * (1.0 - ny), 0.5)
 
     const fill = this.col % 2 === 0 && this.row % 2 === 0 ? colors[this.level] : colors[maxLevel + 1]

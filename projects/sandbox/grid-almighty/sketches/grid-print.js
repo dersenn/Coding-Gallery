@@ -1,5 +1,4 @@
 import { shortcuts } from '~/utils/shortcuts'
-import { lightTheme } from '~/utils/theme'
 
 
 export function draw(context) {
@@ -10,7 +9,6 @@ export function draw(context) {
   const { mm, pt, trimWidth, trimHeight, drawTrimBox } = canvas.print
 
   canvas.background('#fff')
-  // canvas.rect(v(mm(10), mm(10)), mm(50), mm(30), 'red')
 
   canvas.halftone(
     v(mm(10), mm(10)),

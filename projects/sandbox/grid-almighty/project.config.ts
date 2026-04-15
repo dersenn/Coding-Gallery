@@ -279,34 +279,12 @@ const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
-const GRID_FADE_ACTIONS: ProjectActionDefinition[] = [
+const GRID_ACTIONS: ProjectActionDefinition[] = [
   {
     key: 'download-png',
     label: 'Download PNG'
   }
 ]
-
-const NOISY_AUTOMATA_ACTIONS: ProjectActionDefinition[] = [
-  {
-    key: 'download-png',
-    label: 'Download PNG'
-  }
-]
-
-const GROWTH_CANVAS_ACTIONS: ProjectActionDefinition[] = [
-  {
-    key: 'download-png',
-    label: 'Download PNG'
-  }
-]
-
-const GRID_PRINT_ACTIONS: ProjectActionDefinition[] = [
-  {
-    key: 'download-png',
-    label: 'Download PNG'
-  }
-]
-
 
 
 const metadata = {
@@ -331,12 +309,20 @@ const ACTIONS: ProjectActionDefinition[] = []
 
 const SKETCHES: ProjectSketchDefinition[] = [
   {
-    id: 'grid-fade',
-    label: 'Grid Fade',
+    id: 'grid-fade-1',
+    label: 'Grid Fade 1',
     technique: 'canvas2d',
     container: { mode: 'full', padding: '0' },
-    module: './sketches/grid-fade.js',
-    actions: GRID_FADE_ACTIONS,
+    module: './sketches/grid-fade-1.js',
+    actions: GRID_ACTIONS,
+  },
+  {
+    id: 'grid-fade-2',
+    label: 'Grid Fade 2',
+    technique: 'canvas2d',
+    container: { mode: 'full', padding: '0' },
+    module: './sketches/grid-fade-2.js',
+    actions: GRID_ACTIONS,
   },
   {
     id: 'grid-print',
@@ -344,7 +330,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     technique: 'canvas2d',
     container: { print: { width: 210, height: 297, unit: 'mm', dpi: 300, bleed: 3 } },
     module: './sketches/grid-print.js',
-    actions: GRID_PRINT_ACTIONS,
+    actions: GRID_ACTIONS,
   },
   {
     id: 'noisy-automata',
@@ -353,7 +339,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full' },
     module: './sketches/noisy-automata.js',
     controls: NOISY_AUTOMATA_CONTROLS,
-    actions: NOISY_AUTOMATA_ACTIONS,
+    actions: GRID_ACTIONS,
   },
   {
     id: 'grid-growth-canvas',
@@ -362,7 +348,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full' },
     module: './sketches/grid-growth.js',
     controls: GROWTH_CONTROLS,
-    actions: GROWTH_CANVAS_ACTIONS,
+    actions: GRID_ACTIONS,
   },
   {
     id: 'noise-core',

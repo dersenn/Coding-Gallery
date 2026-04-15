@@ -314,6 +314,25 @@ Any contract change must migrate or dual-support these paths.
 
 ---
 
+### Mobile PNG export uses wrong filename (iOS)
+
+- ID: `mobile-png-export-filename`
+- Status: `candidate`
+- Priority: **low**
+- Area: `utils/canvas.ts`, `components/ProjectViewer.vue`
+
+**Problem**  
+On iOS browsers, PNG export can succeed but the saved filename may be a UUID-like
+string (browser ignores `<a download="...">` for blob URLs and falls back to its own name).
+
+**Desired behavior**
+- PNG export should preserve the intended filename shape (for example `project-sketch-seed.png`) on mobile.
+
+**Notes / likely approaches**
+- Consider a mobile-specific export strategy that uses the Web Share API (`navigator.share({ files: [...] })`)
+  to preserve filenames when saving to Files, with fallback to blob URL download.
+- Document expected behavior differences per browser (Safari vs iOS Chrome/Firefox wrappers).
+
 ## Theme / sketch decoupling
 
 ### Sketch-level theme ownership
