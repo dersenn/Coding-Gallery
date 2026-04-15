@@ -1,3 +1,5 @@
+import { createSeed } from '~/utils/generative'
+
 export const useSeedFromURL = () => {
   const route = useRoute()
   const router = useRouter()
@@ -13,20 +15,13 @@ export const useSeedFromURL = () => {
   }
 
   const generateNewSeed = async () => {
-    // Generate a new random seed using the Hash class format
-    const alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
-    const newHash =
-      'oo' + // prefix ready. was 'oo'.
-      Array(49) // was 49.
-        .fill(0)
-        .map(() => alphabet[(Math.random() * alphabet.length) | 0])
-        .join('')
+    const newSeed = createSeed()
 
     // Preserve all current query params (including control values) when setting new seed
     await router.push({
-      query: { ...route.query, seed: newHash },
+      query: { ...route.query, seed: newSeed },
     })
-    
+
     // Reload to apply new seed
     window.location.reload()
   }

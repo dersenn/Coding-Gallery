@@ -125,6 +125,7 @@ import type {
   SelectControlDefinition
 } from '~/types/project'
 import { flattenControls } from '~/composables/useControls'
+import { createSeed } from '~/utils/generative'
 
 const props = defineProps<{
   projectId: string
@@ -261,13 +262,6 @@ const handleActionsLoaded = (actions: ProjectActionDefinition[]) => {
   ))
 }
 
-const seedAlphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
-const createSeed = () => {
-  const chars = Array.from({ length: 49 }, () => {
-    return seedAlphabet[Math.floor(Math.random() * seedAlphabet.length)]
-  }).join('')
-  return `oo${chars}`
-}
 
 const handleControlAction = async (key: string) => {
   if (key === 'reset-controls' || key === 'reset-sketch-controls') {

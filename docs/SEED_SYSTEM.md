@@ -4,7 +4,7 @@ Reference for deterministic randomness across all projects.
 
 ## Overview
 
-The gallery uses an sfc32-based seeded RNG with base58 hash strings (fxhash-style) so sketches are reproducible and shareable by URL.
+The gallery uses a mulberry32-based seeded RNG with short 8-char hex seeds (e.g. `a3f9b2c1`) so sketches are reproducible and shareable by URL. Legacy `oo...` base58 seeds are still accepted for backwards compatibility.
 
 ## Runtime behavior
 
@@ -117,27 +117,10 @@ Use this pattern when sketches can be independently toggled and each must produc
 
 ---
 
-## TODO: Switch seeds to short 8-char hex everywhere
+## Seed format
 
-### Findings
+New seeds are 8-char lowercase hex strings, e.g. `a3f9b2c1`. The PRNG is mulberry32, seeded from `parseInt(seed, 16)`.
 
-- **Long seeds are still being generated in the UI layer**: `components/ProjectRouteView.vue` defines a local `createSeed()` that returns the legacy `oo` + 49 base58 chars, and uses it for the `new-seed` action (also triggered by the `n` keyboard shortcut).
-- **Seed generation is currently duplicated**: `utils/generative.ts` (`Hash.generateNew()`), `composables/useSeedFromURL.ts` (`generateNewSeed()`), and `components/ProjectRouteView.vue` each generate seeds independently.
-- **`Hash` still assumes the legacy encoding shape**: the constructor parses seed strings by slicing off the first 2 chars and base58-decoding the remainder into four ints for `sfc32`. An 8-char hex seed is not compatible with this parsing as-written.
+Old `oo` + 49 base58 char seeds from fxhash still work — `Hash` detects the `oo` prefix and routes them through the original sfc32 path unchanged. No existing URLs need to be updated.
 
-### Work items
-
-- **Unify seed generation behind one factory**:
-  - Add a single exported factory, e.g. `createSeed8Hex()` (or similar) in a shared place (likely `utils/generative.ts`).
-  - Replace the local seed generator in `composables/useSeedFromURL.ts` and `components/ProjectRouteView.vue` with calls to that factory.
-- **Stop generating legacy seeds from the project route view**:
-  - Update `components/ProjectRouteView.vue` `createSeed()` (or remove it) so the `new-seed` action writes an 8-char hex seed to URL and calls `utils.seed.set(seed)`.
-- **Make `Hash` accept the new seed format**:
-  - Replace legacy base58+`slice(2)` parsing with a string-to-uint32 seeding step that can take arbitrary seed strings (including 8-char hex) and produce 4x uint32 state for `sfc32`.
-  - Decide whether to keep **backwards compatibility**:
-    - If yes: detect old `oo...` seeds and parse them with the old base58 path; otherwise treat the seed as a general string and hash it into 4 ints.
-    - If no: document the breaking change and accept only hex (or “any string”) going forward.
-- **Confirm all “new seed” entry points are covered**:
-  - UI action: `new-seed` in `components/ProjectRouteView.vue` (keyboard `n`).
-  - URL helper: `generateNewSeed()` in `composables/useSeedFromURL.ts`.
-  - Runtime default: when the app creates `createGenerativeUtils()` with no seed (calls `new Hash()`), it should also use the unified factory behavior.
+All seed generation is handled by the single exported `createSeed()` from `utils/generative.ts`.

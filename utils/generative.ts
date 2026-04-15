@@ -255,37 +255,34 @@ export interface GenerativeUtils {
   }
 }
 
-// Hash class for seeded random number generation (using sfc32 algorithm)
-// Based on fxhash.xyz standard for generative art
+// Generate a new 8-character lowercase hex seed string.
+export function createSeed(): string {
+  return Array(8).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')
+}
+
+// Hash class for seeded random number generation
 class Hash {
+  // Legacy base58 alphabet — kept for backwards-compatible parsing of oo... seeds
   private alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
   hash: string
   private rnd: () => number
 
   constructor(seedString?: string) {
-    if (seedString) {
-      this.hash = seedString
+    this.hash = seedString ?? createSeed()
+
+    if (this.hash.startsWith('oo')) {
+      // Legacy path: oo + 49 base58 chars → sfc32
+      const hashTrunc = this.hash.slice(2)
+      const regex = new RegExp('.{' + ((hashTrunc.length / 4) | 0) + '}', 'g')
+      const hashes = hashTrunc.match(regex)!.map((h) => this.b58dec(h))
+      this.rnd = this.sfc32(...hashes)
     } else {
-      this.hash = this.generateNew()
+      // New path: 8-char hex → mulberry32
+      this.rnd = this.mulberry32(parseInt(this.hash, 16) >>> 0)
     }
-
-    // Parse hash into numbers for sfc32
-    const hashTrunc = this.hash.slice(2)
-    const regex = new RegExp('.{' + ((hashTrunc.length / 4) | 0) + '}', 'g')
-    const hashes = hashTrunc.match(regex)!.map((h) => this.b58dec(h))
-    this.rnd = this.sfc32(...hashes)
   }
 
-  private generateNew(): string {
-    return (
-      'oo' + // prefix ready. was 'oo'.
-      Array(49) // was 49.
-        .fill(0)
-        .map(() => this.alphabet[(Math.random() * this.alphabet.length) | 0])
-        .join('')
-    )
-  }
-
+  // Legacy base58 decode — used only for oo... seed backwards compat
   private b58dec(str: string): number {
     return [...str].reduce(
       (p, c) => (p * this.alphabet.length + this.alphabet.indexOf(c)) | 0,
@@ -293,12 +290,13 @@ class Hash {
     )
   }
 
+  // Legacy PRNG — used only for oo... seeds
   private sfc32(...args: number[]): () => number {
     let a = args[0] || 0
     let b = args[1] || 0
     let c = args[2] || 0
     let d = args[3] || 0
-    
+
     return () => {
       a |= 0
       b |= 0
@@ -311,6 +309,16 @@ class Hash {
       c = (c << 21) | (c >>> 11)
       c = (c + t) | 0
       return (t >>> 0) / 4294967296
+    }
+  }
+
+  private mulberry32(seed: number): () => number {
+    return () => {
+      seed |= 0
+      seed = (seed + 0x6D2B79F5) | 0
+      let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
     }
   }
 
