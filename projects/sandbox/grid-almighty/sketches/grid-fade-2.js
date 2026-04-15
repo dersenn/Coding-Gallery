@@ -16,14 +16,16 @@ class MyCell extends GridCell {
 
   draw(canvas, colors, maxLevel, spacing) {
     const { curve, rnd, rndInt, map, norm } = shortcuts(this.grid.utils)
-    const { cols } = this.contextSize()
-    const tx = cols > 1 ? this.col / (cols/2 - 1) : 0
-    const colBell = 1 - (Math.sin(Math.PI * tx)) // 0..1, peaks at center col
+    // const { cols } = this.contextSize()
+    // const tx = cols > 1 ? this.col / (cols - 1) : 0
+
+    const tx = (this.x - this.grid.x) / this.parent.width / 2 //grid or parent works
+    const colBell = 1 - (Math.sin(Math.PI * tx * 2)) // 0..1, peaks at center col
 
     const k = map(colBell, 0, 1, 0.4, 6)
     const centerBell = (t, k = 1) => Math.pow(Math.sin(Math.PI * t), k)
 
-    const positive = false //(this.row + this.col) % 2 === 0
+    const positive = (this.row + this.col) % 2 === 0
 
     const density = positive 
       ? (nx, ny) => centerBell(ny, k)
@@ -51,7 +53,7 @@ export function draw(context) {
 
   if (!canvas) return
 
-  const cols = c.cols ?? 1
+  const cols = c.cols ?? pick([2, 4, 6])
   const rows = c.rows ?? pick([2, 4, 6])
   const maxLevel = c.maxLevel ?? 1
 
@@ -71,9 +73,8 @@ export function draw(context) {
   const terminals = grid.subdivide({
     maxLevel,
     // condition: () => coin(50),
-    rule: (cell) => {
-      // if (coin(50)) return false
-      return { cols: (cell.row + 1) * 4, rows: 1}
+    rule: (cell, level) => {
+      return { cols: (cell.row + 1) * 2, rows: 1 }
     }
   })
 
