@@ -278,8 +278,8 @@ class Hash {
 
   private generateNew(): string {
     return (
-      'oo' +
-      Array(49)
+      'oo' + // prefix ready. was 'oo'.
+      Array(49) // was 49.
         .fill(0)
         .map(() => this.alphabet[(Math.random() * this.alphabet.length) | 0])
         .join('')

@@ -114,3 +114,30 @@ Use this pattern when sketches can be independently toggled and each must produc
 - Main docs: `../README.md`
 - Docs index: `INDEX.md`
 - Template guide: `../projects/_Templates/_template/README.md`
+
+---
+
+## TODO: Switch seeds to short 8-char hex everywhere
+
+### Findings
+
+- **Long seeds are still being generated in the UI layer**: `components/ProjectRouteView.vue` defines a local `createSeed()` that returns the legacy `oo` + 49 base58 chars, and uses it for the `new-seed` action (also triggered by the `n` keyboard shortcut).
+- **Seed generation is currently duplicated**: `utils/generative.ts` (`Hash.generateNew()`), `composables/useSeedFromURL.ts` (`generateNewSeed()`), and `components/ProjectRouteView.vue` each generate seeds independently.
+- **`Hash` still assumes the legacy encoding shape**: the constructor parses seed strings by slicing off the first 2 chars and base58-decoding the remainder into four ints for `sfc32`. An 8-char hex seed is not compatible with this parsing as-written.
+
+### Work items
+
+- **Unify seed generation behind one factory**:
+  - Add a single exported factory, e.g. `createSeed8Hex()` (or similar) in a shared place (likely `utils/generative.ts`).
+  - Replace the local seed generator in `composables/useSeedFromURL.ts` and `components/ProjectRouteView.vue` with calls to that factory.
+- **Stop generating legacy seeds from the project route view**:
+  - Update `components/ProjectRouteView.vue` `createSeed()` (or remove it) so the `new-seed` action writes an 8-char hex seed to URL and calls `utils.seed.set(seed)`.
+- **Make `Hash` accept the new seed format**:
+  - Replace legacy base58+`slice(2)` parsing with a string-to-uint32 seeding step that can take arbitrary seed strings (including 8-char hex) and produce 4x uint32 state for `sfc32`.
+  - Decide whether to keep **backwards compatibility**:
+    - If yes: detect old `oo...` seeds and parse them with the old base58 path; otherwise treat the seed as a general string and hash it into 4 ints.
+    - If no: document the breaking change and accept only hex (or “any string”) going forward.
+- **Confirm all “new seed” entry points are covered**:
+  - UI action: `new-seed` in `components/ProjectRouteView.vue` (keyboard `n`).
+  - URL helper: `generateNewSeed()` in `composables/useSeedFromURL.ts`.
+  - Runtime default: when the app creates `createGenerativeUtils()` with no seed (calls `new Hash()`), it should also use the unified factory behavior.

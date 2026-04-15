@@ -16,8 +16,8 @@ export const useSeedFromURL = () => {
     // Generate a new random seed using the Hash class format
     const alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
     const newHash =
-      'oo' +
-      Array(49)
+      'oo' + // prefix ready. was 'oo'.
+      Array(49) // was 49.
         .fill(0)
         .map(() => alphabet[(Math.random() * alphabet.length) | 0])
         .join('')
