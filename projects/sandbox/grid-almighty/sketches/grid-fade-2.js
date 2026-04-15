@@ -20,9 +20,9 @@ class MyCell extends GridCell {
     // const tx = cols > 1 ? this.col / (cols - 1) : 0
 
     const tx = (this.x - this.grid.x) / this.parent.width / 2 //grid or parent works
-    const colBell = 1 - (Math.sin(Math.PI * tx * 2)) // 0..1, peaks at center col
+    const colBell = 1 - (Math.sin(Math.PI * tx * .5)) // 0..1, peaks at center col
 
-    const k = map(colBell, 0, 1, 0.4, 6)
+    const k = map(colBell, 0, 1, 0.5, 6)
     const centerBell = (t, k = 1) => Math.pow(Math.sin(Math.PI * t), k)
 
     const positive = (this.row + this.col) % 2 === 0
@@ -53,7 +53,7 @@ export function draw(context) {
 
   if (!canvas) return
 
-  const cols = c.cols ?? pick([2, 4, 6])
+  const cols = c.cols ?? pick([2, 4])
   const rows = c.rows ?? pick([2, 4, 6])
   const maxLevel = c.maxLevel ?? 1
 
