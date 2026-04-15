@@ -2,6 +2,7 @@ import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 import { lightTheme } from '~/utils/theme'
 
+
 class MyGrid extends Grid {
   createCell(config) {
     return new MyCell(config)
@@ -56,8 +57,6 @@ export function draw(context) {
     rows,
     width: canvas.w,
     height: canvas.h,
-    x: 0,
-    y: 0,
     utils
   })
 
