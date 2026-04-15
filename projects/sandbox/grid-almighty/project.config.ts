@@ -294,6 +294,14 @@ const GROWTH_CANVAS_ACTIONS: ProjectActionDefinition[] = [
   }
 ]
 
+const PRINT_ACTIONS: ProjectActionDefinition[] = [
+  {
+    key: 'download-png',
+    label: 'Download PNG'
+  }
+]
+
+
 
 const metadata = {
   "id": "grid-almighty",
@@ -322,7 +330,14 @@ const SKETCHES: ProjectSketchDefinition[] = [
     technique: 'canvas2d',
     container: { mode: 'full', padding: '0' },
     module: './sketches/grid-fade.js',
-    // prefersTheme: 'light',
+  },
+  {
+    id: 'grid-print',
+    label: 'Grid Print',
+    technique: 'canvas2d',
+    container: { print: { width: 210, height: 297, unit: 'mm', dpi: 300, bleed: 3 } },
+    module: './sketches/grid-print.js',
+    actions: PRINT_ACTIONS,
   },
   {
     id: 'noisy-automata',

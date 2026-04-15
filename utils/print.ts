@@ -67,11 +67,11 @@ export function createPrintContract(config: PrintContractConfig): PrintContract 
   const wMM  = toMM(width,  unit)
   const hMM  = toMM(height, unit)
   const bMM  = toMM(bleed,  unit)
-  const bPx  = Math.round(bMM / MM_PER_INCH * unitDpi)
-  const tw   = Math.round(wMM / MM_PER_INCH * unitDpi)
-  const th   = Math.round(hMM / MM_PER_INCH * unitDpi)
-  const cw   = tw + bPx * 2
-  const ch   = th + bPx * 2
+  const cw = Math.round((wMM + bMM * 2) / MM_PER_INCH * dpi)
+  const ch = Math.round((hMM + bMM * 2) / MM_PER_INCH * dpi)
+  const bPx = Math.round(bMM / MM_PER_INCH * dpi)
+  const tw = cw - bPx * 2
+  const th = ch - bPx * 2
   const units = printUnits(unitDpi)
 
 
