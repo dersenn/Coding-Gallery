@@ -18,9 +18,24 @@ class MyCell extends GridCell {
   draw(canvas, colors, maxLevel, spacing) {
     const { v, curve, rnd, rndInt, map, norm } = shortcuts(this.grid.utils)
 
+    const topToBottom = (this.row + this.col) % 2 === 0
+
+    const density = topToBottom
+      ? (nx, ny) => 1 - curve.easeIn(ny)
+      : (nx, ny) => curve.easeIn(ny)
+
     const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
 
-    canvas.rect(v(this.x, this.y), this.width, this.height, fill, 'transparent', 0)
+    // canvas.rect(v(this.x, this.y), this.width, this.height, fill, 'transparent', 0)
+
+    canvas.halftone(
+      this.tl(),
+      this.width, this.height,
+      fill,
+      density,
+      { spacing, rng: rnd }
+    )
+
   }
 }
 
@@ -57,9 +72,9 @@ export function draw(context) {
   const terminals = grid.subdivide({
     maxLevel: 1,
     rule: (cell) => {
-      if ((cell.col + cell.row) % 2 === 0) return {cols: 2, rows: 2}
-      return { cols: 4, rows: 4 }
-      // return { cols: 1, rows: 1 }
+      if ((cell.col + cell.row) % 2 === 0) 
+        return { cols: 2, rows: cell.row % 2 === 0 ? 2 : 3 }
+      return { cols: 6, rows: cell.row % 2 === 0 ? 3 : 2 }
     }
   })
 
