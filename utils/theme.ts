@@ -37,7 +37,7 @@ export const lightTheme: ThemeTokens = {
   white: '#ffffff',
   black: '#000000',
   outline: '#111111',
-  palette: ['#1d4ed8', '#9333ea', '#dc2626', '#ea580c', '#0f766e', '#4f46e5']
+  palette: ['#ad313a', '#38775b', '#214a93', '#ff580c', '#1d4ed8', '#5e1b93']
 }
 
 const tokensFromBase = (base: ThemeTokens): ThemeTokens => ({
