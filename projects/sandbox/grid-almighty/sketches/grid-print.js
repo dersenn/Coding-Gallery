@@ -19,10 +19,10 @@ class MyCell extends GridCell {
     const { curve, rnd, rndInt } = shortcuts(this.grid.utils)
     const { mm } = canvas.print
 
-    // const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
     const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
 
-    const parity = rndInt(0, 3) //(this.col + this.row) % 4
+    // const parity = (this.col + this.row) % 3
+    const parity = rndInt(0, 3)
     let density
     switch (parity) {
       case 0:
