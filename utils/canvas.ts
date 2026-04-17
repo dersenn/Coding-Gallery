@@ -787,12 +787,14 @@ export class Canvas {
           }
         }
       }
-      ctx.save()
-      ctx.beginPath()
-      ctx.rect(ox, oy, w, h)
-      ctx.clip()
+      /* clip to the rect, so that the halftone is only drawn within the rect */
+      /* but leaves clipped pixels, not suitable for bigger sizings */
+      // ctx.save()
+      // ctx.beginPath()
+      // ctx.rect(ox, oy, w, h)
+      // ctx.clip()
       ctx.fill(path)
-      ctx.restore()
+      // ctx.restore()
     })
   }
 
