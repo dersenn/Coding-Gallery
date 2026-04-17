@@ -74,7 +74,8 @@ export function draw(context) {
     rule: (cell) => {
       if ((cell.col + cell.row) % 2 === 0) 
         return { cols: 2, rows: cell.row % 2 === 0 ? 2 : 3 }
-      return { cols: 6, rows: cell.row % 2 === 0 ? 3 : 2 }
+      // return { cols: 6, rows: cell.row % 2 === 0 ? 3 : 2 }
+      return { cols: 6, rows: cell.row % 2 === 0 ? 6 : 4 }
     }
   })
 
