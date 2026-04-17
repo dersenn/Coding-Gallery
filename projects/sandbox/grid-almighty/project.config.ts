@@ -328,7 +328,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     id: 'grid-print',
     label: 'Grid Print',
     technique: 'canvas2d',
-    container: { print: { width: 210, height: 297, unit: 'mm', dpi: 300, bleed: 3 } },
+    container: { print: { width: 210, height: 297, unit: 'mm', dpi: 144, bleed: 3 } },
     module: './sketches/grid-print.js',
     actions: GRID_ACTIONS,
   },

@@ -16,17 +16,32 @@ class MyCell extends GridCell {
   }
 
   draw(canvas, colors, maxLevel, spacing) {
-    const { v, curve, rnd, rndInt, map, norm } = shortcuts(this.grid.utils)
-
-    const topToBottom = (this.row + this.col) % 2 === 0
-
-    const density = topToBottom
-      ? (nx, ny) => 1 - curve.easeIn(ny)
-      : (nx, ny) => curve.easeIn(ny)
+    const { curve, rnd, rndInt } = shortcuts(this.grid.utils)
+    const { mm } = canvas.print
 
     const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
 
-    // canvas.rect(v(this.x, this.y), this.width, this.height, fill, 'transparent', 0)
+    const parity = rndInt(0, 3) //(this.col + this.row) % 4
+    let density
+    switch (parity) {
+      case 0:
+        density = (nx, ny) => 1 - curve.easeIn(ny)
+        break
+      case 1:
+        density = (nx, ny) => curve.easeIn(ny)
+        break
+      case 2:
+        density = (nx, ny) => curve.log(ny, parity)
+        break
+      default:
+        density = (nx, ny) => 0.9
+        break
+    }
+    
+    // const topToBottom = (this.row + this.col) % 2 === 0
+    // const density = topToBottom
+    //   ? (nx, ny) => 1 - curve.easeIn(ny)
+    //   : (nx, ny) => curve.easeIn(ny)
 
     canvas.halftone(
       this.tl(),
@@ -43,10 +58,10 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { v, rnd, curve, pickMany } = shortcuts(utils)
+  const { v, pick, pickMany } = shortcuts(utils)
   if (!canvas) return
 
-  const { mm, drawTrimBox } = canvas.print
+  const { mm, pt, drawTrimBox } = canvas.print
 
   const border = {
     top: mm(9),
@@ -58,10 +73,11 @@ export function draw(context) {
   const maxLevel = 1
 
   const colors = pickMany(lightTheme.palette, maxLevel + 1)
+  const cols = pick([2, 3, 4])
 
   const grid = new MyGrid({
-    cols: 3,
-    rows: 5,
+    cols: cols,
+    rows: (cols * 2) - 1,
     width: canvas.w - border.left - border.right,
     height: canvas.h - border.top - border.bottom,
     x: border.left,
@@ -70,7 +86,7 @@ export function draw(context) {
   })
 
   const terminals = grid.subdivide({
-    maxLevel: 1,
+    maxLevel: maxLevel,
     rule: (cell) => {
       if ((cell.col + cell.row) % 2 === 0) 
         return { cols: 2, rows: cell.row % 2 === 0 ? 2 : 3 }
@@ -85,8 +101,11 @@ export function draw(context) {
 
 
   terminals.forEach(cell => {
-    cell.draw(canvas, colors, maxLevel, 1)
+    // `canvas.print` at 300dpi can be millions of samples; keep halftone spacing sane.
+    cell.draw(canvas, colors, maxLevel, mm(0.1))
   })
+
+  canvas.text(utils.seed.current, v(mm(9), mm(287)), colors[0], { fontSize: pt(12), fontFamily: 'Helvetica' })
 
  
   
