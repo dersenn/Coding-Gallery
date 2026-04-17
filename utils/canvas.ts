@@ -787,7 +787,12 @@ export class Canvas {
           }
         }
       }
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(ox, oy, w, h)
+      ctx.clip()
       ctx.fill(path)
+      ctx.restore()
     })
   }
 

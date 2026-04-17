@@ -1,6 +1,6 @@
 import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
-import { lightTheme } from '~/utils/theme'
+import { lightTheme, defaultTheme } from '~/utils/theme'
 
 
 
@@ -19,6 +19,7 @@ class MyCell extends GridCell {
     const { curve, rnd, rndInt } = shortcuts(this.grid.utils)
     const { mm } = canvas.print
 
+    // const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
     const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
 
     const parity = rndInt(0, 3) //(this.col + this.row) % 4
@@ -34,22 +35,34 @@ class MyCell extends GridCell {
         density = (nx, ny) => curve.log(ny, parity)
         break
       default:
+        // density = (nx, ny) => {
+        //   const angle = Math.PI / 3
+        //   const t = nx * Math.cos(angle) + ny * Math.sin(angle)
+        //   return curve.easeIn(t)
+        // }
         density = (nx, ny) => 0.9
         break
     }
     
-    // const topToBottom = (this.row + this.col) % 2 === 0
-    // const density = topToBottom
-    //   ? (nx, ny) => 1 - curve.easeIn(ny)
-    //   : (nx, ny) => curve.easeIn(ny)
+    canvas.withContext(ctx => {
+      ctx.globalCompositeOperation = 'multiply'
 
-    canvas.halftone(
-      this.tl(),
-      this.width, this.height,
-      fill,
-      density,
-      { spacing, rng: rnd }
-    )
+      canvas.halftone(
+        this.tl(),
+        this.width, this.height,
+        fill,
+        density,
+        { spacing, rng: rnd }
+      )
+    })
+
+    // canvas.halftone(
+    //   this.tl(),
+    //   this.width, this.height,
+    //   fill,
+    //   density,
+    //   { spacing, rng: rnd }
+    // )
 
   }
 }
@@ -71,6 +84,7 @@ export function draw(context) {
   }
 
   const maxLevel = 1
+  const halftoneSpacing = mm(.15)
 
   const colors = pickMany(lightTheme.palette, maxLevel + 1)
   const cols = pick([2, 3, 4])
@@ -96,27 +110,15 @@ export function draw(context) {
   })
 
 
+  // DRAWING
 
   canvas.background(lightTheme.background)
 
-
   terminals.forEach(cell => {
-    // `canvas.print` at 300dpi can be millions of samples; keep halftone spacing sane.
-    cell.draw(canvas, colors, maxLevel, mm(0.1))
+    cell.draw(canvas, colors, maxLevel, halftoneSpacing)
   })
 
   canvas.text(utils.seed.current, v(mm(9), mm(287)), colors[0], { fontSize: pt(12), fontFamily: 'Helvetica' })
-
- 
-  
-
-  // canvas.halftone(
-  //   v(mm(10), mm(10)),
-  //   mm(50), mm(297-20),
-  //   '#000',
-  //   (nx, ny) => 1 - curve.easeIn(ny),
-  //   { spacing: mm(.3), rng: rnd }
-  // )
 
   // drawTrimBox(canvas.ctx)
 }
