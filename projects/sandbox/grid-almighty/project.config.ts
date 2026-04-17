@@ -279,6 +279,67 @@ const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
+const GRID_PRINT_2_CONTROLS: ProjectControlDefinition[] = [
+  {
+    type: 'group',
+    id: 'grid',
+    label: 'Grid',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      { type: 'slider', label: 'Cols', key: 'cols', default: 80, min: 2, max: 240, step: 1 },
+      { type: 'slider', label: 'Rows', key: 'rows', default: 120, min: 2, max: 360, step: 1 },
+    ]
+  },
+  {
+    type: 'group',
+    id: 'warp',
+    label: 'Warp',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      { type: 'slider', label: 'Warp amp (mm)', key: 'warpAmpMm', default: 20, min: 0, max: 80, step: 1 },
+      { type: 'slider', label: 'Warp scale', key: 'warpScale', default: 0.003, min: 0.0002, max: 0.02, step: 0.0001 },
+      { type: 'slider', label: 'Warp scale X', key: 'warpScaleX', default: 1, min: 0.2, max: 5, step: 0.05 },
+      { type: 'slider', label: 'Warp scale Y', key: 'warpScaleY', default: 1, min: 0.2, max: 5, step: 0.05 },
+      { type: 'slider', label: 'Octaves', key: 'octaves', default: 1, min: 1, max: 6, step: 1 },
+      {
+        type: 'slider',
+        label: 'Lacunarity',
+        key: 'lacunarity',
+        default: 2.0,
+        min: 1.2,
+        max: 4.0,
+        step: 0.1,
+        visibleWhenSelectKey: 'octaves',
+        visibleWhenSelectValues: [2, 3, 4, 5, 6]
+      },
+      {
+        type: 'slider',
+        label: 'Persistence',
+        key: 'persistence',
+        default: 0.5,
+        min: 0.1,
+        max: 0.95,
+        step: 0.05,
+        visibleWhenSelectKey: 'octaves',
+        visibleWhenSelectValues: [2, 3, 4, 5, 6]
+      }
+    ]
+  },
+  {
+    type: 'group',
+    id: 'pin',
+    label: 'Pinning',
+    collapsible: true,
+    defaultOpen: false,
+    controls: [
+      { type: 'toggle', label: 'Pin edges', key: 'pinEdges', default: false },
+      { type: 'slider', label: 'Pin falloff', key: 'pinFalloff', default: 20, min: 0, max: 80, step: 1 },
+    ]
+  }
+]
+
 const GRID_ACTIONS: ProjectActionDefinition[] = [
   {
     key: 'download-png',
@@ -339,6 +400,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { print: { width: 210, height: 297, unit: 'mm', dpi: 144, bleed: 3 } },
     module: './sketches/grid-print-2.js',
     actions: GRID_ACTIONS,
+    controls: GRID_PRINT_2_CONTROLS,
   },
   {
     id: 'noisy-automata',

@@ -1,6 +1,20 @@
 import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
-import { lightTheme, defaultTheme } from '~/utils/theme'
+import { lightTheme } from '~/utils/theme'
+
+export const controls = [
+  { type: 'slider', key: 'cols', label: 'Cols', default: 80, min: 2, max: 240, step: 1 },
+  { type: 'slider', key: 'rows', label: 'Rows', default: 120, min: 2, max: 360, step: 1 },
+  { type: 'slider', key: 'warpAmpMm', label: 'Warp amp (mm)', default: 20, min: 0, max: 80, step: 1 },
+  { type: 'slider', key: 'warpScale', label: 'Warp scale', default: 0.003, min: 0.0002, max: 0.02, step: 0.0001 },
+  { type: 'slider', key: 'warpScaleX', label: 'Warp scale X', default: 1, min: 0.2, max: 5, step: 0.05 },
+  { type: 'slider', key: 'warpScaleY', label: 'Warp scale Y', default: 1, min: 0.2, max: 5, step: 0.05 },
+  { type: 'slider', key: 'octaves', label: 'Octaves', default: 1, min: 1, max: 6, step: 1 },
+  { type: 'slider', key: 'lacunarity', label: 'Lacunarity', default: 2.0, min: 1.2, max: 4.0, step: 0.1 },
+  { type: 'slider', key: 'persistence', label: 'Persistence', default: 0.5, min: 0.1, max: 0.95, step: 0.05 },
+  { type: 'toggle', key: 'pinEdges', label: 'Pin edges', default: false },
+  { type: 'slider', key: 'pinFalloff', label: 'Pin falloff', default: 20, min: 0, max: 80, step: 1 },
+]
 
 
 // ----------------------------------------------------------------------------
@@ -44,7 +58,7 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { v, pick, pickMany } = shortcuts(utils)
+  const { v } = shortcuts(utils)
   if (!canvas) return
 
   const { mm, pt } = canvas.print
@@ -56,15 +70,15 @@ export function draw(context) {
     left: mm(12),
   }
 
-  const color = lightTheme.foreground
-  const pinEdges = false
-  const pinFalloff = 20 // in vertex steps; tweak
+  const color = lightTheme.palette[2]
+  const pinEdges = c.pinEdges ?? false
+  const pinFalloff = c.pinFalloff ?? 20
 
 
   // GRID
   const grid = new MyGrid({
-    cols: 80,
-    rows: 120,
+    cols: c.cols ?? 80,
+    rows: c.rows ?? 120,
     width: canvas.w - border.left - border.right,
     height: canvas.h - border.top - border.bottom,
     x: border.left,
@@ -83,9 +97,30 @@ export function draw(context) {
   )
 
   // WARPING NOISE (mean-subtracted)
-  const warpAmp = mm(20) // tweak
-  const warpScale = 0.002 // tweak (noise frequency)
-  const { noise2 } = shortcuts(utils)
+  const warpAmp = mm(c.warpAmpMm ?? 20)
+  const warpScale = c.warpScale ?? 0.003
+  const warpScaleX = c.warpScaleX ?? 1
+  const warpScaleY = c.warpScaleY ?? 1
+  const octaves = Math.max(1, Math.floor(c.octaves ?? 1))
+  const lacunarity = c.lacunarity ?? 2.0
+  const persistence = c.persistence ?? 0.5
+  
+  const { simplex2 } = shortcuts(utils)
+
+  const fbm2 = (x, y) => {
+    let sum = 0
+    let amp = 1
+    let freq = 1
+    let norm = 0
+    for (let i = 0; i < octaves; i++) {
+      sum += simplex2(x * freq, y * freq) * amp
+      norm += amp
+      amp *= persistence
+      freq *= lacunarity
+    }
+    return norm > 0 ? sum / norm : 0
+  }
+
   // First pass: compute offsets + mean
   let sumDx = 0
   let sumDy = 0
@@ -95,10 +130,10 @@ export function draw(context) {
   for (let r = 0; r <= grid.rows; r++) {
     for (let c = 0; c <= grid.cols; c++) {
       const p = lattice[r][c]
-      const nx = p.x * warpScale
-      const ny = p.y * warpScale
-      const dx = noise2(nx + 100, ny + 100)
-      const dy = noise2(nx - 100, ny - 100)
+      const nx = p.x * warpScale * warpScaleX
+      const ny = p.y * warpScale * warpScaleY
+      const dx = fbm2(nx + 100, ny + 100)
+      const dy = fbm2(nx - 100, ny - 100)
       offsets[r][c].dx = dx
       offsets[r][c].dy = dy
       sumDx += dx
@@ -117,7 +152,11 @@ export function draw(context) {
       let w = 1
       if (pinEdges) {
         const dEdge = Math.min(c, r, grid.cols - c, grid.rows - r) // 0 at edge
-        w = Math.max(0, Math.min(1, dEdge / pinFalloff))
+        if (pinFalloff <= 0) {
+          w = dEdge === 0 ? 0 : 1
+        } else {
+          w = Math.max(0, Math.min(1, dEdge / pinFalloff))
+        }
         w = w * w // ease-in (optional)
       }
       p.x += (dx - meanDx) * warpAmp * w
@@ -146,7 +185,7 @@ export function draw(context) {
   // DRAWING
   canvas.background(lightTheme.background)
   grid.forEach(cell => {
-    cell.draw(canvas, lightTheme.foreground)
+    cell.draw(canvas, color)
   })
 
 }
