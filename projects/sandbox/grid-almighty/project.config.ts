@@ -333,6 +333,14 @@ const SKETCHES: ProjectSketchDefinition[] = [
     actions: GRID_ACTIONS,
   },
   {
+    id: 'grid-print-2',
+    label: 'Grid Print 2',
+    technique: 'canvas2d',
+    container: { print: { width: 210, height: 297, unit: 'mm', dpi: 144, bleed: 3 } },
+    module: './sketches/grid-print-2.js',
+    actions: GRID_ACTIONS,
+  },
+  {
     id: 'noisy-automata',
     label: 'Noisy Automata',
     technique: 'canvas2d',
