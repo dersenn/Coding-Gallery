@@ -50,18 +50,21 @@ export function draw(context) {
   const { mm, pt } = canvas.print
 
   const border = {
-    top: mm(9),
-    right: mm(9),
-    bottom: mm(15),
-    left: mm(9),
+    top: mm(12),
+    right: mm(12),
+    bottom: mm(18),
+    left: mm(12),
   }
 
   const color = lightTheme.foreground
+  const pinEdges = false
+  const pinFalloff = 20 // in vertex steps; tweak
+
 
   // GRID
   const grid = new MyGrid({
-    cols: 40,
-    rows: 60,
+    cols: 80,
+    rows: 120,
     width: canvas.w - border.left - border.right,
     height: canvas.h - border.top - border.bottom,
     x: border.left,
@@ -79,20 +82,46 @@ export function draw(context) {
     )
   )
 
-  // WARPING NOISE
+  // WARPING NOISE (mean-subtracted)
   const warpAmp = mm(20) // tweak
-  const warpScale = 0.001 // tweak (noise frequency)
+  const warpScale = 0.002 // tweak (noise frequency)
   const { noise2 } = shortcuts(utils)
+  // First pass: compute offsets + mean
+  let sumDx = 0
+  let sumDy = 0
+  const offsets = Array.from({ length: grid.rows + 1 }, () =>
+    Array.from({ length: grid.cols + 1 }, () => ({ dx: 0, dy: 0 }))
+  )
   for (let r = 0; r <= grid.rows; r++) {
     for (let c = 0; c <= grid.cols; c++) {
       const p = lattice[r][c]
       const nx = p.x * warpScale
       const ny = p.y * warpScale
-      // two decorrelated noise samples for x/y offsets
       const dx = noise2(nx + 100, ny + 100)
       const dy = noise2(nx - 100, ny - 100)
-      p.x += dx * warpAmp
-      p.y += dy * warpAmp
+      offsets[r][c].dx = dx
+      offsets[r][c].dy = dy
+      sumDx += dx
+      sumDy += dy
+    }
+  }
+  const count = (grid.rows + 1) * (grid.cols + 1)
+  const meanDx = sumDx / count
+  const meanDy = sumDy / count
+
+  // Second pass: apply centered offsets
+  for (let r = 0; r <= grid.rows; r++) {
+    for (let c = 0; c <= grid.cols; c++) {
+      const p = lattice[r][c]
+      const { dx, dy } = offsets[r][c]
+      let w = 1
+      if (pinEdges) {
+        const dEdge = Math.min(c, r, grid.cols - c, grid.rows - r) // 0 at edge
+        w = Math.max(0, Math.min(1, dEdge / pinFalloff))
+        w = w * w // ease-in (optional)
+      }
+      p.x += (dx - meanDx) * warpAmp * w
+      p.y += (dy - meanDy) * warpAmp * w
     }
   }
 
@@ -116,6 +145,8 @@ export function draw(context) {
 
   // DRAWING
   canvas.background(lightTheme.background)
-  grid.forEach(cell => cell.draw(canvas, lightTheme.foreground))
+  grid.forEach(cell => {
+    cell.draw(canvas, lightTheme.foreground)
+  })
 
 }
