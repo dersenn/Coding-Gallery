@@ -32,6 +32,11 @@ class MyCell extends GridCell {
 
   draw(canvas, stroke = lightTheme.foreground, fill = null) {
     const { mm, pt } = canvas.print
+
+    // a quick test to see if the cell is on the right edge
+    // if (this.edgeFlags().right) {
+    //   canvas.circle(this.tl(), this.width, fill)
+    // }
     
     const corners = this.geom.corners
     if (!corners) return

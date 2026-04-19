@@ -11,6 +11,53 @@ export type NeighborDirection =
   | 'left' 
   | 'topLeft'
 
+/** Which sides of a rectangular row/col context this cell touches. */
+export interface GridCellEdgeFlags {
+  top: boolean
+  right: boolean
+  bottom: boolean
+  left: boolean
+}
+
+/** Corner occupancy derived only from `GridCellEdgeFlags` (adjacent side pairs). */
+export interface GridCellCornerFlags {
+  tl: boolean
+  tr: boolean
+  br: boolean
+  bl: boolean
+}
+
+function edgeFlagsFromIndices(
+  row: number,
+  col: number,
+  rows: number,
+  cols: number
+): GridCellEdgeFlags {
+  return {
+    top: row === 0,
+    right: col === cols - 1,
+    bottom: row === rows - 1,
+    left: col === 0
+  }
+}
+
+function cornerFlagsFromEdges(edges: GridCellEdgeFlags): GridCellCornerFlags {
+  return {
+    tl: edges.top && edges.left,
+    tr: edges.top && edges.right,
+    br: edges.bottom && edges.right,
+    bl: edges.bottom && edges.left
+  }
+}
+
+function anyEdge(edges: GridCellEdgeFlags): boolean {
+  return edges.top || edges.right || edges.bottom || edges.left
+}
+
+function anyCorner(corners: GridCellCornerFlags): boolean {
+  return corners.tl || corners.tr || corners.br || corners.bl
+}
+
 export interface GridConfig {
   cols: number
   rows: number
@@ -79,12 +126,12 @@ export interface GridCellConfig extends CellConfig {
  * - Both paths use `Grid.createCell()`, so custom subclasses apply uniformly.
  *
  * Context model:
- * - Default APIs (`getNeighbor`, `getNeighbors*`, `isEdge`, `isCorner`) operate
- *   in the cell's active context:
+ * - Default APIs (`getNeighbor`, `getNeighbors*`, `isEdge`, `isCorner`,
+ *   `edgeFlags`, `cornerFlags`) operate in the cell's active context:
  *   - root cells => root grid context
  *   - recursive cells => sibling-local subdivision context
- * - Root-explicit APIs (`getRootNeighbor`, `isRootEdge`, etc.) always resolve
- *   against the root grid coordinates.
+ * - Root-explicit APIs (`getRootNeighbor`, `isRootEdge`, `rootEdgeFlags`, etc.)
+ *   always resolve against the root grid coordinates.
  *
  * To use a custom subclass, subclass `Grid` and override `createCell()`:
  *
@@ -127,32 +174,53 @@ export class GridCell extends Cell {
   }
 
   /**
+   * Which sides of the active neighbor context this cell lies on.
+   *
+   * Corner cells have two adjacent sides `true`. See `cornerFlags()`.
+   */
+  edgeFlags(): GridCellEdgeFlags {
+    const { rows, cols } = this.resolveNeighborContext()
+    return edgeFlagsFromIndices(this.row, this.col, rows, cols)
+  }
+
+  /**
+   * Which corners of the active context this cell occupies, derived only from
+   * `edgeFlags()` (single source of truth for boundary sides).
+   */
+  cornerFlags(): GridCellCornerFlags {
+    return cornerFlagsFromEdges(this.edgeFlags())
+  }
+
+  /**
+   * Same shape as `edgeFlags()` but using root grid dimensions and this cell's
+   * `row`/`col` (mirrors `isRootEdge` inputs).
+   */
+  rootEdgeFlags(): GridCellEdgeFlags {
+    return edgeFlagsFromIndices(this.row, this.col, this.grid.rows, this.grid.cols)
+  }
+
+  /**
+   * Corner occupancy in root coordinates, derived from `rootEdgeFlags()`.
+   */
+  rootCornerFlags(): GridCellCornerFlags {
+    return cornerFlagsFromEdges(this.rootEdgeFlags())
+  }
+
+  /**
    * Check if this cell is on the edge of its active context.
    *
    * For root cells, this matches root-grid edge checks.
    * For recursive subdivision cells, this checks sibling-local bounds.
    */
   isEdge(): boolean {
-    const context = this.resolveNeighborContext()
-    return (
-      this.row === 0 ||
-      this.row === context.rows - 1 ||
-      this.col === 0 ||
-      this.col === context.cols - 1
-    )
+    return anyEdge(this.edgeFlags())
   }
 
   /**
    * Check if this cell is a corner in its active context.
    */
   isCorner(): boolean {
-    const context = this.resolveNeighborContext()
-    return (
-      (this.row === 0 && this.col === 0) ||
-      (this.row === 0 && this.col === context.cols - 1) ||
-      (this.row === context.rows - 1 && this.col === 0) ||
-      (this.row === context.rows - 1 && this.col === context.cols - 1)
-    )
+    return anyCorner(this.cornerFlags())
   }
 
   /**
@@ -161,24 +229,14 @@ export class GridCell extends Cell {
    * Useful when working with recursive nodes but wanting root-topology checks.
    */
   isRootEdge(): boolean {
-    return (
-      this.row === 0 ||
-      this.row === this.grid.rows - 1 ||
-      this.col === 0 ||
-      this.col === this.grid.cols - 1
-    )
+    return anyEdge(this.rootEdgeFlags())
   }
 
   /**
    * Check if this cell is a corner in the root grid.
    */
   isRootCorner(): boolean {
-    return (
-      (this.row === 0 && this.col === 0) ||
-      (this.row === 0 && this.col === this.grid.cols - 1) ||
-      (this.row === this.grid.rows - 1 && this.col === 0) ||
-      (this.row === this.grid.rows - 1 && this.col === this.grid.cols - 1)
-    )
+    return anyCorner(this.rootCornerFlags())
   }
 
   /**
