@@ -61,6 +61,8 @@ export interface CheckboxGroupControlDefinition extends BaseControlDefinition {
   type: 'checkbox-group'
   default: Array<string | number>
   options: ControlOptionDefinition[]
+  randomize?: boolean
+  randomCount?: { min: number; max: number }
   visibleCountFromSelectKey?: string
   visibleCountBySelectValue?: Record<string, number>
   visibleCountFromKey?: string
@@ -93,6 +95,7 @@ export interface ControlGroupDefinition extends ConditionalVisibilityDefinition 
   collapsible?: boolean
   defaultOpen?: boolean
   order?: number
+  randomize?: boolean
 }
 
 export type ProjectControlDefinition = ControlDefinition | ControlGroupDefinition
@@ -195,6 +198,7 @@ export interface ProjectContext {
   theme: ThemeTokens
   onControlChange: (callback: (controls: ControlValues) => void) => void
   registerAction: (key: string, handler: () => void) => void
+  setControls: (updates: Array<{ key: string; value: ControlValue }>) => void
   runtime?: {
     paused: boolean
     enablePause?: () => void

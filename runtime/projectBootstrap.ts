@@ -56,7 +56,7 @@ export async function initFromProjectDefinition(
     )
   }
 
-  const { controls, utils, theme, onControlChange, registerAction, runtime } = context
+  const { controls, utils, theme, onControlChange, registerAction, setControls, runtime } = context
   const { v, rnd, coin } = shortcuts(utils)
   const controlState: ProjectContext['controls'] & { activeSketch: string } = {
     ...controls,
@@ -88,6 +88,7 @@ export async function initFromProjectDefinition(
           theme,
           utils,
           controls: controlState,
+          setControls,
           runtime,
           v,
           rnd,
@@ -134,6 +135,7 @@ export async function initFromProjectDefinition(
               theme,
               utils,
               controls: controlState,
+              setControls,
               runtime: augmentedRuntime,
               v,
               rnd,
@@ -163,6 +165,7 @@ export async function initFromProjectDefinition(
               theme,
               onControlChange,
               registerAction,
+              setControls,
               runtime
             })
           }

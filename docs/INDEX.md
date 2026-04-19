@@ -19,7 +19,11 @@ Status labels: `[IMPLEMENTED]` — current behaviour; `[PARTIAL]` — phases 1+2
 - Sketch runtime helper pattern (single-active sketch, multi-technique): `SKETCH_RUNTIME_MANAGER.md` `[IMPLEMENTED]`
 - Container sizing and layout: `CONTAINER_UTILITY.md` `[IMPLEMENTED]`
 - Lightweight canvas drawing API: `CANVAS_DRAWING_UTILITY.md` `[IMPLEMENTED]`
-- Initial control randomization reference: `INITIAL_CONTROL_RANDOMIZATION.md` `[IMPLEMENTED]`
+- Programmatic control overrides from a sketch (`context.setControls`): `FEATURE_SET_CONTROLS.md` `[IMPLEMENTED]`
+- Control randomisation (global button, group-scoped button, per-item locking): `CONTROL_RANDOMISATION.md` `[IMPLEMENTED]`
+- Initial control randomization reference (superseded by `setControls`): `INITIAL_CONTROL_RANDOMIZATION.md` `[SUPERSEDED]`
+- Control randomisation plan (superseded by `CONTROL_RANDOMISATION.md`): `CONTROL_RANDOMISATION_PLAN.md` `[SUPERSEDED]`
+- Checkbox-group randomise feature spec (superseded by `CONTROL_RANDOMISATION.md`): `FEATURE_RANDOMISE_CHECKBOX_GROUP.md` `[SUPERSEDED]`
 - Pause/resume for animated sketches (`runtime?.enablePause?.()`, `runtime?.paused`, `runtime?.onPauseChange`): see `../README.md` Pause/Resume section and `../composables/usePlayback.ts` `[IMPLEMENTED]`
 - Project config migration playbook: `PROJECT_CONFIG_MIGRATION_PLAYBOOK.md` `[IMPLEMENTED]`
 - Agent prompt preambles and naming guidance: `AGENT_PROMPT_PREAMBLES.md` `[IMPLEMENTED]`

@@ -36,7 +36,7 @@ const props = defineProps<{
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
-const { controlValues, initializeScopedControls } = useControls()
+const { controlValues, silentUpdateActive, initializeScopedControls, silentUpdateControls } = useControls()
 const { paused, togglePause, setPaused, setPauseEnabled } = usePlayback()
 const { utils } = useGenerativeUtils()
 const route = useRoute()
@@ -330,6 +330,9 @@ const loadProject = async () => {
         registerAction: (key, handler) => {
           actionHandlers[key] = handler
         },
+        setControls: (updates) => {
+          silentUpdateControls(updates)
+        },
         runtime: {
           get paused() {
             return paused.value
@@ -369,6 +372,7 @@ const loadProject = async () => {
 
 // Watch for control changes and notify project
 watch(controlValues, (newValues) => {
+  if (silentUpdateActive.value) return
   if (controlCallbacks.length > 0) {
     const rawValues = toRaw(newValues)
     controlCallbacks.forEach(cb => cb(rawValues))

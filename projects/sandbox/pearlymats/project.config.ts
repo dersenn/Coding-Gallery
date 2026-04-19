@@ -119,6 +119,7 @@ const PEARLYMATS_CONTROLS: ProjectControlDefinition[] = [
     label: 'Color',
     collapsible: true,
     defaultOpen: true,
+    randomize: true,
     controls: [
       {
         type: 'select',
@@ -131,6 +132,7 @@ const PEARLYMATS_CONTROLS: ProjectControlDefinition[] = [
         type: 'checkbox-group',
         label: 'Palette Colors',
         key: 'selectedPaletteIndices',
+        randomize: true,
         default: DEFAULT_SELECTED_PALETTE_INDICES,
         visibleCountFromSelectKey: 'palettePreset',
         visibleCountBySelectValue: PALETTE_VISIBLE_COUNT_BY_PRESET,
@@ -264,18 +266,18 @@ const PEARLYMATS_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Inner Limit',
         key: 'innerLimit',
-        default: 21,
-        min: 3,
-        max: 100,
+        default: 18,
+        min: 1,
+        max: 50,
         step: 1
       },
       {
         type: 'slider',
         label: 'Outer Limit',
         key: 'outerLimit',
-        default: 25,
-        min: 3,
-        max: 100,
+        default: 21,
+        min: 2,
+        max: 50,
         step: 1
       }
     ]

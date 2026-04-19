@@ -58,7 +58,7 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { v } = shortcuts(utils)
+  const { v, rndInt } = shortcuts(utils)
   if (!canvas) return
 
   const { mm, pt } = canvas.print
@@ -73,6 +73,13 @@ export function draw(context) {
   const color = lightTheme.palette[2]
   const pinEdges = c.pinEdges ?? false
   const pinFalloff = c.pinFalloff ?? 20
+
+  context.setControls([
+    {
+    key: 'warpAmpMm',
+    value: (rndInt(3, 15))
+    }
+  ])
 
 
   // GRID

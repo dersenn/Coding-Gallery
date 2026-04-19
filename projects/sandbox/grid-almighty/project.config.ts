@@ -8,16 +8,16 @@ import type {
 
 const GROWTH_CONTROLS: ProjectControlDefinition[] = [
   {
-    type: 'group',
     id: 'grid',
     label: 'Grid',
+    type: 'group',
     collapsible: true,
     defaultOpen: true,
     controls: [
       {
-        type: 'slider',
-        label: 'Short Side Divisions',
         key: 'grid_short_side_divisions',
+        label: 'Short Side Divisions',
+        type: 'slider',
         default: 60,
         min: 12,
         max: 90,
@@ -26,34 +26,34 @@ const GROWTH_CONTROLS: ProjectControlDefinition[] = [
     ]
   },
   {
-    type: 'group',
     id: 'growth',
     label: 'Growth',
+    type: 'group',
     collapsible: true,
     defaultOpen: true,
     controls: [
       {
-        type: 'slider',
-        label: 'Seed Count',
         key: 'growth_seed_count',
+        label: 'Seed Count',
+        type: 'slider',
         default: 8,
         min: 1,
         max: 64,
         step: 1
       },
       {
-        type: 'slider',
-        label: 'Growth Chance',
         key: 'growth_chance',
+        label: 'Growth Chance',
+        type: 'slider',
         default: 68,
         min: 1,
         max: 100,
         step: 1
       },
       {
-        type: 'select',
-        label: 'Neighborhood',
         key: 'growth_neighborhood',
+        label: 'Neighborhood',
+        type: 'select',
         default: '8',
         options: [
           { label: '8 Neighbors', value: '8' },
@@ -61,18 +61,18 @@ const GROWTH_CONTROLS: ProjectControlDefinition[] = [
         ]
       },
       {
-        type: 'slider',
-        label: 'Max Passes',
         key: 'growth_max_passes',
+        label: 'Max Passes',
+        type: 'slider',
         default: 420,
         min: 10,
         max: 2000,
         step: 10
       },
       {
-        type: 'slider',
-        label: 'Target Fill',
         key: 'growth_target_fill',
+        label: 'Target Fill',
+        type: 'slider',
         default: 100,
         min: 1,
         max: 100,
@@ -84,16 +84,16 @@ const GROWTH_CONTROLS: ProjectControlDefinition[] = [
 
 const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
   {
-    type: 'group',
     id: 'grid',
     label: 'Grid',
+    type: 'group',
     collapsible: true,
     defaultOpen: true,
     controls: [
       {
-        type: 'slider',
-        label: 'Short Side Divisions',
         key: 'grid_short_side_divisions',
+        label: 'Short Side Divisions',
+        type: 'slider',
         default: 60,
         min: 12,
         max: 90,
@@ -102,16 +102,16 @@ const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
     ]
   },
   {
-    type: 'group',
     id: 'rules',
     label: 'Rules',
+    type: 'group',
     collapsible: true,
     defaultOpen: true,
     controls: [
       {
-        type: 'select',
-        label: 'Rule Preset',
         key: 'rule_preset',
+        label: 'Rule Preset',
+        type: 'select',
         default: 'auto',
         options: [
           { label: 'Auto', value: 'auto' },
@@ -122,75 +122,75 @@ const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
         ]
       },
       {
-        type: 'toggle',
-        label: 'Single Rule',
         key: 'rule_single_mode',
+        label: 'Single Rule',
+        type: 'toggle',
         default: false
       },
       {
-        type: 'toggle',
-        label: 'Single Color',
         key: 'rule_single_color',
+        label: 'Single Color',
+        type: 'toggle',
         default: false
       }
     ]
   },
   {
-    type: 'group',
     id: 'noise',
     label: 'Noise',
+    type: 'group',
     collapsible: true,
     defaultOpen: false,
     controls: [
       {
-        type: 'slider',
-        label: 'Noise Scale',
         key: 'noiseScale',
+        label: 'Noise Scale',
+        type: 'slider',
         default: 21,
         min: 2,
         max: 80,
         step: 1
       },
       {
-        type: 'slider',
-        label: 'Stretch X',
         key: 'stretchX',
+        label: 'Stretch X',
+        type: 'slider',
         default: 1.2,
         min: 0.2,
         max: 3,
         step: 0.15
       },
       {
-        type: 'slider',
-        label: 'Stretch Y',
         key: 'stretchY',
+        label: 'Stretch Y',
+        type: 'slider',
         default: 0.75,
         min: 0.2,
         max: 3,
         step: 0.15
       },
       {
-        type: 'slider',
-        label: 'Amplitude',
         key: 'amplitude',
+        label: 'Amplitude',
+        type: 'slider',
         default: 1.5,
         min: 0.1,
         max: 2.0,
         step: 0.1
       },
       {
-        type: 'slider',
-        label: 'Octaves',
         key: 'octaves',
+        label: 'Octaves',
+        type: 'slider',
         default: 1,
         min: 1,
         max: 4,
         step: 1
       },
       {
-        type: 'slider',
-        label: 'Lacunarity',
         key: 'lacunarity',
+        label: 'Lacunarity',
+        type: 'slider',
         default: 2.4,
         min: 1.5,
         max: 3.0,
@@ -199,9 +199,9 @@ const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
         visibleWhenSelectValues: [2, 3, 4]
       },
       {
-        type: 'slider',
-        label: 'Persistence',
         key: 'persistence',
+        label: 'Persistence',
+        type: 'slider',
         default: 0.9,
         min: 0.1,
         max: 1.0,
@@ -215,61 +215,61 @@ const NOISY_AUTOMATA_CONTROLS: ProjectControlDefinition[] = [
 
 const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
   {
-    type: 'group',
     id: 'noiseAnim',
     label: 'Noise Animation',
+    type: 'group',
     collapsible: true,
     defaultOpen: true,
     controls: [
       {
-        type: 'slider',
-        label: 'Columns',
         key: 'noise_anim_cols',
+        label: 'Columns',
+        type: 'slider',
         default: 64,
         min: 8,
         max: 180,
         step: 1
       },
       {
-        type: 'slider',
-        label: 'Rows',
         key: 'noise_anim_rows',
+        label: 'Rows',
+        type: 'slider',
         default: 64,
         min: 8,
         max: 180,
         step: 1
       },
       {
-        type: 'slider',
-        label: 'Noise Scale',
         key: 'noise_anim_scale',
+        label: 'Noise Scale',
+        type: 'slider',
         default: 0.065,
         min: 0.005,
         max: 0.2,
         step: 0.001
       },
       {
-        type: 'slider',
-        label: 'Time Scale',
         key: 'noise_anim_time_scale',
+        label: 'Time Scale',
+        type: 'slider',
         default: 0.0006,
         min: 0.00001,
         max: 0.003,
         step: 0.00001
       },
       {
-        type: 'slider',
-        label: 'Warp',
         key: 'noise_anim_warp',
+        label: 'Warp',
+        type: 'slider',
         default: 0.18,
         min: 0,
         max: 0.6,
         step: 0.01
       },
       {
-        type: 'slider',
-        label: 'Contrast',
         key: 'noise_anim_contrast',
+        label: 'Contrast',
+        type: 'slider',
         default: 1,
         min: 0.1,
         max: 3,
@@ -281,61 +281,41 @@ const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
 
 const GRID_PRINT_2_CONTROLS: ProjectControlDefinition[] = [
   {
-    type: 'group',
     id: 'grid',
     label: 'Grid',
+    type: 'group',
     collapsible: true,
     defaultOpen: true,
     controls: [
-      { type: 'slider', label: 'Cols', key: 'cols', default: 80, min: 2, max: 240, step: 1 },
-      { type: 'slider', label: 'Rows', key: 'rows', default: 120, min: 2, max: 360, step: 1 },
+      { key: 'cols', label: 'Cols', type: 'slider', default: 40, min: 2, max: 240, step: 1 },
+      { key: 'rows', label: 'Rows', type: 'slider', default: 60, min: 2, max: 360, step: 1 },
     ]
   },
   {
-    type: 'group',
     id: 'warp',
     label: 'Warp',
+    type: 'group',
     collapsible: true,
     defaultOpen: true,
     controls: [
-      { type: 'slider', label: 'Warp amp (mm)', key: 'warpAmpMm', default: 20, min: 0, max: 80, step: 1 },
-      { type: 'slider', label: 'Warp scale', key: 'warpScale', default: 0.003, min: 0.0002, max: 0.02, step: 0.0001 },
-      { type: 'slider', label: 'Warp scale X', key: 'warpScaleX', default: 1, min: 0.2, max: 5, step: 0.05 },
-      { type: 'slider', label: 'Warp scale Y', key: 'warpScaleY', default: 1, min: 0.2, max: 5, step: 0.05 },
-      { type: 'slider', label: 'Octaves', key: 'octaves', default: 1, min: 1, max: 6, step: 1 },
-      {
-        type: 'slider',
-        label: 'Lacunarity',
-        key: 'lacunarity',
-        default: 2.0,
-        min: 1.2,
-        max: 4.0,
-        step: 0.1,
-        visibleWhenSelectKey: 'octaves',
-        visibleWhenSelectValues: [2, 3, 4, 5, 6]
-      },
-      {
-        type: 'slider',
-        label: 'Persistence',
-        key: 'persistence',
-        default: 0.5,
-        min: 0.1,
-        max: 0.95,
-        step: 0.05,
-        visibleWhenSelectKey: 'octaves',
-        visibleWhenSelectValues: [2, 3, 4, 5, 6]
-      }
+      { key: 'warpAmpMm', label: 'Warp amp (mm)', type: 'slider', default: 9, min: 0, max: 80, step: 1 },
+      { key: 'warpScale', label: 'Warp scale', type: 'slider', default: 0.003, min: 0.0002, max: 0.02, step: 0.0001 },
+      { key: 'warpScaleX', label: 'Warp scale X', type: 'slider', default: 1, min: 0.2, max: 5, step: 0.05 },
+      { key: 'warpScaleY', label: 'Warp scale Y', type: 'slider', default: 1, min: 0.2, max: 5, step: 0.05 },
+      { key: 'octaves', label: 'Octaves', type: 'slider', default: 1, min: 1, max: 6, step: 1 },
+      { key: 'lacunarity', label: 'Lacunarity', type: 'slider', default: 2.0, min: 1.2, max: 4.0, step: 0.1, visibleWhenSelectKey: 'octaves', visibleWhenSelectValues: [2, 3, 4, 5, 6] },
+      { key: 'persistence', label: 'Persistence', type: 'slider', default: 0.5, min: 0.1, max: 0.95, step: 0.05, visibleWhenSelectKey: 'octaves', visibleWhenSelectValues: [2, 3, 4, 5, 6] }
     ]
   },
   {
-    type: 'group',
     id: 'pin',
     label: 'Pinning',
+    type: 'group',
     collapsible: true,
     defaultOpen: false,
     controls: [
-      { type: 'toggle', label: 'Pin edges', key: 'pinEdges', default: false },
-      { type: 'slider', label: 'Pin falloff', key: 'pinFalloff', default: 20, min: 0, max: 80, step: 1 },
+      { key: 'pinEdges', label: 'Pin edges', type: 'toggle', default: false },
+      { key: 'pinFalloff', label: 'Pin falloff', type: 'slider', default: 20, min: 0, max: 80, step: 1 },
     ]
   }
 ]

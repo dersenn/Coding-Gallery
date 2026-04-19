@@ -26,20 +26,41 @@
         class="rounded-md"
         :class="section.label || section.collapsible ? 'control-section-surface backdrop-blur-lg p-3' : ''"
       >
-        <button
+        <div
           v-if="section.collapsible"
-          type="button"
-          class="w-full flex items-center justify-between text-left"
+          class="w-full flex items-center justify-between cursor-pointer select-none"
           @click="toggleSection(section.id)"
         >
           <span class="text-xs uppercase tracking-wide">{{ section.label }}</span>
-          <span class="control-text-muted text-sm">{{ isSectionOpen(section) ? '−' : '+' }}</span>
-        </button>
+          <span class="flex items-center gap-1">
+            <UButton
+              v-if="section.randomize"
+              icon="i-heroicons-arrow-path"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              title="Randomise"
+              class="control-text-muted hover:opacity-100 transition-opacity opacity-40"
+              @click.stop="runGroupRandomise(section)"
+            />
+            <span class="control-text-muted text-sm">{{ isSectionOpen(section) ? '−' : '+' }}</span>
+          </span>
+        </div>
         <div
           v-else-if="section.label"
-          class="control-text-muted text-xs uppercase tracking-wide"
+          class="flex items-center justify-between"
         >
-          {{ section.label }}
+          <span class="control-text-muted text-xs uppercase tracking-wide">{{ section.label }}</span>
+          <UButton
+            v-if="section.randomize"
+            icon="i-heroicons-arrow-path"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            title="Randomise"
+            class="control-text-muted hover:opacity-100 transition-opacity opacity-40"
+            @click="runGroupRandomise(section)"
+          />
         </div>
 
         <div
@@ -132,24 +153,36 @@
               v-else-if="control.type === 'checkbox-group'"
               class="space-y-2"
             >
-              <label
+              <div
                 v-for="option in getVisibleCheckboxOptions(control)"
                 :key="option.value"
-                class="flex items-center gap-2 cursor-pointer"
+                class="flex items-center gap-2"
               >
-                <input
-                  type="checkbox"
-                  :checked="isCheckboxOptionSelected(control, option.value)"
-                  @change="toggleCheckboxOption(control, option.value, ($event.target as HTMLInputElement).checked)"
-                  class="w-4 h-4 rounded cursor-pointer accent-foreground"
+                <label class="flex items-center gap-2 cursor-pointer flex-1">
+                  <input
+                    type="checkbox"
+                    :checked="isCheckboxOptionSelected(control, option.value)"
+                    @change="toggleCheckboxOption(control, option.value, ($event.target as HTMLInputElement).checked)"
+                    class="w-4 h-4 rounded cursor-pointer accent-foreground"
+                  />
+                  <span
+                    v-if="getCheckboxOptionSwatch(control, option)"
+                    class="control-swatch-border inline-block w-3 h-3 rounded border"
+                    :style="{ backgroundColor: getCheckboxOptionSwatch(control, option) }"
+                  />
+                  <span>{{ getCheckboxOptionLabel(control, option) }}</span>
+                </label>
+                <UButton
+                  v-if="section.randomize"
+                  :icon="isCheckboxItemLocked(control.key, getCheckboxOptionIndex(control, option)) ? 'i-heroicons-lock-closed' : 'i-heroicons-lock-open'"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  :class="isCheckboxItemLocked(control.key, getCheckboxOptionIndex(control, option)) ? 'opacity-100' : 'opacity-20'"
+                  class="control-text-muted hover:opacity-100 transition-opacity shrink-0"
+                  @click="toggleCheckboxItemLock(control.key, getCheckboxOptionIndex(control, option))"
                 />
-                <span
-                  v-if="getCheckboxOptionSwatch(control, option)"
-                  class="control-swatch-border inline-block w-3 h-3 rounded border"
-                  :style="{ backgroundColor: getCheckboxOptionSwatch(control, option) }"
-                />
-                <span>{{ getCheckboxOptionLabel(control, option) }}</span>
-              </label>
+              </div>
             </div>
 
             <!-- Color List -->
@@ -233,11 +266,24 @@ const showResetAll = computed(() => props.showResetAll ?? false)
 const openSections = ref<Record<string, boolean>>({})
 
 const lockedKeys = ref(new Set<string>())
+const lockedCheckboxItems = ref(new Map<string, Set<number>>())
+
+const groupRandomizedKeys = computed(() => {
+  const keys = new Set<string>()
+  for (const section of normalizedSections.value) {
+    if (section.randomize) {
+      for (const control of section.controls) keys.add(control.key)
+    }
+  }
+  return keys
+})
 
 const randomizableControls = computed(() =>
   flattenControls(props.controls).filter(
-    (c): c is SliderControlDefinition | SelectControlDefinition | ToggleControlDefinition =>
-      (c.type === 'slider' || c.type === 'select' || c.type === 'toggle') && !!c.randomize
+    (c): c is SliderControlDefinition | SelectControlDefinition | ToggleControlDefinition | CheckboxGroupControlDefinition =>
+      (c.type === 'slider' || c.type === 'select' || c.type === 'toggle' || c.type === 'checkbox-group') &&
+      !!c.randomize &&
+      !groupRandomizedKeys.value.has(c.key)
   )
 )
 
@@ -252,24 +298,91 @@ const toggleLock = (key: string) => {
 
 const isLocked = (key: string) => lockedKeys.value.has(key)
 
-const runRandomise = () => {
-  const updates: Array<{ key: string; value: import('~/types/project').ControlValue }> = []
+const isCheckboxItemLocked = (key: string, index: number) =>
+  lockedCheckboxItems.value.get(key)?.has(index) ?? false
 
-  for (const control of randomizableControls.value) {
-    if (isLocked(control.key)) continue
+const toggleCheckboxItemLock = (key: string, index: number) => {
+  const next = new Map(lockedCheckboxItems.value)
+  const set = new Set(next.get(key) ?? [])
+  if (set.has(index)) set.delete(index)
+  else set.add(index)
+  set.size > 0 ? next.set(key, set) : next.delete(key)
+  lockedCheckboxItems.value = next
+}
 
-    if (control.type === 'slider') {
-      const range = control.randomRange ?? { min: control.min, max: control.max }
-      const raw = range.min + Math.random() * (range.max - range.min)
-      updates.push({ key: control.key, value: raw })
-    } else if (control.type === 'select') {
-      const pick = control.options[Math.floor(Math.random() * control.options.length)]
-      if (pick) updates.push({ key: control.key, value: pick.value as string | number })
-    } else if (control.type === 'toggle') {
-      updates.push({ key: control.key, value: Math.random() < 0.5 })
-    }
+const pickRandom = <T>(items: T[], count: number): T[] => {
+  const arr = [...items]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j]!, arr[i]!]
   }
+  return arr.slice(0, Math.max(0, count))
+}
 
+const pickRandomIndices = (visibleCount: number, count: number): number[] =>
+  pickRandom(Array.from({ length: visibleCount }, (_, i) => i), count).sort((a, b) => a - b)
+
+const resolveCheckboxVisibleCount = (
+  control: CheckboxGroupControlDefinition,
+  values: import('~/types/project').ControlValues
+): number => {
+  if (control.visibleCountFromSelectKey) {
+    const selectValue = String(values[control.visibleCountFromSelectKey] ?? '')
+    const count = control.visibleCountBySelectValue?.[selectValue]
+    if (typeof count === 'number') return count
+  }
+  if (typeof control.visibleCountFromKey === 'string') {
+    const list = values[control.visibleCountFromKey]
+    if (Array.isArray(list)) return list.length
+  }
+  return control.options.length
+}
+
+const randomiseControlUpdate = (
+  control: ControlDefinition,
+  values: import('~/types/project').ControlValues
+): { key: string; value: import('~/types/project').ControlValue } | null => {
+  if (control.type === 'slider' && control.randomize) {
+    const range = control.randomRange ?? { min: control.min, max: control.max }
+    return { key: control.key, value: range.min + Math.random() * (range.max - range.min) }
+  }
+  if (control.type === 'select' && control.randomize) {
+    const pick = control.options[Math.floor(Math.random() * control.options.length)]
+    return pick ? { key: control.key, value: pick.value as string | number } : null
+  }
+  if (control.type === 'toggle' && control.randomize) {
+    return { key: control.key, value: Math.random() < 0.5 }
+  }
+  if (control.type === 'checkbox-group' && control.randomize) {
+    const visibleCount = resolveCheckboxVisibleCount(control, values)
+    if (!visibleCount) return null
+    const raw = values[control.key]
+    const currentCount = Array.isArray(raw) ? raw.length : 3
+    const countRange = control.randomCount ?? { min: currentCount, max: currentCount }
+    const targetCount = Math.round(countRange.min + Math.random() * (countRange.max - countRange.min))
+    const locked = lockedCheckboxItems.value.get(control.key) ?? new Set<number>()
+    const lockedVisible = [...locked].filter(i => i < visibleCount)
+    const unlockedIndices = Array.from({ length: visibleCount }, (_, i) => i).filter(i => !locked.has(i))
+    const remainingSlots = Math.max(0, Math.max(targetCount, lockedVisible.length) - lockedVisible.length)
+    const picks = pickRandom(unlockedIndices, Math.min(remainingSlots, unlockedIndices.length))
+    return { key: control.key, value: [...lockedVisible, ...picks].sort((a, b) => a - b) }
+  }
+  return null
+}
+
+const runRandomise = () => {
+  const updates = randomizableControls.value
+    .filter(c => !isLocked(c.key))
+    .map(c => randomiseControlUpdate(c, controlValues.value))
+    .filter((u): u is NonNullable<typeof u> => u !== null)
+  if (updates.length) batchUpdateControls(updates)
+}
+
+const runGroupRandomise = (section: ControlSection) => {
+  const updates = section.controls
+    .filter(c => 'randomize' in c && c.randomize && !isLocked(c.key))
+    .map(c => randomiseControlUpdate(c as ControlDefinition, controlValues.value))
+    .filter((u): u is NonNullable<typeof u> => u !== null)
   if (updates.length) batchUpdateControls(updates)
 }
 const panelStateStorageKey = computed(() => {
@@ -283,6 +396,7 @@ interface ControlSection {
   controls: ControlDefinition[]
   collapsible: boolean
   defaultOpen: boolean
+  randomize?: boolean
   visibleWhenSelectKey?: string
   visibleWhenSelectValue?: ControlValue
   visibleWhenSelectValues?: ControlValue[]
@@ -347,6 +461,7 @@ const normalizedSections = computed<ControlSection[]>(() => {
         controls: control.controls,
         collapsible: control.collapsible ?? true,
         defaultOpen: control.defaultOpen ?? true,
+        randomize: control.randomize,
         visibleWhenSelectKey: control.visibleWhenSelectKey,
         visibleWhenSelectValue: control.visibleWhenSelectValue,
         visibleWhenSelectValues: control.visibleWhenSelectValues

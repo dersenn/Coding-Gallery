@@ -26,6 +26,7 @@ The stable interface between framework and sketch. Every sketch receives this as
   theme,           // palette, colors
   onControlChange, // register a callback for when controls change
   registerAction,  // register named actions (download-svg etc.)
+  setControls,     // programmatically set control values without touching the URL
   runtime          // sketch-scoped runtime (animation loop, frame info)
 }
 ```
@@ -147,6 +148,21 @@ export const controls = [
 
 Access current values via `context.controls.speed` (or via destructured `controls`).
 Use `const c = controls` at top of draw for shorthand.
+
+### setControls
+
+Use `context.setControls(updates)` to programmatically override control values from inside a sketch — for init-time randomisation, viewport-responsive defaults, or any one-time setup:
+
+```js
+context.setControls([
+  { key: 'density', value: Math.random() * 0.8 + 0.1 },
+  { key: 'columns', value: frame.width > frame.height ? 12 : 6 },
+])
+```
+
+Values update the control panel UI immediately. No URL change occurs.
+
+**Do not call `setControls` on every frame** — it is intended for one-time setup (top of `draw()`, orientation change, etc.), not per-frame logic.
 
 ---
 

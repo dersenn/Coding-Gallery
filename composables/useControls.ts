@@ -47,6 +47,8 @@ export const flattenControls = (
   return flattened
 }
 
+const _silentUpdateActive = ref(false)
+
 export const useControls = () => {
   const route = useRoute()
   const router = useRouter()
@@ -386,6 +388,29 @@ export const useControls = () => {
     void router.replace({ query: newQuery })
   }
 
+  const silentUpdateControls = (updates: Array<{ key: string; value: ControlValue }>) => {
+    const activeSketchId = resolveScopedActiveLayer()
+    _silentUpdateActive.value = true
+    for (const { key, value } of updates) {
+      const constrained = applyControlConstraints(key, value)
+      if (key === 'activeSketch' || isSharedControlKey(key)) {
+        scopedControlValues.value.shared[key] = constrained
+      } else {
+        const scopedLayerId = resolveControlLayerScope(key, activeSketchId)
+        if (scopedLayerId) {
+          if (!scopedControlValues.value.sketches[scopedLayerId]) {
+            scopedControlValues.value.sketches[scopedLayerId] = {}
+          }
+          scopedControlValues.value.sketches[scopedLayerId]![key] = constrained
+        } else {
+          scopedControlValues.value.shared[key] = constrained
+        }
+      }
+    }
+    applyEffectiveControlValues(activeSketchId)
+    nextTick(() => { _silentUpdateActive.value = false })
+  }
+
   const commitControl = (key: string) => {
     const value = controlValues.value[key]
     if (value === undefined) return
@@ -500,10 +525,12 @@ export const useControls = () => {
 
   return {
     controlValues,
+    silentUpdateActive: _silentUpdateActive,
     initializeScopedControls,
     initializeControls,
     updateControl,
     batchUpdateControls,
+    silentUpdateControls,
     commitControl,
     resetControls,
     resetSketchControls,
