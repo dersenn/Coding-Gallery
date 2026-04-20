@@ -2,41 +2,45 @@ import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 import { lightTheme } from '~/utils/theme'
 
-export const controls = [
-  { type: 'slider', key: 'cols', label: 'Cols', default: 80, min: 2, max: 240, step: 1 },
-  { type: 'slider', key: 'rows', label: 'Rows', default: 120, min: 2, max: 360, step: 1 },
-  { type: 'slider', key: 'warpAmpMm', label: 'Warp amp (mm)', default: 20, min: 0, max: 80, step: 1 },
-  { type: 'slider', key: 'warpScale', label: 'Warp scale', default: 0.003, min: 0.0002, max: 0.02, step: 0.0001 },
-  { type: 'slider', key: 'warpScaleX', label: 'Warp scale X', default: 1, min: 0.2, max: 5, step: 0.05 },
-  { type: 'slider', key: 'warpScaleY', label: 'Warp scale Y', default: 1, min: 0.2, max: 5, step: 0.05 },
-  { type: 'slider', key: 'octaves', label: 'Octaves', default: 1, min: 1, max: 6, step: 1 },
-  { type: 'slider', key: 'lacunarity', label: 'Lacunarity', default: 2.0, min: 1.2, max: 4.0, step: 0.1 },
-  { type: 'slider', key: 'persistence', label: 'Persistence', default: 0.5, min: 0.1, max: 0.95, step: 0.05 },
-  { type: 'toggle', key: 'pinEdges', label: 'Pin edges', default: false },
-  { type: 'slider', key: 'pinFalloff', label: 'Pin falloff', default: 20, min: 0, max: 80, step: 1 },
-]
 
 
 // ----------------------------------------------------------------------------
 
 class MyGrid extends Grid {
+  constructor(config) {
+    super(config)
+    // this.lattice = this.buildLattice()
+  }
+
+  buildLattice() {
+    const { v } = shortcuts(this.utils)
+    const origin = this.at(0, 0).tl()
+    const cellW = this.at(0, 0).width
+    const cellH = this.at(0, 0).height
+    const lattice = Array.from({ length: this.rows + 1 }, (_, r) =>
+      Array.from({ length: this.cols + 1 }, (_, c) =>
+        v(origin.x + c * cellW, origin.y + r * cellH)
+      )
+    )
+    return lattice
+  }
+
   createCell(config) {
     return new MyCell(config)
   }
 }
 
 class MyCell extends GridCell {
-  constructor(config) {
-    super(config)
-  }
-
-  draw(canvas, stroke = lightTheme.foreground, fill = null) {
+  draw(canvas) {
     const { mm, pt } = canvas.print
 
     // a quick test to see if the cell is on the right edge
     // if (this.edgeFlags().right) {
     //   canvas.circle(this.tl(), this.width, fill)
     // }
+
+    const fill = lightTheme.palette[3]
+    const stroke = lightTheme.background
     
     const corners = this.geom.corners
     if (!corners) return
@@ -79,12 +83,12 @@ export function draw(context) {
   const pinEdges = c.pinEdges ?? false
   const pinFalloff = c.pinFalloff ?? 20
 
-  context.setControls([
-    {
-    key: 'warpAmpMm',
-    value: (rndInt(3, 15))
-    }
-  ])
+  // context.setControls([
+  //   {
+  //   key: 'warpAmpMm',
+  //   value: (rndInt(3, 15))
+  //   }
+  // ])
 
 
   // GRID
@@ -99,14 +103,7 @@ export function draw(context) {
   })
 
   // WARPING LATTICE
-  const origin = grid.at(0, 0).tl()
-  const cellW = grid.at(0, 0).width
-  const cellH = grid.at(0, 0).height
-  const lattice = Array.from({ length: grid.rows + 1 }, (_, r) =>
-    Array.from({ length: grid.cols + 1 }, (_, c) =>
-      v(origin.x + c * cellW, origin.y + r * cellH)
-    )
-  )
+  grid.lattice = grid.buildLattice()
 
   // WARPING NOISE (mean-subtracted)
   const warpAmp = mm(c.warpAmpMm ?? 20)
@@ -141,7 +138,7 @@ export function draw(context) {
   )
   for (let r = 0; r <= grid.rows; r++) {
     for (let c = 0; c <= grid.cols; c++) {
-      const p = lattice[r][c]
+      const p = grid.lattice[r][c]
       const nx = p.x * warpScale * warpScaleX
       const ny = p.y * warpScale * warpScaleY
       const dx = fbm2(nx + 100, ny + 100)
@@ -159,7 +156,7 @@ export function draw(context) {
   // Second pass: apply centered offsets
   for (let r = 0; r <= grid.rows; r++) {
     for (let c = 0; c <= grid.cols; c++) {
-      const p = lattice[r][c]
+      const p = grid.lattice[r][c]
       const { dx, dy } = offsets[r][c]
       let w = 1
       if (pinEdges) {
@@ -180,10 +177,10 @@ export function draw(context) {
   grid.forEach((cell) => {
     const r = cell.row
     const c = cell.col
-    const tl = lattice[r][c]
-    const tr = lattice[r][c + 1]
-    const br = lattice[r + 1][c + 1]
-    const bl = lattice[r + 1][c]
+    const tl = grid.lattice[r][c]
+    const tr = grid.lattice[r][c + 1]
+    const br = grid.lattice[r + 1][c + 1]
+    const bl = grid.lattice[r + 1][c]
     cell.geom = {
       corners: [tl, tr, br, bl],
       center: v(
@@ -197,7 +194,7 @@ export function draw(context) {
   // DRAWING
   canvas.background(lightTheme.background)
   grid.forEach(cell => {
-    cell.draw(canvas, color)
+    cell.draw(canvas)
   })
 
 }
