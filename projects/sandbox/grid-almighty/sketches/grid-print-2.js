@@ -9,7 +9,6 @@ import { lightTheme } from '~/utils/theme'
 class MyGrid extends Grid {
   constructor(config) {
     super(config)
-    // this.lattice = this.buildLattice()
   }
 
   buildLattice() {
@@ -32,6 +31,7 @@ class MyGrid extends Grid {
 
 class MyCell extends GridCell {
   draw(canvas) {
+    const { v, vMid } = shortcuts(this.grid.utils)
     const { mm, pt } = canvas.print
 
     // a quick test to see if the cell is on the right edge
@@ -39,11 +39,12 @@ class MyCell extends GridCell {
     //   canvas.circle(this.tl(), this.width, fill)
     // }
 
-    const fill = lightTheme.palette[3]
-    const stroke = lightTheme.background
+    const fill = lightTheme.background
+    const stroke = lightTheme.foreground
     
     const corners = this.geom.corners
     if (!corners) return
+
     canvas.withContext(ctx => {
       ctx.beginPath()
       ctx.moveTo(corners[0].x, corners[0].y)
@@ -51,14 +52,21 @@ class MyCell extends GridCell {
         ctx.lineTo(corners[i].x, corners[i].y)
       }
       ctx.closePath()
-      if (fill) {
-        ctx.fillStyle = fill
-        ctx.fill()
-      }
-      ctx.strokeStyle = stroke
+      ctx.strokeStyle = lightTheme.background
       ctx.lineWidth = pt(1)
       ctx.stroke()
+      ctx.fillStyle = fill
+      ctx.fill()
     })
+
+    const ct = vMid(corners[0], corners[1])
+    const cr = vMid(corners[1], corners[2])
+    const cb = vMid(corners[2], corners[3])
+    const cl = vMid(corners[3], corners[0])
+
+    canvas.line(ct, cb, stroke)
+    // canvas.line(cl, cr, stroke, pt(1))
+
   }
 }
 
@@ -158,18 +166,39 @@ export function draw(context) {
     for (let c = 0; c <= grid.cols; c++) {
       const p = grid.lattice[r][c]
       const { dx, dy } = offsets[r][c]
-      let w = 1
+      let wx = 1
+      let wy = 1
+
       if (pinEdges) {
-        const dEdge = Math.min(c, r, grid.cols - c, grid.rows - r) // 0 at edge
         if (pinFalloff <= 0) {
-          w = dEdge === 0 ? 0 : 1
+          const dEdge = Math.min(c, r, grid.cols - c, grid.rows - r)
+          wx = wy = dEdge === 0 ? 0 : 1
         } else {
-          w = Math.max(0, Math.min(1, dEdge / pinFalloff))
+          const dH = Math.min(c, grid.cols - c)
+          const dV = Math.min(r, grid.rows - r)
+          const tH = Math.max(0, Math.min(1, dH / pinFalloff))
+          const tV = Math.max(0, Math.min(1, dV / pinFalloff))
+
+          // cubic ease-out
+          wx = 1 - (1 - tH) ** 3
+          wy = 1 - (1 - tV) ** 3
+
+          // cubic ease-in
+          // wx = tH ** 3
+          // wy = tV ** 3
+
+          // power
+          // wx = tH ** .5
+          // wy = tV ** .5
+
+          // smootherstep
+          // wx = tH * tH * tH * (tH * (tH * 6 - 15) + 10)
+          // wy = tV * tV * tV * (tV * (tV * 6 - 15) + 10)
         }
-        w = w * w // ease-in (optional)
       }
-      p.x += (dx - meanDx) * warpAmp * w
-      p.y += (dy - meanDy) * warpAmp * w
+
+      p.x += (dx - meanDx) * warpAmp * wx
+      p.y += (dy - meanDy) * warpAmp * wy
     }
   }
 

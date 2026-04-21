@@ -20,6 +20,7 @@ class MyCell extends GridCell {
     const { mm } = canvas.print
 
     const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
+    // const fill = lightTheme.foreground
 
     // const parity = (this.col + this.row) % 3
     const parity = rndInt(0, 3)
@@ -112,7 +113,7 @@ export function draw(context) {
 
   // DRAWING
 
-  canvas.background(lightTheme.background)
+  canvas.background('#fff')
 
   terminals.forEach(cell => {
     cell.draw(canvas, colors, maxLevel, halftoneSpacing)
