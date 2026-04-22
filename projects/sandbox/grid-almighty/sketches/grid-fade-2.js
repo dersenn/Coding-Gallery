@@ -60,7 +60,7 @@ export function draw(context) {
   const colors = pickMany(lightTheme.palette, maxLevel + 2)
 
   let spacing = c.spacing ?? 1
-  // spacing = canvas.pixelRatio < 2 ? spacing : spacing / 2
+  spacing = canvas.pixelRatio < 2 ? spacing : spacing / 2
   
   const grid = new MyGrid({
     cols,

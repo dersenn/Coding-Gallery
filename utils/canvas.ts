@@ -771,6 +771,8 @@ export class Canvas {
     density: (nx: number, ny: number) => number,
     options: HalftoneOptions = {}
   ): void {
+
+
     const { spacing = 4, rng = Math.random } = options
     const w = Math.ceil(width)
     const h = Math.ceil(height)
@@ -779,22 +781,15 @@ export class Canvas {
 
     this.withContext(ctx => {
       ctx.fillStyle = color
-      const path = new Path2D()
       for (let py = 0; py < h; py += spacing) {
+        const path = new Path2D()
         for (let px = 0; px < w; px += spacing) {
           if (rng() < density(px / w, py / h)) {
             path.rect(ox + px, oy + py, spacing, spacing)
           }
         }
+        ctx.fill(path)
       }
-      /* clip to the rect, so that the halftone is only drawn within the rect */
-      /* but leaves clipped pixels, not suitable for bigger sizings */
-      // ctx.save()
-      // ctx.beginPath()
-      // ctx.rect(ox, oy, w, h)
-      // ctx.clip()
-      ctx.fill(path)
-      // ctx.restore()
     })
   }
 
