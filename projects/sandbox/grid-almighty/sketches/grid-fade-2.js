@@ -31,7 +31,7 @@ class MyCell extends GridCell {
       ? (nx, ny) => centerBell(ny, k)
       : (nx, ny) => 1 - centerBell(ny, k)
 
-    console.log(this.grid)
+    // console.log(this.grid)
 
     const fill = this.col % 2 === 0 && this.row % 2 === 0 ? colors[this.level] : colors[this.level + 1]
     // const fill = theme.palette[this.level]
@@ -60,7 +60,7 @@ export function draw(context) {
   const colors = pickMany(lightTheme.palette, maxLevel + 2)
 
   let spacing = c.spacing ?? 1
-  spacing = canvas.pixelRatio < 2 ? spacing : spacing / 2
+  // spacing = canvas.pixelRatio < 2 ? spacing : spacing / 2
   
   const grid = new MyGrid({
     cols,
