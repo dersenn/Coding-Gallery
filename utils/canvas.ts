@@ -772,25 +772,45 @@ export class Canvas {
     options: HalftoneOptions = {}
   ): void {
 
-
     const { spacing = 4, rng = Math.random } = options
     const w = Math.ceil(width)
     const h = Math.ceil(height)
     const ox = this.snapX(at.x)
     const oy = this.snapY(at.y)
+    const step = Number.isInteger(spacing) ? spacing : Math.max(1, Math.round(spacing))  // ← here
 
     this.withContext(ctx => {
       ctx.fillStyle = color
-      for (let py = 0; py < h; py += spacing) {
-        const path = new Path2D()
-        for (let px = 0; px < w; px += spacing) {
+      for (let py = 0; py < h; py += step) {
+        const rowPath = new Path2D()
+        for (let px = 0; px < w; px += step) {
           if (rng() < density(px / w, py / h)) {
-            path.rect(ox + px, oy + py, spacing, spacing)
+            rowPath.rect(ox + px, oy + py, step, step)
           }
         }
-        ctx.fill(path)
+        ctx.fill(rowPath)
       }
     })
+
+    // Without Snapping
+    // const { spacing = 4, rng = Math.random } = options
+    // const w = Math.ceil(width)
+    // const h = Math.ceil(height)
+    // const ox = this.snapX(at.x)
+    // const oy = this.snapY(at.y)
+
+    // this.withContext(ctx => {
+    //   ctx.fillStyle = color
+    //   for (let py = 0; py < h; py += spacing) {
+    //     const path = new Path2D()
+    //     for (let px = 0; px < w; px += spacing) {
+    //       if (rng() < density(px / w, py / h)) {
+    //         path.rect(ox + px, oy + py, spacing, spacing)
+    //       }
+    //     }
+    //     ctx.fill(path)
+    //   }
+    // })
   }
 
   private pngCrc(data: Uint8Array): number {
