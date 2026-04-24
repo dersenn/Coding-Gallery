@@ -10,8 +10,8 @@
       "noise"
     ],
     "hidden": false,
-    "configFile": "/projects/sandbox/patchwork/project.config.ts",
-    "entryFile": "/projects/sandbox/patchwork/index.ts"
+    "configFile": "/projects/patchwork/project.config.ts",
+    "entryFile": "/projects/patchwork/index.ts"
   },
   {
     "id": "anni",
@@ -24,8 +24,8 @@
     ],
     "hidden": false,
     "prefersTheme": "light",
-    "configFile": "/projects/sandbox/anni/project.config.ts",
-    "entryFile": "/projects/sandbox/anni/index.ts"
+    "configFile": "/projects/anni/project.config.ts",
+    "entryFile": "/projects/anni/index.ts"
   },
   {
     "id": "grid-almighty",
@@ -37,8 +37,8 @@
       "grid"
     ],
     "hidden": false,
-    "configFile": "/projects/sandbox/grid-almighty/project.config.ts",
-    "entryFile": "/projects/sandbox/grid-almighty/index.ts"
+    "configFile": "/projects/grid-almighty/project.config.ts",
+    "entryFile": "/projects/grid-almighty/index.ts"
   },
   {
     "id": "this-is-water",
@@ -51,8 +51,8 @@
       "animation"
     ],
     "hidden": false,
-    "configFile": "/projects/sandbox/this-is-water/project.config.ts",
-    "entryFile": "/projects/sandbox/this-is-water/index.ts"
+    "configFile": "/projects/this-is-water/project.config.ts",
+    "entryFile": "/projects/this-is-water/index.ts"
   },
   {
     "id": "pearlymats",
@@ -65,8 +65,8 @@
       "grid"
     ],
     "hidden": false,
-    "configFile": "/projects/sandbox/pearlymats/project.config.ts",
-    "entryFile": "/projects/sandbox/pearlymats/index.ts"
+    "configFile": "/projects/pearlymats/project.config.ts",
+    "entryFile": "/projects/pearlymats/index.ts"
   },
   {
     "id": "voronoi",
@@ -80,8 +80,8 @@
     ],
     "hidden": false,
     "noControls": true,
-    "configFile": "/projects/sandbox/voronoi/project.config.ts",
-    "entryFile": "/projects/sandbox/voronoi/index.ts"
+    "configFile": "/projects/voronoi/project.config.ts",
+    "entryFile": "/projects/voronoi/index.ts"
   },
   {
     "id": "bezier-lab",
@@ -95,8 +95,8 @@
       "subdivision"
     ],
     "hidden": false,
-    "configFile": "/projects/sandbox/bezier-lab/project.config.ts",
-    "entryFile": "/projects/sandbox/bezier-lab/index.ts"
+    "configFile": "/projects/bezier-lab/project.config.ts",
+    "entryFile": "/projects/bezier-lab/index.ts"
   },
   {
     "id": "vera",
@@ -150,8 +150,8 @@
       "misc"
     ],
     "hidden": true,
-    "configFile": "/projects/sandbox/svg-misc/project.config.ts",
-    "entryFile": "/projects/sandbox/svg-misc/index.ts"
+    "configFile": "/projects/svg-misc/project.config.ts",
+    "entryFile": "/projects/svg-misc/index.ts"
   },
   {
     "id": "svg-animated-template",
