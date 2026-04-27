@@ -19,7 +19,8 @@ class MyCell extends GridCell {
     const { curve, rnd, rndInt } = shortcuts(this.grid.utils)
     const { mm } = canvas.print
 
-    const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
+    const fill = (this.col + this.row) % 2 === 0 ? '#000' : '#000'
+    // const fill = (this.col + this.row) % 2 === 0 ? colors[0] : colors[1]
     // const fill = lightTheme.foreground
 
     // const parity = (this.col + this.row) % 3
@@ -119,7 +120,7 @@ export function draw(context) {
     cell.draw(canvas, colors, maxLevel, halftoneSpacing)
   })
 
-  canvas.text(utils.seed.current, v(mm(9), mm(287)), colors[0], { fontSize: pt(12), fontFamily: 'Helvetica' })
+  canvas.text(utils.seed.current, v(mm(9), mm(287)), '#000', { fontSize: pt(12), fontFamily: 'Helvetica' })
 
   // drawTrimBox(canvas.ctx)
 }

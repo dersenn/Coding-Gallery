@@ -11,6 +11,10 @@ class MyGrid extends Grid {
     super(config)
   }
 
+  createCell(config) {
+    return new MyCell(config)
+  }
+
   buildLattice() {
     const { v } = shortcuts(this.utils)
     const origin = this.at(0, 0).tl()
@@ -22,10 +26,6 @@ class MyGrid extends Grid {
       )
     )
     return lattice
-  }
-
-  createCell(config) {
-    return new MyCell(config)
   }
 }
 
@@ -53,7 +53,7 @@ class MyCell extends GridCell {
       }
       ctx.closePath()
       ctx.strokeStyle = lightTheme.background
-      ctx.lineWidth = pt(1)
+      ctx.lineWidth = pt(0)
       ctx.stroke()
       ctx.fillStyle = fill
       ctx.fill()
@@ -64,7 +64,7 @@ class MyCell extends GridCell {
     const cb = vMid(corners[2], corners[3])
     const cl = vMid(corners[3], corners[0])
 
-    canvas.line(ct, cb, stroke)
+    canvas.line(ct, cb, stroke, pt(1))
     // canvas.line(cl, cr, stroke, pt(1))
 
   }
