@@ -110,7 +110,7 @@ class MyGrid extends Grid {
 }
 
 class MyCell extends GridCell {
-  draw(canvas, drawAmp) {
+  draw(canvas, drawAmp, colorAmp) {
     const { v, vMid } = shortcuts(this.grid.utils)
     const { mm, pt } = canvas.print
 
@@ -122,7 +122,7 @@ class MyCell extends GridCell {
     // Noise is already normalized to [0, 1] by `makeNoiseField` (signed: false).
     // Map it to a hue wheel.
     const hue = (this.noiseValue ?? 0) * 360
-    const fill = Color.fromHsl(hue, 70, 60, drawAmp).toRgbaString()
+    const fill = Color.fromHsl(hue, 70, 60, colorAmp).toRgbaString()
     const stroke = Color.fromHsl((hue + 180) % 360, 60, 25, 1).toRgbaString()
     
     const corners = this.geom.corners
@@ -186,10 +186,12 @@ export function draw(context) {
     utils,
   })
 
-  // WARPING NOISE
+
   const warpAmp = mm(c.warpAmpMm ?? 20)
   const drawAmp = c.drawAmp ?? 1
-  
+  const colorAmp = c.colorAmp ?? 1
+
+  // WARPING NOISE
   const { simplex2 } = shortcuts(utils)
 
   const fbm2 = noiseField(simplex2, { 
@@ -213,7 +215,7 @@ export function draw(context) {
   // DRAWING
   canvas.background(lightTheme.background)
   grid.forEach(cell => {
-    cell.draw(canvas, drawAmp)
+    cell.draw(canvas, drawAmp, colorAmp)
   })
 
 }
