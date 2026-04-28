@@ -1,5 +1,6 @@
 import { Grid, GridCell } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
+import { Color } from '~/utils/color'
 import { lightTheme } from '~/utils/theme'
 
 
@@ -118,8 +119,11 @@ class MyCell extends GridCell {
     //   canvas.circle(this.tl(), this.width, fill)
     // }
 
-    const fill = lightTheme.background
-    const stroke = lightTheme.foreground
+    // Noise is already normalized to [0, 1] by `makeNoiseField` (signed: false).
+    // Map it to a hue wheel.
+    const hue = (this.noiseValue ?? 0) * 360
+    const fill = Color.fromHsl(hue, 70, 60, drawAmp).toRgbaString()
+    const stroke = Color.fromHsl((hue + 180) % 360, 60, 25, 1).toRgbaString()
     
     const corners = this.geom.corners
     if (!corners) return
