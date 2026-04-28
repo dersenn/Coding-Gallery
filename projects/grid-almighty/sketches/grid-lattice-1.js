@@ -101,17 +101,17 @@ class MyGrid extends Grid {
     })
   }
 
-  assignCellNoise({ fbm2, warpScale, warpScaleX, warpScaleY, warpAmp }) {
+  assignCellNoise({ fbm2, warpScale, warpScaleX, warpScaleY }) {
     this.forEach((cell) => {
       const { center } = cell.geom
-      cell.noiseValue = fbm2(center.x * warpScale * warpScaleX * warpAmp, center.y * warpScale * warpScaleY * warpAmp)
+      cell.noiseValue = fbm2(center.x * warpScale * warpScaleX, center.y * warpScale * warpScaleY)
     })
   }
 
 }
 
 class MyCell extends GridCell {
-  draw(canvas) {
+  draw(canvas, warpAmp) {
     const { v, vMid } = shortcuts(this.grid.utils)
     const { mm, pt } = canvas.print
 
@@ -145,7 +145,7 @@ class MyCell extends GridCell {
     const cb = vMid(corners[2], corners[3])
     const cl = vMid(corners[3], corners[0])
 
-    canvas.line(ct, cb, stroke, pt(10 *this.noiseValue))
+    canvas.line(ct, cb, stroke, pt(.3 * this.noiseValue * warpAmp))
     // canvas.line(cl, cr, stroke, pt(1))
 
   }
@@ -215,14 +215,14 @@ export function draw(context) {
   grid.lattice = grid.buildLattice()
   grid.warpLattice({ fbm2, warpScale, warpScaleX, warpScaleY, warpAmp, pinEdges, pinFalloff })
   grid.assignCellGeometry()
-  grid.assignCellNoise({ fbm2, warpScale, warpScaleX, warpScaleY, warpAmp })
+  grid.assignCellNoise({ fbm2, warpScale, warpScaleX, warpScaleY })
 
-  console.log(grid)
+  // console.log(grid)
 
   // DRAWING
   canvas.background(lightTheme.background)
   grid.forEach(cell => {
-    cell.draw(canvas)
+    cell.draw(canvas, warpAmp)
   })
 
 }
