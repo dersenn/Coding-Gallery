@@ -109,7 +109,7 @@ class MyGrid extends Grid {
 }
 
 class MyCell extends GridCell {
-  draw(canvas, warpAmp) {
+  draw(canvas, drawAmp) {
     const { v, vMid } = shortcuts(this.grid.utils)
     const { mm, pt } = canvas.print
 
@@ -143,7 +143,7 @@ class MyCell extends GridCell {
     const cb = vMid(corners[2], corners[3])
     const cl = vMid(corners[3], corners[0])
 
-    canvas.line(ct, cb, stroke, pt(.3 * this.noiseValue * warpAmp))
+    canvas.line(ct, cb, stroke, pt(.3 * this.noiseValue * drawAmp))
     // canvas.line(cl, cr, stroke, pt(1))
 
   }
@@ -184,6 +184,7 @@ export function draw(context) {
 
   // WARPING NOISE
   const warpAmp = mm(c.warpAmpMm ?? 20)
+  const drawAmp = c.drawAmp ?? 1
   
   const { simplex2 } = shortcuts(utils)
 
@@ -208,7 +209,7 @@ export function draw(context) {
   // DRAWING
   canvas.background(lightTheme.background)
   grid.forEach(cell => {
-    cell.draw(canvas, warpAmp)
+    cell.draw(canvas, drawAmp)
   })
 
 }

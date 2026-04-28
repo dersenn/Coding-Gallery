@@ -279,7 +279,7 @@ const NOISE_CORE_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
-const GRID_PRINT_2_CONTROLS: ProjectControlDefinition[] = [
+const GRID_LATTICE_1_CONTROLS: ProjectControlDefinition[] = [
   {
     id: 'grid',
     label: 'Grid',
@@ -298,6 +298,7 @@ const GRID_PRINT_2_CONTROLS: ProjectControlDefinition[] = [
     collapsible: true,
     defaultOpen: true,
     controls: [
+      { key: 'drawAmp', label: 'Draw amp', type: 'slider', default: 1, min: 0, max: 100, step: 1 },
       { key: 'warpAmpMm', label: 'Warp amp (mm)', type: 'slider', default: 9, min: 0, max: 80, step: 1 },
       { key: 'warpScale', label: 'Warp scale', type: 'slider', default: 0.003, min: 0.0002, max: 0.02, step: 0.0001 },
       { key: 'warpScaleX', label: 'Warp scale X', type: 'slider', default: 1, min: 0.2, max: 5, step: 0.05 },
@@ -388,7 +389,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { print: { width: 210, height: 297, unit: 'mm', dpi: 144, bleed: 0 }, padding: '3vmin' },
     module: './sketches/grid-lattice-1.js',
     actions: GRID_ACTIONS,
-    controls: GRID_PRINT_2_CONTROLS,
+    controls: GRID_LATTICE_1_CONTROLS,
   },
   {
     id: 'noisy-automata',
