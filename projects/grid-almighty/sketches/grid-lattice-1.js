@@ -28,7 +28,7 @@ class MyGrid extends Grid {
     return lattice
   }
 
-  warpLattice({ fbm2, warpScale, warpScaleX, warpScaleY, warpAmp, pinEdges, pinFalloff }) {
+  warpLattice({ fbm2, warpAmp, pinEdges, pinFalloff }) {
 
     // First pass: compute offsets + mean
     let sumDx = 0, sumDy = 0
@@ -39,10 +39,8 @@ class MyGrid extends Grid {
     for (let r = 0; r <= this.rows; r++) {
       for (let c = 0; c <= this.cols; c++) {
         const p = this.lattice[r][c]
-        const nx = p.x * warpScale * warpScaleX
-        const ny = p.y * warpScale * warpScaleY
-        const dx = fbm2(nx + 100, ny + 100)
-        const dy = fbm2(nx - 100, ny - 100)
+        const dx = fbm2(p.x, p.y + 100)
+        const dy = fbm2(p.x - 100, p.y)
         offsets[r][c] = { dx, dy }
         sumDx += dx
         sumDy += dy
@@ -101,10 +99,10 @@ class MyGrid extends Grid {
     })
   }
 
-  assignCellNoise({ fbm2, warpScale, warpScaleX, warpScaleY }) {
+  assignCellNoise({ fbm2}) {
     this.forEach((cell) => {
       const { center } = cell.geom
-      cell.noiseValue = fbm2(center.x * warpScale * warpScaleX, center.y * warpScale * warpScaleY)
+      cell.noiseValue = fbm2(center.x, center.y)
     })
   }
 
@@ -156,7 +154,7 @@ class MyCell extends GridCell {
 
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { v, rndInt } = shortcuts(utils)
+  const { v, rndInt, noiseField } = shortcuts(utils)
   if (!canvas) return
 
   const { mm, pt } = canvas.print
@@ -186,36 +184,24 @@ export function draw(context) {
 
   // WARPING NOISE
   const warpAmp = mm(c.warpAmpMm ?? 20)
-  const warpScale = c.warpScale ?? 0.003
-  const warpScaleX = c.warpScaleX ?? 1
-  const warpScaleY = c.warpScaleY ?? 1
-  const octaves = Math.max(1, Math.floor(c.octaves ?? 1))
-  const lacunarity = c.lacunarity ?? 2.0
-  const persistence = c.persistence ?? 0.5
   
   const { simplex2 } = shortcuts(utils)
 
-  const fbm2 = (x, y) => {
-    let sum = 0
-    let amp = 1
-    let freq = 1
-    let norm = 0
-    for (let i = 0; i < octaves; i++) {
-      sum += simplex2(x * freq, y * freq) * amp
-      norm += amp
-      amp *= persistence
-      freq *= lacunarity
-    }
-    return norm > 0 ? sum / norm : 0
-  }
-
+  const fbm2 = noiseField(simplex2, { 
+    frequency: c.warpScale ?? 0.003,
+    frequencyX: c.warpScaleX ?? 1,
+    frequencyY: c.warpScaleY ?? 1,
+    octaves: Math.max(1, Math.floor(c.octaves ?? 1)),
+    lacunarity: c.lacunarity ?? 2.0,
+    persistence: c.persistence ?? 0.5,
+  })
 
 
   // BUILD WARPING LATTICE & CELL GEOMETRY
   grid.lattice = grid.buildLattice()
-  grid.warpLattice({ fbm2, warpScale, warpScaleX, warpScaleY, warpAmp, pinEdges, pinFalloff })
+  grid.warpLattice({ fbm2, warpAmp, pinEdges, pinFalloff })
   grid.assignCellGeometry()
-  grid.assignCellNoise({ fbm2, warpScale, warpScaleX, warpScaleY })
+  grid.assignCellNoise({ fbm2 })
 
   // console.log(grid)
 

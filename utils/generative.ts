@@ -350,6 +350,40 @@ function perlin3D(x: number, y: number, z: number): number {
   return (noise3D(x, y, z) + 1) / 2 // Normalize to 0-1
 }
 
+// Make a noise field from a simplex noise function. For Grids etc.
+export function makeNoiseField(
+  simplex2: (x: number, y: number) => number,
+  {
+    frequency = 1,
+    frequencyX = 1,
+    frequencyY = 1,
+    octaves = 1,
+    lacunarity = 2,
+    persistence = 0.5,
+    signed = false,
+  }: {
+    frequency?: number
+    frequencyX?: number
+    frequencyY?: number
+    octaves?: number
+    lacunarity?: number
+    persistence?: number
+    signed?: boolean
+  } = {}
+): (x: number, y: number) => number {
+  return (x, y) => {
+    let sum = 0, amp = 1, freq = 1, norm = 0
+    for (let i = 0; i < octaves; i++) {
+      sum += simplex2(x * frequency * frequencyX * freq, y * frequency * frequencyY * freq) * amp
+      norm += amp
+      amp *= persistence
+      freq *= lacunarity
+    }
+    const raw = norm > 0 ? sum / norm : 0
+    return signed ? raw : (raw + 1) / 2
+  }
+}
+
 // Create generative utilities instance
 export function createGenerativeUtils(seedString?: string): GenerativeUtils {
   // Initialize hash with provided seed or generate new one

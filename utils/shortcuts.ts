@@ -57,6 +57,7 @@ export function shortcuts(utils: GenerativeUtils) {
     noise3: utils.noise.perlin3D, // noise3(x, y, z) => number [-1, 1]
     simplex2: utils.noise.simplex2D, // simplex2(x, y) => number [-1, 1]
     simplex3: utils.noise.simplex3D, // simplex3(x, y, z) => number [-1, 1]
+    noiseField: makeNoiseField,  // makeNoiseField(simplex2, config) => (x, y) => number
 
     // Array shortcuts
     shuffle: utils.array.shuffle, // shuffle(array) => array
