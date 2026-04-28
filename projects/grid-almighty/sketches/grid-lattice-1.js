@@ -124,7 +124,12 @@ class MyCell extends GridCell {
     const hue = (this.noiseValue ?? 0) * 360
     const fill = Color.fromHsl(hue, 70, 60, colorAmp).toRgbaString()
     const stroke = Color.fromHsl((hue + 180) % 360, 60, 25, 1).toRgbaString()
-    
+
+    // const fill = Color.fromHex(lightTheme.palette[2])?.withAlpha(1 - this.noiseValue).toRgbaString() ?? lightTheme.palette[2]
+    // const stroke = Color.fromHex(lightTheme.palette[3]).toRgbaString()
+
+
+
     const corners = this.geom.corners
     if (!corners) return
 
