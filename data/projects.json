@@ -107,30 +107,6 @@
     "configFile": "/projects/c4ta/svg/vera/project.config.ts"
   },
   {
-    "id": "canvas2d-sketch-template",
-    "title": "Canvas2D Sketch Template",
-    "description": "Canonical sketch-based canvas2d template with RAF loop, pause support, and draw(context) pattern",
-    "date": "2026-03",
-    "tags": [
-      "canvas2d",
-      "template"
-    ],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_canvas2d-layer-template/project.config.ts"
-  },
-  {
-    "id": "canvas2d-template",
-    "title": "Canvas2D Template",
-    "description": "Template",
-    "date": "2026-03",
-    "tags": [
-      "canvas2d",
-      "template"
-    ],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_canvas2d-template/project.config.ts"
-  },
-  {
     "id": "svg-misc",
     "title": "SVG Misc",
     "description": "SVG Misc",
@@ -141,68 +117,6 @@
     ],
     "hidden": true,
     "configFile": "/projects/svg-misc/project.config.ts"
-  },
-  {
-    "id": "svg-animated-template",
-    "title": "SVG Animated Template",
-    "description": "SVG Animated Template",
-    "date": "2026-02",
-    "tags": [
-      "svg",
-      "template"
-    ],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_svg-animated-template/project.config.ts"
-  },
-  {
-    "id": "svg-example",
-    "title": "SVG Showcase",
-    "description": "One cell per SVG primitive and path mode — a live reference for the engine",
-    "date": "2026-02",
-    "tags": [
-      "svg",
-      "grid",
-      "reference"
-    ],
-    "hidden": true,
-    "prefersTheme": "light",
-    "configFile": "/projects/_Templates/_svg-example/project.config.ts"
-  },
-  {
-    "id": "svg-template",
-    "title": "SVG Template",
-    "description": "SVG Template",
-    "date": "2026-02",
-    "tags": [
-      "svg",
-      "template"
-    ],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_svg-template/project.config.ts"
-  },
-  {
-    "id": "template",
-    "title": "P5 Template",
-    "description": "Template",
-    "date": "2026-02",
-    "tags": [
-      "template"
-    ],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_template/project.config.ts"
-  },
-  {
-    "id": "noise-field",
-    "title": "Perlin Noise Field",
-    "description": "Flow field visualization using Perlin noise",
-    "date": "2024-03",
-    "tags": [
-      "p5js",
-      "generative",
-      "noise"
-    ],
-    "hidden": true,
-    "configFile": "/projects/_Templates/_noise-field/project.config.ts"
   },
   {
     "id": "legacy-3d",
