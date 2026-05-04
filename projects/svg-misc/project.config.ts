@@ -31,7 +31,15 @@ const SKETCHES: ProjectSketchDefinition[] = [
     technique: 'svg',
     container: { mode: '3:4' },
     module: './sketches/mascara-lines.js',
+  },
+  {
+    id: 'spiral',
+    label: 'Spiral',
+    technique: 'svg',
+    container: { mode: '3:4' },
+    module: './sketches/spiral.js',
   }
+
 ]
 
 const definition: ProjectDefinition = {

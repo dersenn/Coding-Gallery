@@ -401,7 +401,10 @@ export class Path {
       let p0: Vec, p1: Vec, p2: Vec
       switch (i) {
         case 0:
-          p0 = pts[pts.length - 1]!
+          // For open paths, avoid wrapping endpoints (which kinks the start).
+          // Use the first point itself as the "previous" neighbor so the handle
+          // collapses toward the tangent defined by (p1 → p2).
+          p0 = close ? pts[pts.length - 1]! : pts[0]!
           p1 = pts[i]!
           p2 = pts[i + 1]!
           controlPoints.set(i, this.getControlPointsSpline(p0, p1, p2, t))
@@ -424,7 +427,9 @@ export class Path {
         case pts.length - 1:
           p0 = pts[i - 1]!
           p1 = pts[i]!
-          p2 = pts[0]!
+          // For open paths, avoid wrapping endpoints (which kinks the end).
+          // Use the last point itself as the "next" neighbor.
+          p2 = close ? pts[0]! : pts[pts.length - 1]!
           controlPoints.set(i, this.getControlPointsSpline(p0, p1, p2, t))
           if (close) {
             const cp0 = controlPoints.get(i - 1)!
