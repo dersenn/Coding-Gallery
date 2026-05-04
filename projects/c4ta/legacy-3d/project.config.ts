@@ -100,7 +100,6 @@ const SKETCHES: ProjectSketchDefinition[] = [
 ]
 
 const CONTAINER = { mode: 'full' as const }
-const TECHNIQUES = ['p5'] as const
 const DEFAULT_TECHNIQUE = 'p5' as const
 
 const CONTROLS: ProjectControlDefinition[] = []
@@ -119,11 +118,10 @@ const metadata = {
     "c4ta"
   ],
   "hidden": true
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches'>
 
 const definition: ProjectDefinition = {
   ...metadata,
-  techniques: [...TECHNIQUES],
   defaultTechnique: DEFAULT_TECHNIQUE,
   libraries: [],
   controls: CONTROLS,

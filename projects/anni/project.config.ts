@@ -11,7 +11,6 @@ const ANNI_LAYER_OPTIONS = [
 
 const ANNI_DEFAULT_LAYER = 'anni-1' as const
 const ANNI_CONTAINER = { mode: 'square' as const, padding: '3vmin' }
-const ANNI_TECHNIQUES = ['svg'] as const
 const ANNI_DEFAULT_TECHNIQUE = 'svg' as const
 
 const ANNI_CONTROLS: ProjectControlDefinition[] = [
@@ -63,11 +62,10 @@ const metadata = {
   ],
   "prefersTheme": "light",
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches'>
 
 const definition: ProjectDefinition = {
   ...metadata,
-  techniques: [...ANNI_TECHNIQUES],
   defaultTechnique: ANNI_DEFAULT_TECHNIQUE,
   libraries: [],
   controls: ANNI_CONTROLS,

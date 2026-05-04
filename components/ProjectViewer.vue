@@ -85,20 +85,12 @@ const DOWNLOAD_PNG_ACTION: ProjectActionDefinition = {
 
 const activeDefinition = ref<ProjectDefinition | null>(null)
 const hasSvgTechnique = computed(() => {
-  const definition = activeDefinition.value
-  const sketches = definition?.sketches ?? []
-  if (sketches.some((sketch) => sketch.technique === 'svg')) return true
-  const supported = definition?.supportedTechniques ?? []
-  if (supported.includes('svg')) return true
-  return Boolean(props.project.tags?.includes('svg'))
+  const sketches = activeDefinition.value?.sketches ?? []
+  return sketches.some((sketch) => sketch.technique === 'svg')
 })
 const hasCanvas2dTechnique = computed(() => {
-  const definition = activeDefinition.value
-  const sketches = definition?.sketches ?? []
-  if (sketches.some((sketch) => sketch.technique === 'canvas2d')) return true
-  const supported = definition?.supportedTechniques ?? []
-  if (supported.includes('canvas2d')) return true
-  return Boolean(props.project.tags?.includes('canvas2d'))
+  const sketches = activeDefinition.value?.sketches ?? []
+  return sketches.some((sketch) => sketch.technique === 'canvas2d')
 })
 const defaultSketchId = computed(() => {
   const sketches = activeDefinition.value?.sketches ?? []
@@ -131,13 +123,6 @@ const runtimeCapabilities = computed<RuntimeActionCapabilities>(() => {
     return {
       canDownloadSvg: activeSketch.technique === 'svg',
       canDownloadPng: activeSketch.technique === 'canvas2d'
-    }
-  }
-  const supported = definition?.supportedTechniques ?? []
-  if (supported.length > 0) {
-    return {
-      canDownloadSvg: supported.includes('svg'),
-      canDownloadPng: supported.includes('canvas2d')
     }
   }
   return {

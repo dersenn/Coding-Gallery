@@ -781,6 +781,10 @@ export class Canvas {
 
     this.withContext(ctx => {
       ctx.fillStyle = color
+      // Path2D is batched per row rather than as a single path for the whole region.
+      // A single large Path2D caused rendering hangs in Safari and Chrome at high
+      // dot counts — per-row batching avoids this while still reducing fill calls
+      // from one-per-dot to one-per-row.
       for (let py = 0; py < h; py += step) {
         const rowPath = new Path2D()
         for (let px = 0; px < w; px += step) {
@@ -791,26 +795,6 @@ export class Canvas {
         ctx.fill(rowPath)
       }
     })
-
-    // Without Snapping
-    // const { spacing = 4, rng = Math.random } = options
-    // const w = Math.ceil(width)
-    // const h = Math.ceil(height)
-    // const ox = this.snapX(at.x)
-    // const oy = this.snapY(at.y)
-
-    // this.withContext(ctx => {
-    //   ctx.fillStyle = color
-    //   for (let py = 0; py < h; py += spacing) {
-    //     const path = new Path2D()
-    //     for (let px = 0; px < w; px += spacing) {
-    //       if (rng() < density(px / w, py / h)) {
-    //         path.rect(ox + px, oy + py, spacing, spacing)
-    //       }
-    //     }
-    //     ctx.fill(path)
-    //   }
-    // })
   }
 
   private pngCrc(data: Uint8Array): number {

@@ -143,10 +143,9 @@ const metadata = {
     "noise"
   ],
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches'>
 
 const CONTAINER = { mode: 'full' as const }
-const TECHNIQUES = ['canvas2d'] as const
 const DEFAULT_TECHNIQUE = 'canvas2d' as const
 const CONTROLS: ProjectControlDefinition[] = []
 const ACTIONS: ProjectActionDefinition[] = []
@@ -166,7 +165,6 @@ const SKETCHES: ProjectSketchDefinition[] = [
 
 const definition: ProjectDefinition = {
   ...metadata,
-  techniques: [...TECHNIQUES],
   defaultTechnique: DEFAULT_TECHNIQUE,
   libraries: [],
   controls: CONTROLS,

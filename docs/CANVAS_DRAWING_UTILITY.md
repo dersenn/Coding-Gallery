@@ -81,7 +81,6 @@ export async function init(container: HTMLElement, context: ProjectContext): Pro
 ## Notes
 
 - Keep this utility intentionally compact for now; avoid adding advanced path/transform APIs until needed by at least one sketch.
-- p5 remains fully supported and is still a recommended option for rapid prototyping.
 - Point-based APIs expect `Vec` instances.
 - Rectangle drawing now defaults to device-pixel snapping (`rectSnap: 'device'`) to reduce hairline seams when tiled rects meet.
 - Override globally with `new Canvas({ ..., rectSnap: 'none' })` or per call with `rect(..., { snap: 'none' })` when fractional/soft edges are desired.

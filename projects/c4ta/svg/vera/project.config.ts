@@ -41,7 +41,6 @@ const SKETCHES: ProjectSketchDefinition[] = [
 ]
 
 const CONTAINER = 'square' as const
-const TECHNIQUES = ['svg'] as const
 const DEFAULT_TECHNIQUE = 'svg' as const
 
 const CONTROLS: ProjectControlDefinition[] = []
@@ -60,11 +59,10 @@ const metadata = {
   ],
   "prefersTheme": "light",
   "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'techniques'>
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches'>
 
 const definition: ProjectDefinition = {
   ...metadata,
-  techniques: [...TECHNIQUES],
   defaultTechnique: DEFAULT_TECHNIQUE,
   libraries: [],
   controls: CONTROLS,

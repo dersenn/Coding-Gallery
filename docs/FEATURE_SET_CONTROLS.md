@@ -1,116 +1,44 @@
-# Feature: `setControls` on `ProjectContext`
+# `context.setControls`
 
-## Overview
+Programmatically update control values from inside a sketch without touching
+the URL or browser history. Intended for init-time setup: seed-deterministic
+randomisation, viewport-responsive defaults, or any one-time override.
 
-Add a `setControls` function to `ProjectContext` that sketches can call to update control values
-without touching the URL or browser history. Covers init-time randomisation, viewport-responsive
-defaults, and any other programmatic overrides.
-
-**Affects 3 files:**
-- `composables/useControls.ts`
-- `types/project.ts` (verify exact path before editing)
-- `components/ProjectViewer.vue`
-
----
-
-## 1. `useControls.ts` — add `silentUpdateControls`
-
-Add a new function alongside `batchUpdateControls`. It shares the same state-writing logic but
-skips `syncQueryWithControl` entirely.
+## Signature
 
 ```ts
-const silentUpdateControls = (updates: Array<{ key: string; value: ControlValue }>) => {
-  const activeSketchId = resolveScopedActiveLayer()
-  for (const { key, value } of updates) {
-    const constrained = applyControlConstraints(key, value)
-    if (key === 'activeSketch' || isSharedControlKey(key)) {
-      scopedControlValues.value.shared[key] = constrained
-    } else {
-      const scopedLayerId = resolveControlLayerScope(key, activeSketchId)
-      if (scopedLayerId) {
-        if (!scopedControlValues.value.sketches[scopedLayerId]) {
-          scopedControlValues.value.sketches[scopedLayerId] = {}
-        }
-        scopedControlValues.value.sketches[scopedLayerId]![key] = constrained
-      } else {
-        scopedControlValues.value.shared[key] = constrained
-      }
-    }
-  }
-  applyEffectiveControlValues(activeSketchId)
+context.setControls(updates: Array<{ key: string; value: ControlValue }>): void
+```
+
+## Usage
+
+```js
+export function draw(context) {
+  const { canvas, controls, utils, setControls } = context
+
+  // One-time init — call at the top of draw(), not inside runtime.loop()
+  utils.seed.reset()
+  setControls([
+    { key: 'density', value: utils.seed.randomRange(0.1, 0.9) },
+    { key: 'columns', value: canvas.w > canvas.h ? 12 : 6 },
+  ])
+
+  // ... rest of sketch
 }
 ```
 
-Add to the return object at the bottom of `useControls`:
+## Behaviour
 
-```ts
-return {
-  // ...existing exports unchanged...
-  silentUpdateControls,
-}
-```
+- Values are applied immediately and reflected in the control panel UI.
+- The normal `onControlChange` callback fires, so a redraw triggers if called
+  from `draw()`.
+- No URL change occurs. Seeds and control state remain independent.
+- Calling `setControls` on every frame or inside `runtime.loop()` is wasteful —
+  use it for one-time setup only.
 
-> **Do not modify `batchUpdateControls`** — it is intentionally URL-syncing and is used by the
-> control panel.
+## Implementation
 
----
-
-## 2. `types/project.ts` — extend `ProjectContext`
-
-Locate the `ProjectContext` interface and add one property:
-
-```ts
-setControls: (updates: Array<{ key: string; value: ControlValue }>) => void
-```
-
----
-
-## 3. `ProjectViewer.vue` — wire into context
-
-**Step 1.** Destructure `silentUpdateControls` from `useControls()` at the top of the component,
-alongside the existing destructure:
-
-```ts
-const { controlValues, initializeScopedControls, silentUpdateControls } = useControls()
-```
-
-**Step 2.** In `loadProject`, inside the context object passed to `initFromProjectDefinition`,
-add alongside `onControlChange` and `registerAction`:
-
-```ts
-setControls: (updates) => {
-  silentUpdateControls(updates)
-},
-```
-
----
-
-## Usage in a sketch
-
-```ts
-// Init-time randomisation
-context.setControls([
-  { key: 'density', value: Math.random() * 0.8 + 0.1 },
-  { key: 'rotation', value: Math.floor(Math.random() * 4) * 90 },
-])
-
-// Viewport-responsive defaults
-const isLandscape = frame.width > frame.height
-context.setControls([
-  { key: 'columns', value: isLandscape ? 12 : 6 },
-])
-```
-
-Values reflect immediately in the control panel UI and trigger the normal `onControlChange`
-callback, so a redraw fires if called from `init`. No URL changes.
-
----
-
-## Notes
-
-- `silentUpdateControls` is intentionally a separate function, not `batchUpdateControls` with a
-  flag — keeping them separate avoids a conditional and makes intent explicit.
-- No changes needed in `projectBootstrap.ts` — context is passed through as-is from
-  `ProjectViewer`, and sketch modules already receive it in full.
-- `setControls` called from `draw()` on every frame would be wasteful — it's intended for
-  one-time setup (init, orientation change, etc.), not per-frame logic.
+- `silentUpdateControls` in `composables/useControls.ts` — writes values without
+  calling `syncQueryWithControl`.
+- Wired into `ProjectContext` in `components/ProjectViewer.vue`.
+- `setControls` on `ProjectContext` in `types/project.ts`.

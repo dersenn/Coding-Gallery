@@ -158,7 +158,6 @@ export interface ProjectIndexEntry extends ProjectMetadata {
 }
 
 export interface ProjectDefinition extends ProjectMetadata {
-  techniques?: string[]
   defaultTechnique?: Technique
   container?: ContainerMode | ContainerConfig
   controls?: ProjectControlDefinition[]
@@ -171,7 +170,6 @@ export interface ProjectDefinition extends ProjectMetadata {
    */
   init?: (container: HTMLElement, context: ProjectContext) => Promise<CleanupFunction>
   theme?: ThemeOverride
-  supportedTechniques?: string[]
 }
 
 /**
@@ -184,7 +182,6 @@ export interface ProjectModule {
   actions?: ProjectActionDefinition[]
   theme?: ThemeOverride
   container?: ContainerMode | ContainerConfig
-  supportedTechniques?: Technique[]
   defaultTechnique?: Technique
   sketches?: ProjectSketchDefinition[]
 }
