@@ -5,8 +5,7 @@
 //   npm run generate:projects           — write data/projects.json
 //   npm run generate:projects -- --dry-run  — preview output without writing
 
-import { readFile, writeFile, access, readdir } from 'node:fs/promises'
-import { constants } from 'node:fs'
+import { readFile, writeFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -32,15 +31,6 @@ const parseMetadataFromConfig = (source, configRel) => {
     return JSON.parse(match[1])
   } catch (err) {
     throw new Error(`metadata block is not valid JSON: ${String(err)}`)
-  }
-}
-
-const fileExists = async (p) => {
-  try {
-    await access(p, constants.F_OK)
-    return true
-  } catch {
-    return false
   }
 }
 
@@ -78,19 +68,6 @@ const run = async () => {
       continue
     }
 
-    // Determine entryFile: prefer index.ts, fall back to index.js.
-    const entryTs = path.join(projectDir, 'index.ts')
-    const entryJs = path.join(projectDir, 'index.js')
-    let entryFile
-    if (await fileExists(entryTs)) {
-      entryFile = toRootRelative(entryTs)
-    } else if (await fileExists(entryJs)) {
-      entryFile = toRootRelative(entryJs)
-    } else {
-      skipped.push(`${configRel}: no index.ts or index.js found`)
-      continue
-    }
-
     // Build the index entry.
     // Required fields first, optional fields only when present in metadata,
     // path pointers last.
@@ -104,8 +81,7 @@ const run = async () => {
       ...(metadata.noControls !== undefined ? { noControls: metadata.noControls } : {}),
       ...(metadata.prefersTheme !== undefined ? { prefersTheme: metadata.prefersTheme } : {}),
       ...(metadata.github !== undefined ? { github: metadata.github } : {}),
-      configFile: configRel,
-      entryFile
+      configFile: configRel
     }
     entries.push(entry)
   }

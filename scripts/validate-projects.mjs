@@ -41,17 +41,8 @@ const validateProjectIndexEntry = async (project) => {
   if (!/\/project\.config\.ts$/.test(project.configFile)) {
     throw new Error(`Project "${project.id}" configFile must target project.config.ts`)
   }
-  if (typeof project.entryFile !== 'string' || !project.entryFile.startsWith('/projects/')) {
-    throw new Error(`Project "${project.id}" must keep canonical entryFile under /projects/...`)
-  }
-  if (!/\/index\.(ts|js)$/.test(project.entryFile)) {
-    throw new Error(`Project "${project.id}" entryFile must target index.ts or index.js`)
-  }
-
   const configAbs = path.join(ROOT, project.configFile)
-  const entryAbs = path.join(ROOT, project.entryFile)
   await ensureFileExists(configAbs, `configFile for project "${project.id}"`)
-  await ensureFileExists(entryAbs, `entryFile for project "${project.id}"`)
   const configSource = await readFile(configAbs, 'utf8')
   const configMetadata = parseMetadataJsonFromConfig(configSource, project.configFile)
 

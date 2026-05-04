@@ -19,11 +19,9 @@ Minimal template for creating new p5.js projects in the gallery.
      "description": "A cool generative sketch",
      "date": "2026-03",
      "tags": ["p5js", "generative"],
-     "entryFile": "/projects/sandbox/my-sketch/index.ts",
      "configFile": "/projects/sandbox/my-sketch/project.config.ts"
    }
    ```
-   Keep `entryFile` canonical and define runtime behavior in `project.config.ts`.
 
 4. **Run and test**:
    ```bash

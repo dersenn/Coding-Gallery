@@ -31,7 +31,7 @@ SVG-specific sketch helpers.
 - `growing-things` was migrated as the pilot mixed-technique project (canvas2d + p5).
 - Strict metadata validation is available through `npm run validate:projects`.
 - Canonical runtime loading now uses per-project `project.config.ts`.
-- `data/projects.json` is a thin index with canonical `entryFile` + `configFile`.
+- `data/projects.json` is a thin index with canonical `configFile`.
 - `growing-things` is now the thin-config A-mode reference project.
 
 ## Current constraints
@@ -178,7 +178,6 @@ Concept sketch:
 ```json
 {
   "id": "grid-study",
-  "entryFile": "/projects/.../index.ts",
   "techniques": ["svg", "canvas2d"],
   "sketches": [
     { "id": "svg-grid", "technique": "svg" },
@@ -195,7 +194,6 @@ Recommended v1 schema direction:
 ```json
 {
   "id": "grid-study",
-  "entryFile": "/projects/grid-study/index.ts",
   "techniques": ["svg", "canvas2d"],
   "container": { "mode": "full" },
   "sketches": [

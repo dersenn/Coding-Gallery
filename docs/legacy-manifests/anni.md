@@ -6,7 +6,6 @@
 - Migration destination: `projects/svg/anni/project.config.ts` + `projects/svg/anni/sketches/*.js`
 - Canonical index pointers:
   - `configFile`: `/projects/svg/anni/project.config.ts`
-  - `entryFile`: `/projects/svg/anni/index.ts`
 
 ## Status
 

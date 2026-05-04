@@ -342,13 +342,11 @@ Then add a thin entry to `data/projects.json`:
   "description": "A cool generative sketch",
   "date": "2026-03",
   "tags": ["canvas2d", "generative"],
-  "entryFile": "/projects/sandbox/my-new-project/index.ts",
   "configFile": "/projects/sandbox/my-new-project/project.config.ts"
 }
 ```
 
 `configFile` is the canonical runtime definition.
-`entryFile` remains in the index as canonical source path for structure/taxonomy validation.
 
 **Optional fields:**
 - `"hidden": true` - Hide from gallery (still accessible via direct URL)

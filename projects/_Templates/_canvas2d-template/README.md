@@ -22,7 +22,6 @@ For animated sketches (RAF loop, noise fields, physics), use `_canvas2d-sketch-t
      "description": "What this sketch does",
      "date": "2026-03",
      "tags": ["canvas2d", "generative"],
-     "entryFile": "/projects/sandbox/my-sketch/index.ts",
      "configFile": "/projects/sandbox/my-sketch/project.config.ts"
    }
    ```

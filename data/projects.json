@@ -10,8 +10,7 @@
       "noise"
     ],
     "hidden": false,
-    "configFile": "/projects/patchwork/project.config.ts",
-    "entryFile": "/projects/patchwork/index.ts"
+    "configFile": "/projects/patchwork/project.config.ts"
   },
   {
     "id": "anni",
@@ -24,8 +23,7 @@
     ],
     "hidden": false,
     "prefersTheme": "light",
-    "configFile": "/projects/anni/project.config.ts",
-    "entryFile": "/projects/anni/index.ts"
+    "configFile": "/projects/anni/project.config.ts"
   },
   {
     "id": "grid-almighty",
@@ -37,8 +35,7 @@
       "grid"
     ],
     "hidden": false,
-    "configFile": "/projects/grid-almighty/project.config.ts",
-    "entryFile": "/projects/grid-almighty/index.ts"
+    "configFile": "/projects/grid-almighty/project.config.ts"
   },
   {
     "id": "this-is-water",
@@ -51,8 +48,7 @@
       "animation"
     ],
     "hidden": false,
-    "configFile": "/projects/this-is-water/project.config.ts",
-    "entryFile": "/projects/this-is-water/index.ts"
+    "configFile": "/projects/this-is-water/project.config.ts"
   },
   {
     "id": "pearlymats",
@@ -65,8 +61,7 @@
       "grid"
     ],
     "hidden": false,
-    "configFile": "/projects/pearlymats/project.config.ts",
-    "entryFile": "/projects/pearlymats/index.ts"
+    "configFile": "/projects/pearlymats/project.config.ts"
   },
   {
     "id": "voronoi",
@@ -80,8 +75,7 @@
     ],
     "hidden": false,
     "noControls": true,
-    "configFile": "/projects/voronoi/project.config.ts",
-    "entryFile": "/projects/voronoi/index.ts"
+    "configFile": "/projects/voronoi/project.config.ts"
   },
   {
     "id": "bezier-lab",
@@ -95,8 +89,7 @@
       "subdivision"
     ],
     "hidden": false,
-    "configFile": "/projects/bezier-lab/project.config.ts",
-    "entryFile": "/projects/bezier-lab/index.ts"
+    "configFile": "/projects/bezier-lab/project.config.ts"
   },
   {
     "id": "vera",
@@ -111,8 +104,7 @@
     ],
     "hidden": false,
     "prefersTheme": "light",
-    "configFile": "/projects/c4ta/svg/vera/project.config.ts",
-    "entryFile": "/projects/c4ta/svg/vera/index.ts"
+    "configFile": "/projects/c4ta/svg/vera/project.config.ts"
   },
   {
     "id": "canvas2d-sketch-template",
@@ -124,8 +116,7 @@
       "template"
     ],
     "hidden": true,
-    "configFile": "/projects/_Templates/_canvas2d-layer-template/project.config.ts",
-    "entryFile": "/projects/_Templates/_canvas2d-layer-template/index.ts"
+    "configFile": "/projects/_Templates/_canvas2d-layer-template/project.config.ts"
   },
   {
     "id": "canvas2d-template",
@@ -137,8 +128,7 @@
       "template"
     ],
     "hidden": true,
-    "configFile": "/projects/_Templates/_canvas2d-template/project.config.ts",
-    "entryFile": "/projects/_Templates/_canvas2d-template/index.ts"
+    "configFile": "/projects/_Templates/_canvas2d-template/project.config.ts"
   },
   {
     "id": "svg-misc",
@@ -150,8 +140,7 @@
       "misc"
     ],
     "hidden": true,
-    "configFile": "/projects/svg-misc/project.config.ts",
-    "entryFile": "/projects/svg-misc/index.ts"
+    "configFile": "/projects/svg-misc/project.config.ts"
   },
   {
     "id": "svg-animated-template",
@@ -163,8 +152,7 @@
       "template"
     ],
     "hidden": true,
-    "configFile": "/projects/_Templates/_svg-animated-template/project.config.ts",
-    "entryFile": "/projects/_Templates/_svg-animated-template/index.ts"
+    "configFile": "/projects/_Templates/_svg-animated-template/project.config.ts"
   },
   {
     "id": "svg-example",
@@ -178,8 +166,7 @@
     ],
     "hidden": true,
     "prefersTheme": "light",
-    "configFile": "/projects/_Templates/_svg-example/project.config.ts",
-    "entryFile": "/projects/_Templates/_svg-example/index.ts"
+    "configFile": "/projects/_Templates/_svg-example/project.config.ts"
   },
   {
     "id": "svg-template",
@@ -191,8 +178,7 @@
       "template"
     ],
     "hidden": true,
-    "configFile": "/projects/_Templates/_svg-template/project.config.ts",
-    "entryFile": "/projects/_Templates/_svg-template/index.ts"
+    "configFile": "/projects/_Templates/_svg-template/project.config.ts"
   },
   {
     "id": "template",
@@ -203,8 +189,7 @@
       "template"
     ],
     "hidden": true,
-    "configFile": "/projects/_Templates/_template/project.config.ts",
-    "entryFile": "/projects/_Templates/_template/index.ts"
+    "configFile": "/projects/_Templates/_template/project.config.ts"
   },
   {
     "id": "noise-field",
@@ -217,26 +202,7 @@
       "noise"
     ],
     "hidden": true,
-    "configFile": "/projects/_Templates/_noise-field/project.config.ts",
-    "entryFile": "/projects/_Templates/_noise-field/index.ts"
-  },
-  {
-    "id": "type-in-space",
-    "title": "Type In Space",
-    "description": "WEBGL glyph point-chunks rendered at depth with orbiting camera (migrated from C4TA p5)",
-    "date": "2022-02",
-    "tags": [
-      "p5js",
-      "legacy-migration",
-      "webgl",
-      "3d",
-      "typography",
-      "c4ta"
-    ],
-    "hidden": true,
-    "noControls": true,
-    "configFile": "/projects/c4ta/p5/type-in-space/project.config.ts",
-    "entryFile": "/projects/c4ta/p5/type-in-space/index.ts"
+    "configFile": "/projects/_Templates/_noise-field/project.config.ts"
   },
   {
     "id": "legacy-3d",
@@ -251,8 +217,7 @@
       "c4ta"
     ],
     "hidden": true,
-    "configFile": "/projects/c4ta/legacy-3d/project.config.ts",
-    "entryFile": "/projects/c4ta/legacy-3d/index.ts"
+    "configFile": "/projects/c4ta/legacy-3d/project.config.ts"
   },
   {
     "id": "legacy-p5",
@@ -265,7 +230,6 @@
       "c4ta"
     ],
     "hidden": true,
-    "configFile": "/projects/c4ta/legacy-p5/project.config.ts",
-    "entryFile": "/projects/c4ta/legacy-p5/index.ts"
+    "configFile": "/projects/c4ta/legacy-p5/project.config.ts"
   }
 ]

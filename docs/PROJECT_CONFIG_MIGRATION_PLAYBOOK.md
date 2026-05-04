@@ -11,7 +11,6 @@ Use this for one-project migrations and batch migrations.
 - `index.ts` is optional runtime escape hatch; prefer minimal stub when unused.
 - `data/projects.json` remains thin index metadata + pointers:
   - `configFile`
-  - canonical `entryFile` (for structure/taxonomy validation)
 
 ## Scope assumptions
 
@@ -29,14 +28,10 @@ Use this for one-project migrations and batch migrations.
    - `technique` (`svg`, `canvas2d`, or supported set)
    - `container` where needed
    - `module` path under the same project folder
-3. Keep `index.ts` policy:
-   - if custom orchestration not required, keep minimal stub (`export {}`) for canonical `entryFile`
-   - if required, keep only focused escape-hatch logic
-4. Update `data/projects.json` entry:
+3. Update `data/projects.json` entry:
    - set `configFile` to `/projects/.../project.config.ts`
-   - keep canonical `entryFile` to `/projects/.../index.ts|js`
    - keep thin metadata fields only
-5. Validate action/control behavior:
+4. Validate action/control behavior:
    - sketch-scoped action visibility via `visibleWhenSelect*`
    - defaults behavior preserves active sketch when intended
 
@@ -79,7 +74,7 @@ For the migrated route:
   - check extension fallback (`.js` vs `.ts`) in sketch module paths
 - **Validation drift errors**
   - sync index metadata fields with config metadata
-  - keep `entryFile` and `configFile` paths canonical and existing
+  - keep `configFile` path canonical and existing
 
 ## Conventions to keep migrations clean
 

@@ -33,7 +33,6 @@ For quick static sketches without animation, `_canvas2d-template/` (init pattern
      "description": "What this sketch does",
      "date": "2026-03",
      "tags": ["canvas2d", "generative"],
-     "entryFile": "/projects/sandbox/my-sketch/index.ts",
      "configFile": "/projects/sandbox/my-sketch/project.config.ts"
    }
    ```
