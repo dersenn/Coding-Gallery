@@ -59,12 +59,6 @@ text(
 ): SVGTextElement
 ```
 
-## Templates and examples
-
-- Static template: `projects/_Templates/_svg-template/`
-- Animated template: `projects/_Templates/_svg-animated-template/`
-- Example: `projects/_Templates/_svg-example/`
-
 ## Minimal usage sketch
 
 ```typescript
@@ -86,4 +80,3 @@ export async function init(container, context) {
 - Main docs: `../README.md`
 - Docs index: `INDEX.md`
 - Seed details: `SEED_SYSTEM.md`
-- Template guide: `../projects/_Templates/_template/README.md`

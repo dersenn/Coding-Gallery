@@ -83,7 +83,6 @@ export async function init(container: HTMLElement, context: ProjectContext): Pro
 - Keep this utility intentionally compact for now; avoid adding advanced path/transform APIs until needed by at least one sketch.
 - p5 remains fully supported and is still a recommended option for rapid prototyping.
 - Point-based APIs expect `Vec` instances.
-- Template starter: `projects/_Templates/_canvas2d-template/`.
 - Rectangle drawing now defaults to device-pixel snapping (`rectSnap: 'device'`) to reduce hairline seams when tiled rects meet.
 - Override globally with `new Canvas({ ..., rectSnap: 'none' })` or per call with `rect(..., { snap: 'none' })` when fractional/soft edges are desired.
 - Snapping is applied only for axis-aligned transforms; when the active transform includes rotation or skew, rect drawing falls back to legacy behavior.

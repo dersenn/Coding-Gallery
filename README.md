@@ -43,14 +43,6 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 │   ├── [id].vue               # Primary full-screen project route
 │   └── project/[id].vue       # Legacy-compatible project route
 ├── projects/
-│   ├── _Templates/            # Hidden project templates and reference examples
-│   │   ├── _template/             # p5.js starter template
-│   │   ├── _canvas2d-template/    # Canvas2D starter template (init pattern)
-│   │   ├── _canvas2d-sketch-template/ # Canvas2D sketch template (canonical modern pattern)
-│   │   ├── _svg-template/         # SVG static template
-│   │   ├── _svg-animated-template/ # SVG animated template
-│   │   ├── _noise-field/          # Noise field reference example (p5.js)
-│   │   └── _svg-example/          # SVG engine live reference
 │   ├── sandbox/               # Active projects
 │   └── c4ta/                  # Migrated C4TA sketches (subdivided by medium)
 ├── types/
@@ -81,30 +73,9 @@ This gallery uses a **JavaScript module architecture** where projects are portab
 
 ## Creating a New Project
 
-Choose a template based on your sketch type:
-- **Canvas2D (sketch pattern, recommended for animated sketches)**: `projects/_Templates/_canvas2d-sketch-template/`
-- **Canvas2D (init pattern, for simple/static sketches)**: `projects/_Templates/_canvas2d-template/`
-- **SVG (static)**: `projects/_Templates/_svg-template/`
-- **SVG (animated)**: `projects/_Templates/_svg-animated-template/`
-- **p5.js**: `projects/_Templates/_template/`
+Create a new folder under `projects/sandbox/my-new-project/` with a `project.config.ts` and a `sketches/` directory.
 
-### 1. Copy the Template
-
-```bash
-# Canvas2D — sketch pattern (recommended for new animated sketches)
-cp -r projects/_Templates/_canvas2d-sketch-template projects/sandbox/my-new-project
-
-# Canvas2D — init pattern (simple/static)
-cp -r projects/_Templates/_canvas2d-template projects/sandbox/my-new-project
-
-# SVG (static)
-cp -r projects/_Templates/_svg-template projects/sandbox/my-svg-project
-
-# p5.js
-cp -r projects/_Templates/_template projects/sandbox/my-p5-project
-```
-
-### 2. Implement Your Sketch
+### 1. Implement Your Sketch
 
 Edit your project's entry file (or `index.js` for rapid iteration):
 
@@ -825,7 +796,7 @@ export async function init(container, context) {
 - `buildSpline(t, close?)` - Smooth cubic spline
 
 **Animation:**
-Use `requestAnimationFrame` for animated SVG sketches (see `projects/_Templates/_svg-animated-template/`)
+Use `requestAnimationFrame` for animated SVG sketches
 
 **Download/Save:**
 SVG projects can expose a `download-svg` action. Press **'s'** (or click the action button) to save:
@@ -848,8 +819,6 @@ Projects are designed to be easily extracted and run independently:
 2. Create an `index.html` with p5.js CDN
 3. Mock the gallery context with default values
 4. Import and initialize your project module
-
-See `projects/_Templates/_template/README.md` for detailed export instructions.
 
 ## Development
 

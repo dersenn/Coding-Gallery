@@ -170,7 +170,6 @@ See `STANDALONE_EXPORT_SKETCH.md` for phased design, output package shape, and t
 - `runtime/projectBootstrap.ts` and/or `runtime/sketchRuntime.ts` — standalone-capable runtime descriptors.
 - `types/project.ts` — optional standalone export capability contract.
 - `utils/download.ts` (or new `utils/standaloneExport.ts`) — package/file generation helpers.
-- `projects/_Templates/` — reusable standalone template skeleton(s).
 
 ### Runtime module specialization follow-up
 
@@ -210,7 +209,6 @@ Most sketches still write `utils.*` chains repeatedly or recreate local aliases 
 - `types/project.ts` — runtime context type expansion for shortcuts.
 - `components/ProjectViewer.vue` — context object passed to project init/bootstrap.
 - `runtime/projectBootstrap.ts` — sketch draw-context payload standardization.
-- `projects/_Templates/` — examples updated to prefer runtime-provided shortcuts.
 
 ### Deferred sketch enter transition
 
@@ -279,8 +277,7 @@ long as the splitter knows how to apply them. Today only `{ cols, rows }` is
 needed internally.
 
 **Current usage (audit baseline)**  
-Call sites under `projects/` that use `Grid.subdivide`: template
-`_svg-example`, legacy `grid-division-pixels`, and sketches `grid-fade`,
+Call sites under `projects/` that use `Grid.subdivide`: legacy `grid-division-pixels`, and sketches `grid-fade`,
 `grid-wave`, `grid-division-1`, `grid-division-2`, `patchwork-1`. Of those,
 `rule` appears in five sketch files; `condition` in a live path only in
 `grid-division-1` (non-`useRule` branch) and `grid-division-2` (`fixedGrid` mode).

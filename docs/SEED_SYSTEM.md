@@ -113,8 +113,6 @@ Use this pattern when sketches can be independently toggled and each must produc
 
 - Main docs: `../README.md`
 - Docs index: `INDEX.md`
-- Template guide: `../projects/_Templates/_template/README.md`
-
 ---
 
 ## Seed format
