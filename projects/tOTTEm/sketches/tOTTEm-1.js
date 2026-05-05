@@ -1,6 +1,7 @@
 import { shortcuts } from '~/utils/shortcuts'
 import { Cell } from '~/utils/cell'
 import { Vec } from '~/utils/generative'
+import { lightTheme } from '~/utils/theme'
 
 class TotemCell extends Cell {
   constructor(config) {
@@ -11,24 +12,32 @@ class TotemCell extends Cell {
     this.leftEdge = config.leftEdge
     this.rightEdge = config.rightEdge
     this.spacing = .5
+    this.color = {
+      pillar: lightTheme.palette[0],
+      sidecarLeft: lightTheme.palette[1],
+      sidecarRight: lightTheme.palette[2],
+    }
   }
 
 draw(canvas, rnd) {
-  canvas.halftone(this.tl(), this.width, this.height, '#000', this.density, { rng: rnd, spacing: this.spacing })
+  //pillar
+  canvas.halftone(this.tl(), this.width, this.height, this.color.pillar, this.density, { rng: rnd, spacing: this.spacing })
 
+  // sidecar left
   canvas.halftone(
     new Vec(this.leftEdge, this.y),
     this.x - this.leftEdge,
     this.height,
-    '#f00',
+    this.color.sidecarLeft,
     (nx) => 1 - nx,
     { rng: rnd, spacing: this.spacing }
   )
+  // sidecar right
   canvas.halftone(
     new Vec(this.x + this.width, this.y),
     this.rightEdge - (this.x + this.width),
     this.height,
-    '#f00',
+    this.color.sidecarRight,
     (nx) => nx,
     { rng: rnd, spacing: this.spacing }
   )
