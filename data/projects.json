@@ -1,5 +1,16 @@
 [
   {
+    "id": "tOTTEm",
+    "title": "tOTTEm",
+    "description": "tOTTEm",
+    "date": "2026-05",
+    "tags": [
+      "canvas2d"
+    ],
+    "hidden": false,
+    "configFile": "/projects/tOTTEm/project.config.ts"
+  },
+  {
     "id": "patchwork",
     "title": "Patchwork",
     "description": "Patchwork",

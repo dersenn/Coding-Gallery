@@ -15,7 +15,7 @@
         class="control-btn flex-1 px-3 py-2 rounded-md transition-colors"
         @click="runRandomise()"
       >
-        Randomise
+        Randomise Settings
       </button>
     </div>
 
