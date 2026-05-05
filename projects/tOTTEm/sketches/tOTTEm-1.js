@@ -1,16 +1,39 @@
 import { shortcuts } from '~/utils/shortcuts'
 import { Cell } from '~/utils/cell'
+import { Vec } from '~/utils/generative'
 
 class TotemCell extends Cell {
   constructor(config) {
     super(config)
     this.density = config.density
-    this.spacing = .3
+    this.pillarX = config.pillarX
+    this.pillarW = config.pillarW
+    this.leftEdge = config.leftEdge
+    this.rightEdge = config.rightEdge
+    this.spacing = .5
   }
 
-  draw(canvas, rnd) {
-    canvas.halftone(this.tl(), this.width, this.height, '#000', this.density, { rng: rnd, spacing: this.spacing })
-  }
+draw(canvas, rnd) {
+  canvas.halftone(this.tl(), this.width, this.height, '#000', this.density, { rng: rnd, spacing: this.spacing })
+
+  canvas.halftone(
+    new Vec(this.leftEdge, this.y),
+    this.x - this.leftEdge,
+    this.height,
+    '#f00',
+    (nx) => 1 - nx,
+    { rng: rnd, spacing: this.spacing }
+  )
+  canvas.halftone(
+    new Vec(this.x + this.width, this.y),
+    this.rightEdge - (this.x + this.width),
+    this.height,
+    '#f00',
+    (nx) => nx,
+    { rng: rnd, spacing: this.spacing }
+  )
+}
+
 }
 
 export function draw(context) {
@@ -58,6 +81,10 @@ export function draw(context) {
       width: w,
       height: pts[i + 1].y - pt.y,
       index: i,
+      pillarX: pillar.x,
+      pillarW: pillar.w,
+      leftEdge: border.left,
+      rightEdge: canvas.w - border.right,
       density: pick(densities),
     })
   })
