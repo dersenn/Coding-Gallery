@@ -1,13 +1,23 @@
 import { shortcuts } from '~/utils/shortcuts'
 import { Cell } from '~/utils/cell'
 
+class TotemCell extends Cell {
+  constructor(config) {
+    super(config)
+    this.density = config.density
+    this.spacing = .3
+  }
+
+  draw(canvas, rnd) {
+    canvas.halftone(this.tl(), this.width, this.height, '#000', this.density, { rng: rnd, spacing: this.spacing })
+  }
+}
+
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { v, rnd, rndRange, divLength } = shortcuts(utils)
+  const { v, rnd, rndRange, divLength, pick } = shortcuts(utils)
   const { mm } = canvas.print
   if (!canvas) return
-
-  // SETUP
 
   const border = {
     top: mm(9),
@@ -25,32 +35,37 @@ export function draw(context) {
     y: border.top,
   }
 
-  // divide the pillar height into nSegments random slices
   const pts = divLength(
     v(pillar.x, pillar.y),
     v(pillar.x, pillar.y + pillar.h),
     nSegments,
-    { mode: 'rnd', includeEndpoints: true, rng: rnd }
+    { mode: 'rnd', includeEndpoints: true, rng: rnd, minSegmentLength: mm(20) }
   )
 
-  // build a Cell for each slice
-  const segments = []
-  for (let i = 0; i < pts.length - 1; i++) {
+  const densities = [
+    (nx, ny) => nx,
+    (nx, ny) => 1 - nx,
+    (nx, ny) => nx * nx,
+    (nx, ny) => Math.abs(nx * 2 - 1),       // dark edges, bright center
+    (nx, ny) => 1 - Math.abs(nx * 2 - 1),   // bright edges, dark center
+  ]
+
+  const segments = pts.slice(0, -1).map((pt, i) => {
     const w = rndRange(mm(10), pillar.w)
-    segments.push(new Cell({
+    return new TotemCell({
       x: pillar.x - w / 2,
-      y: pts[i].y,
+      y: pt.y,
       width: w,
-      height: pts[i + 1].y - pts[i].y,
+      height: pts[i + 1].y - pt.y,
       index: i,
-    }))
-  }
+      density: pick(densities),
+    })
+  })
+
+
 
   // DRAWING
 
   canvas.background('#fff')
-
-  for (const seg of segments) {
-      canvas.rect(seg.tl(), seg.width, seg.height, '#000')
-  }
+  segments.forEach(seg => seg.draw(canvas, rnd)) 
 }
