@@ -11,7 +11,7 @@ class TotemCell extends Cell {
     this.pillarW = config.pillarW
     this.leftEdge = config.leftEdge
     this.rightEdge = config.rightEdge
-    this.spacing = .5
+    this.spacing = config.spacing
   }
 
 draw(canvas, colors, rnd) {
@@ -46,6 +46,7 @@ export function draw(context) {
   const { canvas, utils, controls: c } = context
   const { v, rnd, rndInt, rndRange, divLength, pick } = shortcuts(utils)
   if (!canvas) return
+  
   const { mm } = canvas.print
 
   const colors = {
@@ -77,6 +78,7 @@ export function draw(context) {
     { mode: 'rnd', includeEndpoints: true, rng: rnd, minSegmentLength: mm(12) }
   )
 
+  const spacing = mm(0.15)
   const densities = [
     (nx, ny) => nx,
     (nx, ny) => 1 - nx,
@@ -98,6 +100,7 @@ export function draw(context) {
       leftEdge: border.left,
       rightEdge: canvas.w - border.right,
       density: pick(densities),
+      spacing: spacing,
     })
   })
 
