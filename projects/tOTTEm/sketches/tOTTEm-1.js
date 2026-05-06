@@ -14,31 +14,31 @@ class TotemCell extends Cell {
     this.spacing = config.spacing
   }
 
-draw(canvas, colors, rnd) {
+  draw(canvas, colors, rnd) {
 
-  //pillar
-  canvas.halftone(this.tl(), this.width, this.height, colors.pillar, this.density, { rng: rnd, spacing: this.spacing })
+    //pillar
+    canvas.halftone(this.tl(), this.width, this.height, colors.pillar, this.density, { rng: rnd, spacing: this.spacing })
 
-  // sidecar left
-  canvas.halftone(
-    new Vec(this.leftEdge, this.y),
-    this.x - this.leftEdge,
-    this.height,
-    colors.sidecarLeft,
-    (nx) => 1 - nx,
-    { rng: rnd, spacing: this.spacing }
-  )
+    // sidecar left
+    canvas.halftone(
+      new Vec(this.leftEdge, this.y),
+      this.x - this.leftEdge,
+      this.height,
+      colors.sidecarLeft,
+      (nx) => 1 - nx,
+      { rng: rnd, spacing: this.spacing }
+    )
 
-  // sidecar right
-  canvas.halftone(
-    new Vec(this.x + this.width, this.y),
-    this.rightEdge - (this.x + this.width),
-    this.height,
-    colors.sidecarRight,
-    (nx) => nx,
-    { rng: rnd, spacing: this.spacing }
-  )
-}
+    // sidecar right
+    canvas.halftone(
+      new Vec(this.x + this.width, this.y),
+      this.rightEdge - (this.x + this.width),
+      this.height,
+      colors.sidecarRight,
+      (nx) => nx,
+      { rng: rnd, spacing: this.spacing }
+    )
+  }
 
 }
 
