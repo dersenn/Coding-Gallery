@@ -12,32 +12,29 @@ class TotemCell extends Cell {
     this.leftEdge = config.leftEdge
     this.rightEdge = config.rightEdge
     this.spacing = .5
-    this.color = {
-      pillar: lightTheme.palette[0],
-      sidecarLeft: lightTheme.palette[1],
-      sidecarRight: lightTheme.palette[2],
-    }
   }
 
-draw(canvas, rnd) {
+draw(canvas, colors, rnd) {
+
   //pillar
-  canvas.halftone(this.tl(), this.width, this.height, this.color.pillar, this.density, { rng: rnd, spacing: this.spacing })
+  canvas.halftone(this.tl(), this.width, this.height, colors.pillar, this.density, { rng: rnd, spacing: this.spacing })
 
   // sidecar left
   canvas.halftone(
     new Vec(this.leftEdge, this.y),
     this.x - this.leftEdge,
     this.height,
-    this.color.sidecarLeft,
+    colors.sidecarLeft,
     (nx) => 1 - nx,
     { rng: rnd, spacing: this.spacing }
   )
+
   // sidecar right
   canvas.halftone(
     new Vec(this.x + this.width, this.y),
     this.rightEdge - (this.x + this.width),
     this.height,
-    this.color.sidecarRight,
+    colors.sidecarRight,
     (nx) => nx,
     { rng: rnd, spacing: this.spacing }
   )
@@ -47,18 +44,24 @@ draw(canvas, rnd) {
 
 export function draw(context) {
   const { canvas, utils, controls: c } = context
-  const { v, rnd, rndRange, divLength, pick } = shortcuts(utils)
-  const { mm } = canvas.print
+  const { v, rnd, rndInt, rndRange, divLength, pick } = shortcuts(utils)
   if (!canvas) return
+  const { mm } = canvas.print
+
+  const colors = {
+    pillar: lightTheme.foreground,
+    sidecarLeft: pick(lightTheme.palette),
+    sidecarRight: pick(lightTheme.palette),
+  }
 
   const border = {
     top: mm(9),
     right: mm(9),
     bottom: mm(15),
-    left: mm(6),
+    left: mm(9),
   }
 
-  const nSegments = 7
+  const nSegments = rndInt(3, 12)
 
   const pillar = {
     h: canvas.h - border.top - border.bottom,
@@ -71,7 +74,7 @@ export function draw(context) {
     v(pillar.x, pillar.y),
     v(pillar.x, pillar.y + pillar.h),
     nSegments,
-    { mode: 'rnd', includeEndpoints: true, rng: rnd, minSegmentLength: mm(20) }
+    { mode: 'rnd', includeEndpoints: true, rng: rnd, minSegmentLength: mm(12) }
   )
 
   const densities = [
@@ -103,5 +106,5 @@ export function draw(context) {
   // DRAWING
 
   canvas.background('#fff')
-  segments.forEach(seg => seg.draw(canvas, rnd)) 
+  segments.forEach(seg => seg.draw(canvas, colors, rnd)) 
 }
