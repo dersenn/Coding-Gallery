@@ -159,6 +159,14 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full', padding: '0' },
     module: './sketches/patchwork-1.js',
     controls: PATCHWORK_1_CONTROLS,
+  },
+  {
+    id: 'patchwork-2',
+    label: 'Patchwork 2',
+    technique: 'canvas2d',
+    container: { mode: 'full', padding: '0' },
+    module: './sketches/patchwork-2.js',
+    controls: PATCHWORK_1_CONTROLS,
   }
 ]
 
