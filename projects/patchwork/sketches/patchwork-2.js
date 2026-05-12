@@ -3,11 +3,16 @@ import { shortcuts } from '~/utils/shortcuts'
 import { buildWeave } from '~/utils/weave'
 import { lightTheme } from '~/utils/theme'
 
-// ─── Weave “gap” helpers (recent passes) ─────────────────────────────────────
+// ─── Weave secondary-weft helper ─────────────────────────────────────────────
 // Each terminal cell picks a weave pattern from `bucket` (noise → palette index).
-// Slots that used to be only `transparent` now often use `gap`: same weave logic,
-// but the second ink is either transparent, a light HSL tint, or a dark HSL shade
-// — see gapForBucket() for which bucket gets which (tweak the switch there).
+// `weftAlt` is the cell's second weft ink — always a fully opaque color, either a
+// light HSL tint or a dark HSL shade of `this.color`. The primary weft is
+// `this.color` itself. Warp is uniform across the whole piece (one color per draw)
+// for every case EXCEPT case 5 (houndstooth), which uses a 4+4 split of
+// `warpColor` and `this.color` so the houndstooth check appears against the
+// surrounding fabric. Every case renders at an 8×8 sub-grid per terminal cell
+// (8 warps × 8 wefts) so warp pitch is the same across every patch.
+// See weftAltForBucket() for which bucket gets light vs dark (tweak the switch there).
 // Halftone direction is uniform across the sketch: warp sub-cells fade left→right
 // (across the vertical threads), weft sub-cells fade top→bottom (across the horizontal threads).
 
@@ -30,27 +35,26 @@ function shadeColor(utils, input, darknessMix = 0.52) {
 }
 
 /**
- * Second ink for weave warp/weft arrays (`gap` in draw()).
+ * Secondary weft ink for the current cell (`weftAlt` in draw()).
+ * Always opaque — light HSL tint or dark HSL shade of the cell's base color.
  * Bucket = floor(noise * palette.length), same index that selects the switch case.
  *
- * | buckets | gap        |
- * | 0, 3    | light tint |
- * | 1, 5    | transparent (true knockout) |
- * | 2, 4+, default | dark shade |
+ * | buckets         | weftAlt    |
+ * | 0, 1, 3         | light tint |
+ * | 2, 5, default   | dark shade |
  */
-function gapForBucket(utils, baseColor, bucket) {
-  const gapLight = tintColor(utils, baseColor)
-  const gapDark = shadeColor(utils, baseColor)
+function weftAltForBucket(utils, baseColor, bucket) {
+  const light = tintColor(utils, baseColor)
+  const dark = shadeColor(utils, baseColor)
   switch (bucket) {
-    case 1:
-    case 5:
-      return 'transparent'
     case 0:
+    case 1:
     case 3:
-      return gapLight
+      return light
     case 2:
+    case 5:
     default:
-      return gapDark
+      return dark
   }
 }
 
@@ -138,8 +142,6 @@ class MyCell extends GridCell {
           ? weave.warpColors[col % weave.warpColors.length]
           : weave.weftColors[row % weave.weftColors.length]
 
-        if (fill === 'transparent') continue
-
         canvas.halftone(
           v(this.x + col * colSize, this.y + row * rowSize),
           colSize, rowSize,
@@ -151,19 +153,19 @@ class MyCell extends GridCell {
     }
   }
 
-  // Uniform-weave variant: every case renders a 4×4 sub-grid per terminal cell,
+  // Uniform-weave variant: every case renders an 8×8 sub-grid per terminal cell,
   // so warp pitch stays constant across patches (the warp reads as a single fabric).
   // The warp color is fixed for the whole draw and passed in from draw(); only the
   // weft (and the chosen tieup/threading) varies per noise bucket.
   draw(canvas, theme, warpColor) {
     const bucket = Math.min(Math.floor(this.noise * theme.palette.length), theme.palette.length - 1)
-    const gap = gapForBucket(this.grid.utils, this.color, bucket) // second ink; not row-based
+    const weftAlt = weftAltForBucket(this.grid.utils, this.color, bucket) // secondary weft ink for this cell
 
     switch (bucket) {
       case 0:
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 2, 3, 4],
-          treadling: [1, 2, 3, 4],
+          threading: [1, 2, 3, 4, 1, 2, 3, 4],
+          treadling: [1, 2, 3, 4, 1, 2, 3, 4],
           tieup: [
             [true, false, false, false],
             [false, true, false, false],
@@ -171,14 +173,13 @@ class MyCell extends GridCell {
             [false, false, false, true],
           ],
           warpColors: [warpColor],
-          weftColors: [gap, this.color],
+          weftColors: [weftAlt, this.color],
         }))
         break
       case 1: {
-        // plain weave expanded to 4 warps / 4 wefts to match uniform pitch
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 2, 1, 2],
-          treadling: [1, 2, 1, 2],
+          threading: [1, 2, 1, 2, 1, 2, 1, 2],
+          treadling: [1, 2, 1, 2, 1, 2, 1, 2],
           tieup: [
             [true, false],
             [false, true]
@@ -190,8 +191,8 @@ class MyCell extends GridCell {
         }
       case 2:
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 2, 3, 4],
-          treadling: [1, 2, 3, 4],
+          threading: [1, 2, 3, 4, 1, 2, 3, 4],
+          treadling: [1, 2, 3, 4, 1, 2, 3, 4],
           tieup: [
             [true, true, true, false],
             [false, true, true, true],
@@ -199,19 +200,19 @@ class MyCell extends GridCell {
             [true, true, false, true],
           ],
           warpColors: [warpColor],
-          weftColors: [gap],
+          weftColors: [weftAlt],
         }))
         break
       case 3:
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 2, 1, 2],
-          treadling: [1, 2, 1, 2],
+          threading: [1, 2, 1, 2, 1, 2, 1, 2],
+          treadling: [1, 2, 1, 2, 1, 2, 1, 2],
           tieup: [
             [true, false],
             [false, true]
           ],
           warpColors: [warpColor],
-          weftColors: [this.color, gap],
+          weftColors: [this.color, weftAlt],
         }))
         break
       // case 4:
@@ -229,35 +230,38 @@ class MyCell extends GridCell {
       //   }))
       //   break
       case 5:
-        // broken twill reduced from 8×8 to 4×4 to match uniform pitch;
-        // weft halves preserve the original color/gap split across the cell
+        // Houndstooth: classic 2/2 broken twill with a 4+4 color split in the warp.
+        // Weft is a single color (this.color) so the houndstooth check reads against
+        // the cell's own ground color, matching the rest of the patchwork.
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 2, 3, 4],
-          treadling: [1, 2, 3, 4],
+          threading: [1, 2, 3, 4, 1, 2, 3, 4],
+          treadling: [1, 2, 3, 4, 1, 2, 3, 4],
           tieup: [
             [false, false, true, true],
             [false, true, true, false],
             [true, true, false, false],
             [true, false, false, true],
           ],
-          warpColors: [warpColor],
-          weftColors: [this.color, this.color, gap, gap],
+          warpColors: [
+            warpColor, warpColor, warpColor, warpColor,
+            this.color, this.color, this.color, this.color,
+          ],
+          weftColors: [this.color],
         }))
         break
 
       default:
-        // 1-shaft treadling [1,2,…] → horizontal bands in drawdown.
-        // Threading [1,1,1,1] keeps the all-up/all-down behaviour but at the shared 4-warp pitch.
-        // Halftone direction is now per-fill (warp=tb, weft=lr), so no override needed here.
+        // 1-shaft tieup → horizontal bands in drawdown.
+        // Threading [1,…] (all same shaft) keeps the all-up/all-down behaviour at the shared pitch.
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 1, 1, 1],
-          treadling: [1, 2, 1, 2],
+          threading: [1, 1, 1, 1, 1, 1, 1, 1],
+          treadling: [1, 2, 1, 2, 1, 2, 1, 2],
           tieup: [
             [true],
             [false],
           ],
           warpColors: [warpColor],
-          weftColors: [gap],
+          weftColors: [weftAlt],
         }))
         break
     }
