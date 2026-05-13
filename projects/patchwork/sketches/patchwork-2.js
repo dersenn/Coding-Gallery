@@ -7,10 +7,8 @@ import { lightTheme } from '~/utils/theme'
 // Each terminal cell picks a weave pattern from `bucket` (noise → palette index).
 // `weftAlt` is the cell's second weft ink — always a fully opaque color, either a
 // light HSL tint or a dark HSL shade of `this.color`. The primary weft is
-// `this.color` itself. Warp is uniform across the whole piece (one color per draw)
-// for every case EXCEPT case 5 (houndstooth), which uses a 4+4 split of
-// `warpColor` and `this.color` so the houndstooth check appears against the
-// surrounding fabric. Every case renders at an 8×8 sub-grid per terminal cell
+// `this.color` itself. Warp uses the shared `warpColor` for every bucket (including
+// case 5 doubled twill). Every case renders at an 8×8 sub-grid per terminal cell
 // (8 warps × 8 wefts) so warp pitch is the same across every patch.
 // See weftAltForBucket() for which bucket gets light vs dark (tweak the switch there).
 // Halftone direction is uniform across the sketch: warp sub-cells fade left→right
@@ -167,10 +165,10 @@ class MyCell extends GridCell {
           threading: [1, 2, 3, 4, 1, 2, 3, 4],
           treadling: [1, 2, 3, 4, 1, 2, 3, 4],
           tieup: [
-            [true, false, false, false],
-            [false, true, false, false],
-            [false, false, true, false],
-            [false, false, false, true],
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
           ],
           warpColors: [warpColor],
           weftColors: [weftAlt, this.color],
@@ -181,8 +179,8 @@ class MyCell extends GridCell {
           threading: [1, 2, 1, 2, 1, 2, 1, 2],
           treadling: [1, 2, 1, 2, 1, 2, 1, 2],
           tieup: [
-            [true, false],
-            [false, true]
+            [1, 0],
+            [0, 1]
           ],
           warpColors: [warpColor],
           weftColors: [this.color],
@@ -194,10 +192,10 @@ class MyCell extends GridCell {
           threading: [1, 2, 3, 4, 1, 2, 3, 4],
           treadling: [1, 2, 3, 4, 1, 2, 3, 4],
           tieup: [
-            [true, true, true, false],
-            [false, true, true, true],
-            [true, false, true, true],
-            [true, true, false, true],
+            [1, 1, 1, 0],
+            [0, 1, 1, 1],
+            [1, 0, 1, 1],
+            [1, 1, 0, 1],
           ],
           warpColors: [warpColor],
           weftColors: [weftAlt],
@@ -208,8 +206,8 @@ class MyCell extends GridCell {
           threading: [1, 2, 1, 2, 1, 2, 1, 2],
           treadling: [1, 2, 1, 2, 1, 2, 1, 2],
           tieup: [
-            [true, false],
-            [false, true]
+            [1, 0],
+            [0, 1]
           ],
           warpColors: [warpColor],
           weftColors: [this.color, weftAlt],
@@ -220,32 +218,29 @@ class MyCell extends GridCell {
       //     threading: [1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4, 1, 2, 3, 4],
       //     treadling: [1, 2, 3, 4, 1, 1, 2, 2, 3, 3, 4, 4, 1, 1, 1, 2, 2, 3, 3, 4, 4],
       //     tieup: [
-      //       [false, false, true, true],
-      //       [false, true, true, false],
-      //       [true, true, false, false],
-      //       [true, false, false, true],
+      //       [0, 0, 1, 1],
+      //       [0, 1, 1, 0],
+      //       [1, 1, 0, 0],
+      //       [1, 0, 0, 1],
       //     ],
       //     warpColors: ['transparent'],
       //     weftColors: [this.color],
       //   }))
       //   break
       case 5:
-        // Houndstooth: classic 2/2 broken twill with a 4+4 color split in the warp.
-        // Weft is a single color (this.color) so the houndstooth check reads against
-        // the cell's own ground color, matching the rest of the patchwork.
+        // Doubled 2/2 twill: paired picks keep floats tall (vertical). Threading runs
+        // high→low shaft in pairs so the twill wale reads / (bottom-left → top-right)
+        // instead of \ with the same treadling + tieup.
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 2, 3, 4, 1, 2, 3, 4],
-          treadling: [1, 2, 3, 4, 1, 2, 3, 4],
+          threading: [4, 4, 3, 3, 2, 2, 1, 1],
+          treadling: [1, 1, 2, 2, 3, 3, 4, 4],
           tieup: [
-            [false, false, true, true],
-            [false, true, true, false],
-            [true, true, false, false],
-            [true, false, false, true],
+            [1, 1, 0, 0],
+            [0, 1, 1, 0],
+            [0, 0, 1, 1],
+            [1, 0, 0, 1],
           ],
-          warpColors: [
-            warpColor, warpColor, warpColor, warpColor,
-            this.color, this.color, this.color, this.color,
-          ],
+          warpColors: [warpColor],
           weftColors: [this.color],
         }))
         break
@@ -257,8 +252,8 @@ class MyCell extends GridCell {
           threading: [1, 2, 1, 2, 1, 2, 1, 2],
           treadling: [1, 2, 1, 2, 1, 2, 1, 2],
           tieup: [
-            [true, false],
-            [false, true],
+            [1, 0],
+            [0, 1],
           ],
           warpColors: [warpColor],
           weftColors: [weftAlt, weftAlt, this.color, this.color],  // 2-pick color bands
@@ -313,6 +308,10 @@ export function draw(context) {
       return false
     }
   })
+
+  // DRAW
+
+  canvas.background(lightTheme.black)
 
   if (c.drawBackground) {
     canvas.background(lightTheme.background)
