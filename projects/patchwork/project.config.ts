@@ -265,7 +265,8 @@ const metadata = {
   "tags": [
     "canvas2d",
     "grid",
-    "noise"
+    "noise",
+    "weaving"
   ],
   "hidden": false
 } satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches'>
@@ -292,6 +293,7 @@ const SKETCHES: ProjectSketchDefinition[] = [
     container: { mode: 'full', padding: '0' },
     module: './sketches/patchwork-2.js',
     controls: PATCHWORK_2_CONTROLS,
+    defaultActive: true
   }
 ]
 

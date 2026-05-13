@@ -254,14 +254,14 @@ class MyCell extends GridCell {
         // 1-shaft tieup → horizontal bands in drawdown.
         // Threading [1,…] (all same shaft) keeps the all-up/all-down behaviour at the shared pitch.
         this.drawWeave(canvas, buildWeave({
-          threading: [1, 1, 1, 1, 1, 1, 1, 1],
+          threading: [1, 2, 1, 2, 1, 2, 1, 2],
           treadling: [1, 2, 1, 2, 1, 2, 1, 2],
           tieup: [
-            [true],
-            [false],
+            [true, false],
+            [false, true],
           ],
           warpColors: [warpColor],
-          weftColors: [weftAlt],
+          weftColors: [weftAlt, weftAlt, this.color, this.color],  // 2-pick color bands
         }))
         break
     }
