@@ -11,7 +11,7 @@ const LLAL_CONTROLS: ProjectControlDefinition[] = [
     type: 'select',
     label: 'Layout',
     key: 'layoutMode',
-    default: 'rows',
+    default: 'columns',
     options: [
       { label: 'Row based', value: 'rows' },
       { label: 'Column based', value: 'columns' }
@@ -28,7 +28,7 @@ const LLAL_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Width (mm)',
         key: 'outputWidth',
-        default: 88,
+        default: 88*2,
         min: 10,
         max: 1000,
         step: 1
@@ -37,7 +37,7 @@ const LLAL_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Height (mm)',
         key: 'outputHeight',
-        default: 96,
+        default: 96*2,
         min: 10,
         max: 1000,
         step: 1
@@ -67,10 +67,24 @@ const LLAL_CONTROLS: ProjectControlDefinition[] = [
         type: 'slider',
         label: 'Columns',
         key: 'columns',
-        default: 20,
-        min: 5,
+        default: 7,
+        min: 2,
         max: 40,
         step: 1
+      },
+      {
+        type: 'toggle',
+        label: 'Alternate rows',
+        key: 'alternateRows',
+        default: false,
+        visibleWhenSelectKey: 'layoutMode',
+        visibleWhenSelectValue: 'columns'
+      },
+      {
+        type: 'toggle',
+        label: 'Square distribution',
+        key: 'squareDistribution',
+        default: false
       },
       {
         type: 'toggle',
