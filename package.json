@@ -19,6 +19,7 @@
     "nuxt": "^4.0.0",
     "p5": "^2.2.1",
     "simplex-noise": "^4.0.3",
+    "svg-text-to-path": "^2.1.0",
     "vue": "latest"
   },
   "devDependencies": {

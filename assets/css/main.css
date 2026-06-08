@@ -45,6 +45,11 @@
   --project-overlay-shadow: none;
 }
 
+@font-face {
+  font-family: 'LLAL-linear';
+  src: url('/assets/fonts/LLALLogoLinearGX.ttf') format('truetype');
+}
+
 html,
 body,
 #__nuxt {

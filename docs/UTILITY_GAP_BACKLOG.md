@@ -206,6 +206,15 @@ Central list of reusable utility candidates discovered during sketch migrations.
     - Options to explore: remount active layer when a declared “container control” changes; or optional `getContainerConfig(controls) => ContainerConfig` hook on sketch defs; watch for double layout thrash with `ResizeObserver`.
     - PNG/SVG export dimensions should stay coherent if outer size changes.
 
+### SVG export
+
+- ID: `async-svg-text-export`
+  - Status: `candidate`
+  - Priority: **medium**
+  - Need: framework hook to `await` async post-draw steps (e.g. `svg-text-to-path` `replaceAll()`) before `download-svg` serializes the stage.
+  - Seen in: `docs/audits/LLAL_PATTERN_MIGRATION_AUDIT.md` (`projects/llal-pattern`)
+  - Notes: current workaround uses custom `init()` + separate `download-svg-outlined` action that awaits a sketch-module promise.
+
 ### p5 migration helpers
 
 - ID: `asset-path-preload-helper`
