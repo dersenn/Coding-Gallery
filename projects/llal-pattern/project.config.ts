@@ -8,6 +8,16 @@ import { initFromProjectDefinition } from '~/runtime/projectBootstrap'
 
 const LLAL_CONTROLS: ProjectControlDefinition[] = [
   {
+    type: 'select',
+    label: 'Layout',
+    key: 'layoutMode',
+    default: 'rows',
+    options: [
+      { label: 'Row based', value: 'rows' },
+      { label: 'Column based', value: 'columns' }
+    ]
+  },
+  {
     type: 'group',
     id: 'output',
     label: 'Output',
@@ -49,7 +59,9 @@ const LLAL_CONTROLS: ProjectControlDefinition[] = [
         default: 12,
         min: 3,
         max: 30,
-        step: 1
+        step: 1,
+        visibleWhenSelectKey: 'layoutMode',
+        visibleWhenSelectValue: 'rows'
       },
       {
         type: 'slider',

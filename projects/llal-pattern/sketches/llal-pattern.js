@@ -11,6 +11,10 @@ import Session from 'svg-text-to-path/entries/browser-fontkit.js'
 const WDTHS = [50, 100, 150, 200]
 const TEXT = 'LLAL'
 const FONT_FAMILY = 'LLAL-linear'
+const LINE_OFFSET_RATIO = 0.66
+const ROW_FONT_SCALE = 1.5
+const LAYOUT_ROWS = 'rows'
+const LAYOUT_COLUMNS = 'columns'
 
 let lastSvg = null
 let lastConversion = Promise.resolve()
@@ -27,6 +31,15 @@ function syncArtboard(svg, wMM, hMM) {
   svg.stage.setAttribute('width', `${wMM}mm`)
   svg.stage.setAttribute('height', `${hMM}mm`)
   svg.stage.setAttribute('viewBox', `0 0 ${wMM} ${hMM}`)
+}
+
+function lineOffsetMM(fontSizeMM) {
+  return fontSizeMM * LINE_OFFSET_RATIO
+}
+
+function rowsForHeight(hMM, fontSizeMM) {
+  const step = lineOffsetMM(fontSizeMM)
+  return Math.max(1, Math.floor(hMM / step))
 }
 
 function buildSwirlFilter(svg, defs, wMM, hMM, utils) {
@@ -57,17 +70,44 @@ function buildSwirlFilter(svg, defs, wMM, hMM, utils) {
   svg.stage.setAttribute('style', 'filter: url(#swirl)')
 }
 
-function buildLetters(svg, opts) {
-  const { coin, shuffle, v } = shortcuts(opts.utils)
+function appendColumn(textEl, opts, fontSizeMM, offsetMM) {
+  const { coin, shuffle } = shortcuts(opts.utils)
+  const ns = opts.svg.ns
+
+  for (let row = 0; row < opts.rows; row++) {
+    const rowTspan = document.createElementNS(ns, 'tspan')
+    rowTspan.setAttribute('x', textEl.getAttribute('x'))
+    rowTspan.setAttribute('dy', String(offsetMM))
+
+    const wShuffled = shuffle([...WDTHS])
+    for (let g = 0; g < TEXT.length; g++) {
+      let fill = opts.letterFill
+      if (opts.useBlanks && coin(opts.blanksProb)) {
+        fill = opts.backgroundFill
+      }
+      const span = document.createElementNS(ns, 'tspan')
+      span.setAttribute(
+        'style',
+        `font-size: ${fontSizeMM};font-variation-settings: 'wdth' ${wShuffled[g]};fill: ${fill}`
+      )
+      span.textContent = TEXT[g]
+      rowTspan.append(span)
+    }
+    textEl.append(rowTspan)
+  }
+}
+
+function buildLettersGroup(svg, opts) {
+  const { v } = shortcuts(opts.utils)
   const ns = svg.ns
   const letters = document.createElementNS(ns, 'g')
   letters.setAttribute('id', 'letters')
   letters.setAttribute('font-family', FONT_FAMILY)
-  // getBBox() requires the group to be attached to the rendered stage (legacy behavior).
+  // getBBox() requires the group on the rendered stage (legacy behavior).
   svg.stage.append(letters)
 
-  const fontSizeMM = (opts.hMM / opts.rows) * 1.5
-  const lineOffsetMM = fontSizeMM * 0.66
+  const fontSizeMM = opts.fontSizeMM
+  const offsetMM = lineOffsetMM(fontSizeMM)
   const pos = v(0, 0)
 
   for (let col = 0; col < opts.columns; col++) {
@@ -75,32 +115,64 @@ function buildLetters(svg, opts) {
     text.setAttribute('x', String(pos.x))
     text.setAttribute('y', String(pos.y))
     text.setAttribute('font-size', String(fontSizeMM))
-
-    for (let row = 0; row < opts.rows; row++) {
-      const rowTspan = document.createElementNS(ns, 'tspan')
-      rowTspan.setAttribute('x', String(pos.x))
-      rowTspan.setAttribute('dy', String(lineOffsetMM))
-
-      const wShuffled = shuffle([...WDTHS])
-      for (let g = 0; g < TEXT.length; g++) {
-        let fill = opts.letterFill
-        if (opts.useBlanks && coin(opts.blanksProb)) {
-          fill = opts.backgroundFill
-        }
-        const span = document.createElementNS(ns, 'tspan')
-        span.setAttribute(
-          'style',
-          `font-size: ${fontSizeMM};font-variation-settings: 'wdth' ${wShuffled[g]};fill: ${fill}`
-        )
-        span.textContent = TEXT[g]
-        rowTspan.append(span)
-      }
-      text.append(rowTspan)
-    }
-
+    appendColumn(text, opts, fontSizeMM, offsetMM)
     letters.append(text)
     pos.x += text.getBBox().width
   }
+
+  return letters
+}
+
+function measureLettersWidth(group) {
+  return group.getBBox().width
+}
+
+function resolveRowLayout(opts) {
+  const fontSizeMM = (opts.hMM / opts.rows) * ROW_FONT_SCALE
+  return {
+    fontSizeMM,
+    rows: opts.rows,
+    columns: opts.columns
+  }
+}
+
+function resolveColumnLayout(svg, opts) {
+  const measureOpts = {
+    svg,
+    utils: opts.utils,
+    letterFill: opts.letterFill,
+    backgroundFill: opts.backgroundFill,
+    useBlanks: opts.useBlanks,
+    blanksProb: opts.blanksProb,
+    columns: opts.columns
+  }
+
+  const fitWidth = (fontSizeMM, rows) => {
+    const group = buildLettersGroup(svg, {
+      ...measureOpts,
+      fontSizeMM,
+      rows
+    })
+    const width = measureLettersWidth(group)
+    group.remove()
+    return width > 0 ? (opts.wMM / width) * fontSizeMM : fontSizeMM
+  }
+
+  const refSize = 1
+  let rows = rowsForHeight(opts.hMM, refSize)
+  let fontSizeMM = fitWidth(refSize, rows)
+  rows = rowsForHeight(opts.hMM, fontSizeMM)
+  fontSizeMM = fitWidth(fontSizeMM, rows)
+
+  return {
+    fontSizeMM,
+    rows,
+    columns: opts.columns
+  }
+}
+
+function buildLetters(svg, opts) {
+  buildLettersGroup(svg, opts)
 }
 
 export function draw(context) {
@@ -112,6 +184,7 @@ export function draw(context) {
   const wMM = c.outputWidth
   const hMM = c.outputHeight
   const { v } = shortcuts(utils)
+  const layoutMode = c.layoutMode === LAYOUT_COLUMNS ? LAYOUT_COLUMNS : LAYOUT_ROWS
 
   syncArtboard(svg, wMM, hMM)
   svg.rect(v(0, 0), wMM, hMM, theme.background, 'none', 0)
@@ -125,15 +198,33 @@ export function draw(context) {
     svg.stage.removeAttribute('style')
   }
 
-  buildLetters(svg, {
+  const letterOpts = {
+    svg,
+    wMM,
     hMM,
-    rows: c.rows,
+    utils,
     columns: c.columns,
+    rows: c.rows,
     useBlanks: c.useBlanks,
     blanksProb: c.blanksProb,
     letterFill: theme.foreground,
-    backgroundFill: theme.background,
-    utils
+    backgroundFill: theme.background
+  }
+
+  const layout = layoutMode === LAYOUT_COLUMNS
+    ? resolveColumnLayout(svg, letterOpts)
+    : resolveRowLayout(letterOpts)
+
+  // Measurement passes consume the seeded stream; replay before the visible build.
+  if (layoutMode === LAYOUT_COLUMNS) {
+    utils.seed.reset()
+  }
+
+  buildLetters(svg, {
+    ...letterOpts,
+    fontSizeMM: layout.fontSizeMM,
+    rows: layout.rows,
+    columns: layout.columns
   })
 
   const session = new Session(svg.stage, { useFontFace: true })
