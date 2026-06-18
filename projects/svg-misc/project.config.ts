@@ -28,7 +28,10 @@ const SKETCHES: ProjectSketchDefinition[] = [
     id: 'mascara-lines',
     label: 'Mascara Lines',
     technique: 'svg',
-    container: { mode: '3:4' },
+    container: {
+      print: { width: 52.4, height: 70, unit: 'mm', dpi: 25.4, bleed: 0, target: 'svg' },
+      padding: '3vmin',
+    },
     module: './sketches/mascara-lines.js',
   },
   {

@@ -143,7 +143,7 @@ const metadata = {
     "variable-font"
   ],
   "prefersTheme": "light",
-  "hidden": false
+  "hidden": true
 } satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches' | 'theme'>
 
 const baseDefinition = {

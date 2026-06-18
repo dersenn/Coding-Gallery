@@ -1,19 +1,5 @@
 [
   {
-    "id": "llal-pattern",
-    "title": "LLAL Pattern",
-    "description": "Variable-width LLAL letter columns with optional turbulence displacement",
-    "date": "2026-06",
-    "tags": [
-      "svg",
-      "typography",
-      "variable-font"
-    ],
-    "hidden": false,
-    "prefersTheme": "light",
-    "configFile": "/projects/llal-pattern/project.config.ts"
-  },
-  {
     "id": "tOTTEm",
     "title": "tOTTEm",
     "description": "tOTTEm",
@@ -131,6 +117,20 @@
     "hidden": false,
     "prefersTheme": "light",
     "configFile": "/projects/c4ta/svg/vera/project.config.ts"
+  },
+  {
+    "id": "llal-pattern",
+    "title": "LLAL Pattern",
+    "description": "Variable-width LLAL letter columns with optional turbulence displacement",
+    "date": "2026-06",
+    "tags": [
+      "svg",
+      "typography",
+      "variable-font"
+    ],
+    "hidden": true,
+    "prefersTheme": "light",
+    "configFile": "/projects/llal-pattern/project.config.ts"
   },
   {
     "id": "svg-misc",

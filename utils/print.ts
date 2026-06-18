@@ -67,9 +67,12 @@ export function createPrintContract(config: PrintContractConfig): PrintContract 
   const wMM  = toMM(width,  unit)
   const hMM  = toMM(height, unit)
   const bMM  = toMM(bleed,  unit)
-  const cw = Math.round((wMM + bMM * 2) / MM_PER_INCH * dpi)
-  const ch = Math.round((hMM + bMM * 2) / MM_PER_INCH * dpi)
-  const bPx = Math.round(bMM / MM_PER_INCH * dpi)
+
+  // SVG + 25.4 dpi: viewBox units are mm — keep fractional sizes (no pixel rounding).
+  const svgMm = target === 'svg' && dpi === MM_PER_INCH
+  const cw = svgMm ? wMM + bMM * 2 : Math.round((wMM + bMM * 2) / MM_PER_INCH * dpi)
+  const ch = svgMm ? hMM + bMM * 2 : Math.round((hMM + bMM * 2) / MM_PER_INCH * dpi)
+  const bPx = svgMm ? bMM : Math.round(bMM / MM_PER_INCH * dpi)
   const tw = cw - bPx * 2
   const th = ch - bPx * 2
   const units = printUnits(unitDpi)
