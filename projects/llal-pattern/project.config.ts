@@ -65,6 +65,17 @@ const LLAL_CONTROLS: ProjectControlDefinition[] = [
       },
       {
         type: 'slider',
+        label: 'Bottom row size (% of top)',
+        key: 'rowFontTaper',
+        default: 100,
+        min: 10,
+        max: 100,
+        step: 1,
+        visibleWhenSelectKey: 'layoutMode',
+        visibleWhenSelectValue: 'rows'
+      },
+      {
+        type: 'slider',
         label: 'Columns',
         key: 'columns',
         default: 7,
@@ -101,6 +112,25 @@ const LLAL_CONTROLS: ProjectControlDefinition[] = [
         max: 100,
         step: 1,
         visibleWhenSelectKey: 'useBlanks',
+        visibleWhenSelectValue: true
+      },
+      {
+        type: 'toggle',
+        label: 'Blanks increase per row',
+        key: 'blanksIncreasePerRow',
+        default: false,
+        visibleWhenSelectKey: 'useBlanks',
+        visibleWhenSelectValue: true
+      },
+      {
+        type: 'slider',
+        label: 'Bottom blank probability (%)',
+        key: 'blanksBottomProb',
+        default: 100,
+        min: 0,
+        max: 100,
+        step: 1,
+        visibleWhenSelectKey: 'blanksIncreasePerRow',
         visibleWhenSelectValue: true
       },
       {

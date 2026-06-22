@@ -40,6 +40,48 @@ function lineOffsetMM(fontSizeMM) {
   return fontSizeMM * LINE_OFFSET_RATIO
 }
 
+/** Slider 100 = uniform; lower values shrink the bottom row relative to the top. */
+function bottomRowScaleFraction(bottomPercent) {
+  const scale = Math.max(0.1, Math.min(1, bottomPercent / 100))
+  return 1 - scale
+}
+
+function fontSizeForRow(baseSizeMM, row, rows, taper) {
+  if (rows <= 1 || taper === 0) return baseSizeMM
+  const t = row / (rows - 1)
+  return baseSizeMM * (1 - taper * t)
+}
+
+/** Top row uses blanksProb; bottom row ramps up to blanksBottomProb (never below top). */
+function blanksProbForRow(topProb, row, rows, increasePerRow, bottomProb) {
+  if (!increasePerRow || rows <= 1) return topProb
+  const t = row / (rows - 1)
+  const bottom = Math.max(topProb, bottomProb ?? 100)
+  return topProb + (bottom - topProb) * t
+}
+
+function stackedHeightMM(baseSizeMM, rows, taper) {
+  let height = 0
+  for (let row = 0; row < rows; row++) {
+    height += lineOffsetMM(fontSizeForRow(baseSizeMM, row, rows, taper))
+  }
+  return height
+}
+
+function resolveBaseFontSize(hMM, rows, taper) {
+  if (taper === 0) {
+    return (hMM / rows) * ROW_FONT_SCALE
+  }
+  let lo = 0
+  let hi = (hMM / rows) * ROW_FONT_SCALE * 2
+  for (let i = 0; i < 32; i++) {
+    const mid = (lo + hi) / 2
+    if (stackedHeightMM(mid, rows, taper) < hMM) lo = mid
+    else hi = mid
+  }
+  return (lo + hi) / 2
+}
+
 function rowsForHeight(hMM, fontSizeMM) {
   const step = lineOffsetMM(fontSizeMM)
   return Math.max(1, Math.floor(hMM / step))
@@ -116,7 +158,10 @@ function buildSwirlFilter(svg, defs, wMM, hMM, utils) {
 
 function buildColumnSchedules(opts) {
   if (!opts.squareDistribution) return null
-  return Array.from({ length: opts.columns }, () =>
+  const columnCount = opts.columnsPerRow
+    ? Math.max(...opts.columnsPerRow)
+    : opts.columns
+  return Array.from({ length: columnCount }, () =>
     buildSquareColumnSchedule(opts.utils, opts.rows, opts.alternateRows)
   )
 }
@@ -124,8 +169,9 @@ function buildColumnSchedules(opts) {
 function appendRowLetters(textEl, opts, row, fontSizeMM, columnSchedules) {
   const { coin } = shortcuts(opts.utils)
   const ns = opts.svg.ns
+  const rowColumns = opts.columnsPerRow ? opts.columnsPerRow[row] : opts.columns
 
-  for (let col = 0; col < opts.columns; col++) {
+  for (let col = 0; col < rowColumns; col++) {
     const squareSchedule = columnSchedules ? columnSchedules[col] : null
     const wValues = rowWidthValues(
       opts.utils,
@@ -135,9 +181,16 @@ function appendRowLetters(textEl, opts, row, fontSizeMM, columnSchedules) {
       opts.alternateRows
     )
     const letters = rowLetters(row, opts.alternateRows)
+    const rowBlanksProb = blanksProbForRow(
+      opts.blanksProb,
+      row,
+      opts.rows,
+      opts.blanksIncreasePerRow,
+      opts.blanksBottomProb
+    )
     for (let g = 0; g < TEXT.length; g++) {
       let fill = opts.letterFill
-      if (opts.useBlanks && coin(opts.blanksProb)) {
+      if (opts.useBlanks && coin(rowBlanksProb)) {
         fill = opts.backgroundFill
       }
       const span = document.createElementNS(ns, 'tspan')
@@ -158,17 +211,19 @@ function buildLettersGroup(svg, opts) {
   letters.setAttribute('font-family', FONT_FAMILY)
   svg.stage.append(letters)
 
-  const fontSizeMM = opts.fontSizeMM
-  const offsetMM = lineOffsetMM(fontSizeMM)
+  const baseFontSizeMM = opts.fontSizeMM
+  const taper = opts.rowFontTaper ?? 0
   const columnSchedules = buildColumnSchedules(opts)
 
+  let y = 0
   for (let row = 0; row < opts.rows; row++) {
+    const rowFontSizeMM = fontSizeForRow(baseFontSizeMM, row, opts.rows, taper)
+    y += lineOffsetMM(rowFontSizeMM)
     const text = document.createElementNS(ns, 'text')
     text.setAttribute('x', '0')
-    // Match legacy cumulative dy stacking (first row at 1× line offset).
-    text.setAttribute('y', String(offsetMM * (row + 1)))
-    text.setAttribute('font-size', String(fontSizeMM))
-    appendRowLetters(text, opts, row, fontSizeMM, columnSchedules)
+    text.setAttribute('y', String(y))
+    text.setAttribute('font-size', String(rowFontSizeMM))
+    appendRowLetters(text, opts, row, rowFontSizeMM, columnSchedules)
     letters.append(text)
   }
 
@@ -179,12 +234,70 @@ function measureLettersWidth(group) {
   return group.getBBox().width
 }
 
-function resolveRowLayout(opts) {
-  const fontSizeMM = (opts.hMM / opts.rows) * ROW_FONT_SCALE
+function measureRowWidth(svg, measureOpts, fontSizeMM, columns) {
+  const group = buildLettersGroup(svg, {
+    ...measureOpts,
+    fontSizeMM,
+    rows: 1,
+    columns,
+    rowFontTaper: 0,
+    columnsPerRow: null
+  })
+  const width = measureLettersWidth(group)
+  group.remove()
+  return width
+}
+
+/**
+ * Smaller rows need more column repeats to span the artboard width.
+ * Top row keeps the columns control; lower rows scale repeats from measured top-row unit width.
+ */
+function resolveColumnsPerRow(wMM, rows, baseFontSizeMM, taper, topRowWidth, baseColumns) {
+  if (taper === 0 || topRowWidth <= 0) return null
+
+  const topUnitWidth = topRowWidth / baseColumns
+
+  return Array.from({ length: rows }, (_, row) => {
+    if (row === 0) return baseColumns
+    const rowFont = fontSizeForRow(baseFontSizeMM, row, rows, taper)
+    const unitWidth = topUnitWidth * (rowFont / baseFontSizeMM)
+    return Math.max(baseColumns, Math.ceil(wMM / unitWidth))
+  })
+}
+
+function resolveRowLayout(svg, opts) {
+  const taper = bottomRowScaleFraction(opts.rowFontTaper ?? 100)
+  const fontSizeMM = resolveBaseFontSize(opts.hMM, opts.rows, taper)
+
+  const measureOpts = {
+    svg,
+    utils: opts.utils,
+    letterFill: opts.letterFill,
+    backgroundFill: opts.backgroundFill,
+    useBlanks: opts.useBlanks,
+    blanksProb: opts.blanksProb,
+    alternateRows: opts.alternateRows,
+    squareDistribution: opts.squareDistribution
+  }
+
+  const topRowWidth = taper > 0
+    ? measureRowWidth(svg, measureOpts, fontSizeMM, opts.columns)
+    : 0
+  const columnsPerRow = resolveColumnsPerRow(
+    opts.wMM,
+    opts.rows,
+    fontSizeMM,
+    taper,
+    topRowWidth,
+    opts.columns
+  )
+
   return {
     fontSizeMM,
     rows: opts.rows,
-    columns: opts.columns
+    columns: opts.columns,
+    columnsPerRow,
+    rowFontTaper: taper
   }
 }
 
@@ -259,8 +372,11 @@ export function draw(context) {
     utils,
     columns: c.columns,
     rows: c.rows,
+    rowFontTaper: layoutMode === LAYOUT_ROWS ? (c.rowFontTaper ?? 100) : 100,
     useBlanks: c.useBlanks,
     blanksProb: c.blanksProb,
+    blanksIncreasePerRow: c.blanksIncreasePerRow,
+    blanksBottomProb: c.blanksBottomProb ?? 100,
     alternateRows: c.alternateRows,
     squareDistribution: c.squareDistribution,
     letterFill: theme.foreground,
@@ -269,10 +385,10 @@ export function draw(context) {
 
   const layout = layoutMode === LAYOUT_COLUMNS
     ? resolveColumnLayout(svg, letterOpts)
-    : resolveRowLayout(letterOpts)
+    : resolveRowLayout(svg, letterOpts)
 
   // Measurement passes consume the seeded stream; replay before the visible build.
-  if (layoutMode === LAYOUT_COLUMNS) {
+  if (layoutMode === LAYOUT_COLUMNS || layout.rowFontTaper > 0) {
     utils.seed.reset()
   }
 
@@ -280,7 +396,9 @@ export function draw(context) {
     ...letterOpts,
     fontSizeMM: layout.fontSizeMM,
     rows: layout.rows,
-    columns: layout.columns
+    columns: layout.columns,
+    columnsPerRow: layout.columnsPerRow ?? null,
+    rowFontTaper: layout.rowFontTaper ?? 0
   })
 
   const session = new Session(svg.stage, { useFontFace: true })
