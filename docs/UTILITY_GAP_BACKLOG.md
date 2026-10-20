@@ -194,6 +194,18 @@ Central list of reusable utility candidates discovered during sketch migrations.
   - Seen in: exploration workflow while building `projects/sandbox/grid-almighty` grid-2 (many correlated sliders).
   - Notes: Goals TBD — balance surprise vs usability (avoid impossible combos); respect control `type` coercion and conditional visibility; consider debounce with redraw cost on heavy sketches.
 
+- ID: `control-change-diff`
+  - Status: `candidate`
+  - Need: `onControlChange` passes only the full values object, so `init` projects that treat continuous controls (slider/color: debounce) differently from discrete ones (select/toggle: apply immediately) must keep a snapshot and diff it themselves.
+  - Seen in: `projects/pixelate/project.config.ts`, `docs/audits/PIXELATE_MIGRATION_AUDIT.md`
+  - Notes: option: pass the changed keys as a second callback argument (`(controls, changedKeys) => …`), which stays backwards compatible. Extract only when a second `init` project needs it.
+
+- ID: `control-visibility-naming`
+  - Status: `candidate`
+  - Need: `visibleWhenSelectKey` / `visibleWhenSelectValue` already work with **toggle** keys (`isSelectGatedVisible` compares `String(value)`; `this-is-water` gates groups on `shadow_linked: true`), but the `Select` in the name suggests select-only. That misled the pixelate migration spec into initially leaving the posterize/threshold sliders ungated (since fixed).
+  - Seen in: `components/ControlPanel.vue`, `projects/this-is-water/project.config.ts`, `docs/audits/PIXELATE_MIGRATION_AUDIT.md`
+  - Notes: either document toggle gating in `README.md`/`CLAUDE.md`, or add neutral aliases (`visibleWhenKey` / `visibleWhenValue`) while keeping the old names working.
+
 ### Runtime and sketch container
 
 - ID: `sketch-container-dynamic-aspect`
@@ -205,6 +217,12 @@ Central list of reusable utility candidates discovered during sketch migrations.
     - Separate from `resolveInnerFrame`-style letterboxing inside a fixed canvas (already cheap per frame).
     - Options to explore: remount active layer when a declared “container control” changes; or optional `getContainerConfig(controls) => ContainerConfig` hook on sketch defs; watch for double layout thrash with `ResizeObserver`.
     - PNG/SVG export dimensions should stay coherent if outer size changes.
+
+- ID: `dom-image-technique`
+  - Status: `deferred`
+  - Need: a first-class technique for DOM/image-based projects (image elements, worker-rendered bitmaps, hover interaction) that need neither the canvas2d nor the SVG runtime, so they can use `draw()`/sketch definitions instead of the `init` escape hatch.
+  - Seen in: `projects/pixelate/project.config.ts`, `docs/audits/PIXELATE_MIGRATION_AUDIT.md`
+  - Notes: deferred on purpose; the pixelate spec ruled out a new technique and `init` covers it. Revisit if more DOM-type projects arrive (e.g. the planned text dither/blur effect built on `lib/pixelate/stepper.js`).
 
 ### SVG export
 

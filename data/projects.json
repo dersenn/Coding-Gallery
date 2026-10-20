@@ -1,5 +1,19 @@
 [
   {
+    "id": "pixelate",
+    "title": "Pixelate",
+    "description": "Hover-reversible stepped pixelation with pre-pixelation effects",
+    "date": "2026-10",
+    "tags": [
+      "dom",
+      "image",
+      "interaction"
+    ],
+    "hidden": false,
+    "prefersTheme": "light",
+    "configFile": "/projects/pixelate/project.config.ts"
+  },
+  {
     "id": "tOTTEm",
     "title": "tOTTEm",
     "description": "tOTTEm",
