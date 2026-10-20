@@ -361,8 +361,6 @@ export function draw(context) {
 
   if (c.useFilter) {
     buildSwirlFilter(svg, defs, wMM, hMM, utils)
-  } else {
-    svg.stage.removeAttribute('style')
   }
 
   const letterOpts = {
