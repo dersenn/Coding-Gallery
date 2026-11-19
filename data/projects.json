@@ -1,5 +1,17 @@
 [
   {
+    "id": "on-lines",
+    "title": "On Lines",
+    "description": "Pen plotter studies",
+    "date": "2026-11",
+    "tags": [
+      "svg",
+      "plotter"
+    ],
+    "hidden": false,
+    "configFile": "/projects/on-lines/project.config.ts"
+  },
+  {
     "id": "pixelate",
     "title": "Pixelate",
     "description": "Hover-reversible stepped pixelation with pre-pixelation effects",
