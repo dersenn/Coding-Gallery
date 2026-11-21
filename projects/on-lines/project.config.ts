@@ -92,6 +92,43 @@ const GRID_LATTICE_CONTROLS: ProjectControlDefinition[] = [
   }
 ]
 
+const PATCHWORK_LINES_CONTROLS: ProjectControlDefinition[] = [
+  {
+    id: 'patterns',
+    label: 'Patterns',
+    type: 'group',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      { key: 'divisions', label: 'Cells (short side)', type: 'slider', default: 15, min: 3, max: 40, step: 1 },
+      { key: 'spacingMm', label: 'Line spacing (mm)', type: 'slider', default: 1.2, min: 0.3, max: 5, step: 0.1 },
+      { key: 'gapMm', label: 'Cell gap (mm)', type: 'slider', default: 1, min: 0, max: 6, step: 0.1 },
+      { key: 'shufflePatterns', label: 'Shuffle patterns', type: 'toggle', default: false },
+      { key: 'connectLines', label: 'Connect lines (zigzag)', type: 'toggle', default: false },
+      { key: 'penMm', label: 'Pen width (mm)', type: 'slider', default: 0.3, min: 0.05, max: 1.5, step: 0.05 },
+      { key: 'showTrim', label: 'Show trim', type: 'toggle', default: false },
+    ]
+  },
+  {
+    id: 'noise',
+    label: 'Noise Sample',
+    type: 'group',
+    collapsible: true,
+    defaultOpen: true,
+    controls: [
+      { key: 'sampleMultiplier', label: 'Sample multiplier', type: 'slider', default: 2, min: 0, max: 10, step: 1, randomize: true },
+      { key: 'scale', label: 'Scale (1/mm)', type: 'slider', default: 0.005, min: 0.0005, max: 0.02, step: 0.0005, randomize: true },
+      { key: 'offset', label: 'Offset', type: 'slider', default: 1000, min: 1000, max: 10000, step: 1000, randomize: true },
+      { key: 'stretchX', label: 'Stretch X', type: 'slider', default: 1, min: 0.1, max: 10, step: 0.1, randomize: true },
+      { key: 'stretchY', label: 'Stretch Y', type: 'slider', default: 1, min: 0.1, max: 10, step: 0.1, randomize: true },
+      { key: 'amplitude', label: 'Amplitude', type: 'slider', default: 1, min: 0.1, max: 5, step: 0.1, randomize: true },
+      { key: 'octaves', label: 'Octaves', type: 'slider', default: 3, min: 1, max: 10, step: 1, randomize: true },
+      { key: 'lacunarity', label: 'Lacunarity', type: 'slider', default: 1.1, min: 0.1, max: 10, step: 0.1, randomize: true },
+      { key: 'persistence', label: 'Persistence', type: 'slider', default: 0.9, min: 0.1, max: 10, step: 0.1, randomize: true },
+    ]
+  }
+]
+
 const SKETCHES: ProjectSketchDefinition[] = [
   {
     id: 'grid-lattice-svg',
@@ -106,6 +143,18 @@ const SKETCHES: ProjectSketchDefinition[] = [
     controls: GRID_LATTICE_CONTROLS,
     actions: SVG_ACTIONS,
     defaultActive: true,
+  },
+  {
+    id: 'patchwork-lines-svg',
+    label: 'Patchwork Lines (SVG)',
+    technique: 'svg',
+    container: {
+      print: { width: 210, height: 297, unit: 'mm', dpi: 25.4, bleed: 0, target: 'svg' },
+      padding: '3vmin',
+    },
+    module: './sketches/patchwork-lines-svg.js',
+    controls: PATCHWORK_LINES_CONTROLS,
+    actions: SVG_ACTIONS,
   },
 ]
 
