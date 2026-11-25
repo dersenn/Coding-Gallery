@@ -1,6 +1,7 @@
 import { resolveContainer } from '~/utils/container'
 import type { ContainerConfig, ContainerMode } from '~/utils/container'
 import type { CleanupFunction, Technique } from '~/types/project'
+import type { DownloadControlValues } from '~/utils/download'
 import { createSvgSketchRuntime } from '~/runtime/sketchRuntime.svg'
 import { createCanvas2dSketchRuntime } from '~/runtime/sketchRuntime.canvas2d'
 import { createP5SketchRuntime } from '~/runtime/sketchRuntime.p5'
@@ -12,8 +13,8 @@ export interface SingleActiveSketchRuntime {
   technique: SketchTechniqueRuntime
   draw: () => void
   destroy: () => void
-  exportSvg?: (seed: string | number) => void
-  exportPng?: (seed: string | number) => void
+  exportSvg?: (seed: string | number, controls?: DownloadControlValues) => void
+  exportPng?: (seed: string | number, controls?: DownloadControlValues) => void
 }
 
 export interface SingleActiveSketchCreateArgs<LayerId extends string> {
@@ -51,8 +52,8 @@ export interface SingleActiveSketchManagerArgs<LayerId extends string> {
 export interface SingleActiveSketchManager<LayerId extends string> {
   setActiveLayer: (id: LayerId) => void
   draw: () => void
-  exportActiveSvg: (seed: string | number) => void
-  exportActivePng: (seed: string | number) => void
+  exportActiveSvg: (seed: string | number, controls?: DownloadControlValues) => void
+  exportActivePng: (seed: string | number, controls?: DownloadControlValues) => void
   destroy: () => void
 }
 
@@ -316,11 +317,11 @@ export function singleActiveSketchManager<LayerId extends string>(
       mountActiveIfNeeded()
       activeRuntime?.draw()
     },
-    exportActiveSvg: (seed) => {
-      activeRuntime?.exportSvg?.(seed)
+    exportActiveSvg: (seed, controls) => {
+      activeRuntime?.exportSvg?.(seed, controls)
     },
-    exportActivePng: (seed) => {
-      activeRuntime?.exportPng?.(seed)
+    exportActivePng: (seed, controls) => {
+      activeRuntime?.exportPng?.(seed, controls)
     },
     destroy: () => {
       if (resizeObserver) {

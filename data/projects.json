@@ -9,6 +9,7 @@
       "plotter"
     ],
     "hidden": false,
+    "prefersTheme": "light",
     "configFile": "/projects/on-lines/project.config.ts"
   },
   {

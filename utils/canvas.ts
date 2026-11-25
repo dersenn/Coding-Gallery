@@ -1,6 +1,8 @@
 import { Vec } from './generative'
 import { Color, type GradientStop } from './color'
 import { type PrintContractConfig, type PrintContract, createPrintContract } from './print'
+import { buildExportMetadata, type DownloadControlValues } from './download'
+import { downloadCanvasPng } from './png'
 
 
 /**
@@ -51,6 +53,8 @@ export interface CanvasTextOptions {
 export interface CanvasExportOptions {
   projectId?: string
   seed?: string | number
+  /** Control values embedded as PNG metadata (iTXt) for later restore. */
+  controls?: DownloadControlValues
 }
 
 export interface CanvasRectOptions {
@@ -797,73 +801,24 @@ export class Canvas {
     })
   }
 
-  private pngCrc(data: Uint8Array): number {
-    let crc = 0xffffffff
-    for (const byte of data) {
-      crc ^= byte
-      for (let i = 0; i < 8; i++) {
-        crc = (crc & 1) ? (0xedb88320 ^ (crc >>> 1)) : (crc >>> 1)
-      }
-    }
-    return (crc ^ 0xffffffff) >>> 0
-  }
-
-  private injectPngDpi(buffer: ArrayBuffer, dpi: number): ArrayBuffer {
-    const ppm = Math.round(dpi / 25.4 * 1000) // pixels per inch → pixels per metre
-
-    // pHYs chunk data: 4 bytes x ppm, 4 bytes y ppm, 1 byte unit (1 = metre)
-    const data = new Uint8Array(9)
-    const view = new DataView(data.buffer)
-    view.setUint32(0, ppm)
-    view.setUint32(4, ppm)
-    view.setUint8(8, 1)
-
-    const type = new TextEncoder().encode('pHYs')
-    const crc = this.pngCrc(new Uint8Array([...type, ...data]))
-
-    // Assemble chunk: length (4) + type (4) + data (9) + crc (4) = 21 bytes
-    const chunk = new Uint8Array(21)
-    const cv = new DataView(chunk.buffer)
-    cv.setUint32(0, 9)       // data length
-    chunk.set(type, 4)       // chunk type
-    chunk.set(data, 8)       // chunk data
-    cv.setUint32(17, crc)    // crc covers type + data
-
-    // Insert after PNG signature (8 bytes) + IHDR chunk (4+4+13+4 = 25 bytes) = offset 33
-    const src = new Uint8Array(buffer)
-    const out = new Uint8Array(src.length + chunk.length)
-    out.set(src.subarray(0, 33))
-    out.set(chunk, 33)
-    out.set(src.subarray(33), 33 + chunk.length)
-    return out.buffer
-  }
-
-  /** Trigger a browser download of the current bitmap as PNG. */
+  /**
+   * Trigger a browser download of the current bitmap as PNG.
+   * Embeds seed/controls/source URL as an `iTXt` chunk, plus `pHYs` DPI in print mode.
+   */
   save(options: CanvasExportOptions = {}): void {
-    const { projectId, seed } = options
+    const { projectId, seed, controls } = options
     const baseName = projectId ?? this.id
     const safeSeed = seed === undefined ? '' : `-${String(seed)}`
-    const filename = `${baseName}${safeSeed}.png`
-
-    if (this.print) {
-      this.el.toBlob(blob => {
-        if (!blob) return
-        blob.arrayBuffer().then(buffer => {
-          const patched = this.injectPngDpi(buffer, this.print!.dpi)
-          const link = document.createElement('a')
-          link.download = filename
-          link.href = URL.createObjectURL(new Blob([patched], { type: 'image/png' }))
-          link.click()
-          URL.revokeObjectURL(link.href)
-        })
-      }, 'image/png')
-      return
-    }
-
-    const link = document.createElement('a')
-    link.download = filename
-    link.href = this.el.toDataURL('image/png')
-    link.click()
+    const metadata = buildExportMetadata({
+      projectId: baseName,
+      seed: seed === undefined ? undefined : String(seed),
+      controls,
+      sourceUrl: typeof window !== 'undefined' ? window.location.href : undefined
+    })
+    downloadCanvasPng(this.el, `${baseName}${safeSeed}.png`, {
+      metadata,
+      dpi: this.print?.dpi
+    })
   }
 }
 

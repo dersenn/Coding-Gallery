@@ -28,8 +28,8 @@ export function createCanvas2dSketchRuntime(
     draw: () => {
       onDraw(canvas)
     },
-    exportPng: (seed) => {
-      canvas.save({ seed, projectId: runtimeName })
+    exportPng: (seed, controls) => {
+      canvas.save({ seed, projectId: runtimeName, controls })
     },
     destroy: () => {
       onDestroy?.()

@@ -6,6 +6,7 @@ import type {
   Technique
 } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
+import type { DownloadControlValues } from '~/utils/download'
 import { resolveContainer, resolveInnerFrame } from '~/utils/container'
 import { singleActiveSketchManager, type SingleActiveSketchDefinition } from '~/runtime/sketchRuntime'
 import { createSvgSketchRuntime } from '~/runtime/sketchRuntime.svg'
@@ -228,10 +229,10 @@ export async function initFromProjectDefinition(
   })
 
   registerAction('download-svg', () => {
-    layerManager.exportActiveSvg(utils.seed.current)
+    layerManager.exportActiveSvg(utils.seed.current, { ...controlState } as DownloadControlValues)
   })
   registerAction('download-png', () => {
-    layerManager.exportActivePng(utils.seed.current)
+    layerManager.exportActivePng(utils.seed.current, { ...controlState } as DownloadControlValues)
   })
 
   return () => {

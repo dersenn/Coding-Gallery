@@ -7,6 +7,11 @@
   </div>
 </template>
 
+<script setup lang="ts">
+// Drop a PNG/SVG export anywhere to restore its sketch, seed and controls
+useRestoreFromFile()
+</script>
+
 <style>
 /* Page transitions - crossfade */
 .page-enter-active,

@@ -191,6 +191,11 @@ utils/
   shortcuts.ts              — flat destructuring helper for utils
   canvas.ts                 — Canvas utility class
   svg.ts                    — SVG utility class
+  download.ts               — export metadata (buildExportMetadata), SVG serialisation
+  png.ts                    — PNG chunks: pHYs DPI + iTXt export metadata (write/read)
+
+composables/
+  useRestoreFromFile.ts     — drop a PNG/SVG export on the app to restore seed + controls
 
 types/
   project.ts                — ProjectContext, Grid, GridCell, all core types

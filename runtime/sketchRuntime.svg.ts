@@ -27,8 +27,8 @@ export function createSvgSketchRuntime(args: CreateSvgLayerRuntimeArgs): SingleA
       svg.stage.replaceChildren()
       onDraw(svg)
     },
-    exportSvg: (seed) => {
-      svg.save(String(seed), runtimeName)
+    exportSvg: (seed, controls) => {
+      svg.save(String(seed), runtimeName, controls)
     },
     destroy: () => {
       onDestroy?.()

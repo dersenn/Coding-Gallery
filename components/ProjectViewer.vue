@@ -25,7 +25,8 @@ import {
   resolveEffectiveScopedControls
 } from '~/runtime/scopedProjectConfig'
 import { resolveTheme } from '~/utils/theme'
-import { buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
+import { buildExportMetadata, buildSvgDownloadFilename, serializeSvgWithMetadata } from '~/utils/download'
+import { downloadCanvasPng } from '~/utils/png'
 
 const props = defineProps<{
   project: Project
@@ -204,13 +205,15 @@ const createPngDownloadFallback = () => {
       return
     }
 
-    const link = document.createElement('a')
     const seedSuffix = utils.seed.current ? `-${String(utils.seed.current)}` : ''
-    link.download = `${props.project.id}${seedSuffix}.png`
-    link.href = canvasElement.toDataURL('image/png')
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    downloadCanvasPng(canvasElement, `${props.project.id}${seedSuffix}.png`, {
+      metadata: buildExportMetadata({
+        projectId: props.project.id,
+        seed: utils.seed.current,
+        controls: toRaw(controlValues.value),
+        sourceUrl: window.location.href
+      })
+    })
   }
 }
 

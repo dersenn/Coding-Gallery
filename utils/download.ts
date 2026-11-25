@@ -100,23 +100,17 @@ export function buildSvgDownloadFilename(input: {
   return `${segments.join('_')}.svg`
 }
 
-export function serializeSvgWithMetadata(
-  svgElement: SVGElement,
-  input: {
-    projectId?: string
-    seed?: string
-    controls?: DownloadControlValues
-    sourceUrl?: string
-  }
-): string {
-  const clonedSvg = svgElement.cloneNode(true) as SVGElement
-  normalizeAlphaPresentationAttrs(clonedSvg)
-  const ns = clonedSvg.namespaceURI || 'http://www.w3.org/2000/svg'
-  const metadataElement = document.createElementNS(ns, 'metadata')
-  const now = new Date()
+export interface ExportMetadataInput {
+  projectId?: string
+  seed?: string
+  controls?: DownloadControlValues
+  sourceUrl?: string
+}
 
-  metadataElement.setAttribute('data-coding-gallery', 'export')
-  metadataElement.textContent = JSON.stringify({
+/** Shared export metadata — embedded in SVG `<metadata>` and PNG `iTXt` alike. */
+export function buildExportMetadata(input: ExportMetadataInput) {
+  const now = new Date()
+  return {
     source: 'coding-gallery',
     version: 1,
     projectId: input.projectId || null,
@@ -125,7 +119,22 @@ export function serializeSvgWithMetadata(
     exportedAtIso: now.toISOString(),
     sourceUrl: input.sourceUrl || null,
     controls: normalizeControls(input.controls) || null
-  })
+  }
+}
+
+export type ExportMetadata = ReturnType<typeof buildExportMetadata>
+
+export function serializeSvgWithMetadata(
+  svgElement: SVGElement,
+  input: ExportMetadataInput
+): string {
+  const clonedSvg = svgElement.cloneNode(true) as SVGElement
+  normalizeAlphaPresentationAttrs(clonedSvg)
+  const ns = clonedSvg.namespaceURI || 'http://www.w3.org/2000/svg'
+  const metadataElement = document.createElementNS(ns, 'metadata')
+
+  metadataElement.setAttribute('data-coding-gallery', 'export')
+  metadataElement.textContent = JSON.stringify(buildExportMetadata(input))
 
   const existingMetadata = clonedSvg.querySelector('metadata[data-coding-gallery="export"]')
   if (existingMetadata && existingMetadata.parentNode) {
