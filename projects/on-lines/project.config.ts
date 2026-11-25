@@ -5,28 +5,6 @@ import type {
   ProjectSketchDefinition
 } from '~/types/project'
 
-const metadata = {
-  "id": "on-lines",
-  "title": "On Lines",
-  "description": "Pen plotter studies",
-  "date": "2026-11",
-  "tags": [
-    "svg",
-    "plotter"
-  ],
-  "prefersTheme": "light",
-  "hidden": false
-} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches'>
-
-const CONTAINER = { mode: 'full' as const }
-const DEFAULT_TECHNIQUE = 'svg' as const
-const CONTROLS: ProjectControlDefinition[] = []
-const ACTIONS: ProjectActionDefinition[] = []
-
-const SVG_ACTIONS: ProjectActionDefinition[] = [
-  { key: 'download-svg', label: 'Download SVG' }
-]
-
 const GRID_LATTICE_CONTROLS: ProjectControlDefinition[] = [
   {
     id: 'grid',
@@ -101,8 +79,7 @@ const PATCHWORK_LINES_CONTROLS: ProjectControlDefinition[] = [
     defaultOpen: true,
     controls: [
       { key: 'divisions', label: 'Cells (short side)', type: 'slider', default: 15, min: 3, max: 40, step: 1 },
-      { key: 'spacingMm', label: 'Line spacing (mm)', type: 'slider', default: 1.2, min: 0.3, max: 5, step: 0.1 },
-      { key: 'gapMm', label: 'Cell gap (mm)', type: 'slider', default: 1, min: 0, max: 6, step: 0.1 },
+      { key: 'lines', label: 'Lines per cell', type: 'slider', default: 8, min: 1, max: 40, step: 1 },
       { key: 'shufflePatterns', label: 'Shuffle patterns', type: 'toggle', default: false },
       { key: 'connectLines', label: 'Connect lines (zigzag)', type: 'toggle', default: false },
       { key: 'penMm', label: 'Pen width (mm)', type: 'slider', default: 0.3, min: 0.05, max: 1.5, step: 0.05 },
@@ -121,12 +98,34 @@ const PATCHWORK_LINES_CONTROLS: ProjectControlDefinition[] = [
       { key: 'offset', label: 'Offset', type: 'slider', default: 1000, min: 1000, max: 10000, step: 1000, randomize: true },
       { key: 'stretchX', label: 'Stretch X', type: 'slider', default: 1, min: 0.1, max: 10, step: 0.1, randomize: true },
       { key: 'stretchY', label: 'Stretch Y', type: 'slider', default: 1, min: 0.1, max: 10, step: 0.1, randomize: true },
-      { key: 'amplitude', label: 'Amplitude', type: 'slider', default: 1, min: 0.1, max: 5, step: 0.1, randomize: true },
+      { key: 'contrast', label: 'Contrast', type: 'slider', default: 1, min: 0.1, max: 5, step: 0.1, randomize: true },
       { key: 'octaves', label: 'Octaves', type: 'slider', default: 3, min: 1, max: 10, step: 1, randomize: true },
       { key: 'lacunarity', label: 'Lacunarity', type: 'slider', default: 1.1, min: 0.1, max: 10, step: 0.1, randomize: true },
       { key: 'persistence', label: 'Persistence', type: 'slider', default: 0.9, min: 0.1, max: 10, step: 0.1, randomize: true },
     ]
   }
+]
+
+const metadata = {
+  "id": "on-lines",
+  "title": "On Lines",
+  "description": "Pen plotter studies",
+  "date": "2026-11",
+  "tags": [
+    "svg",
+    "plotter"
+  ],
+  "prefersTheme": "light",
+  "hidden": false
+} satisfies Omit<ProjectDefinition, 'init' | 'controls' | 'actions' | 'container' | 'defaultTechnique' | 'sketches'>
+
+const CONTAINER = { mode: 'full' as const }
+const DEFAULT_TECHNIQUE = 'svg' as const
+const CONTROLS: ProjectControlDefinition[] = []
+const ACTIONS: ProjectActionDefinition[] = []
+
+const SVG_ACTIONS: ProjectActionDefinition[] = [
+  { key: 'download-svg', label: 'Download SVG' }
 ]
 
 const SKETCHES: ProjectSketchDefinition[] = [

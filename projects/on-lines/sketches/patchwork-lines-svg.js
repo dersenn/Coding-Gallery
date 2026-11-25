@@ -1,206 +1,271 @@
-import { Grid } from '~/types/project'
+import { Grid, GridCell, Path } from '~/types/project'
 import { shortcuts } from '~/utils/shortcuts'
 
-/**
- * Patchwork Lines — SVG / plotter port of patchwork/patchwork-1|2.
- *
- * Same structure: 2–4 strips along the long side, each split into ~15 square-ish
- * cells across the short side; one snapped fbm sample per cell, normalised
- * across all cells, then bucketed. Where the canvas version mapped bucket →
- * palette colour + weave, here bucket → single-line hatch arrangement.
- *
- * Hatches are anchored to a global line lattice (not per cell), so the same
- * pattern in neighbouring cells lines up across the gap.
- *
- * Units: viewBox is in mm (print target svg @ 25.4 dpi).
- */
+// ─── Patchwork Lines ─────────────────────────────────────────────────────────
+// SVG / plotter port of patchwork/patchwork-1|2. Same grid and noise.
+// Each terminal cell picks a line pattern from `bucket` (noise → pattern index)
+// instead of a palette colour + weave. See the switch in MyCell.draw().
+// Units: viewBox is in mm (print target svg @ 25.4 dpi).
 
-// --- patterns --------------------------------------------------------------
-// Each pattern is a list of hatch angles (degrees). 0 = horizontal.
+const PATTERN_COUNT = 6
 
-const PATTERNS = [
-  { id: 'horizontal', angles: [0] },
-  { id: 'vertical', angles: [90] },
-  { id: 'diagonal', angles: [-45] },     // /
-  { id: 'anti-diagonal', angles: [45] }, // \
-  { id: 'cross', angles: [0, 90] },
-  { id: 'diagonal-cross', angles: [45, -45] },
-]
-
-// --- geometry --------------------------------------------------------------
-
-const squareDivisions = (width, height, divisions) => {
+function squareDivisions(width, height, divisions) {
   if (width <= height) {
-    const size = width / divisions
-    return { cols: divisions, rows: Math.max(1, Math.floor(height / size)) }
+    const cellSize = width / divisions
+    return { cols: divisions, rows: Math.max(1, Math.floor(height / cellSize)) }
+  } else {
+    const cellSize = height / divisions
+    return { cols: Math.max(1, Math.floor(width / cellSize)), rows: divisions }
   }
-  const size = height / divisions
-  return { cols: Math.max(1, Math.floor(width / size)), rows: divisions }
 }
 
-/** Clip the infinite line p + s·d to rect r (Liang–Barsky). Returns [a, b] or null. */
-const clipLine = (px, py, dx, dy, r) => {
-  let s0 = -Infinity
-  let s1 = Infinity
-  const axes = [[px, dx, r.x0, r.x1], [py, dy, r.y0, r.y1]]
-  for (const [p, d, lo, hi] of axes) {
-    if (Math.abs(d) < 1e-9) {
-      if (p < lo || p > hi) return null
-      continue
+/** Point at fraction t along the path a → corner → b. */
+function alongEdges(a, corner, b, t) {
+  const l1 = a.sub(corner).m
+  const l2 = corner.sub(b).m
+  const d = t * (l1 + l2)
+  return d <= l1 ? a.lerp(corner, d / l1) : corner.lerp(b, (d - l1) / l2)
+}
+
+// No svg group helper in utils/svg.ts yet — candidate for UTILITY_GAP_BACKLOG.
+function group(id, parent) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  g.setAttribute('id', id)
+  parent.append(g)
+  return g
+}
+
+
+
+class MyGrid extends Grid {
+  createCell(config) {
+    return new MyCell(config)
+  }
+}
+
+class MyCell extends GridCell {
+  constructor(config) {
+    super(config)
+    this.noise = 0
+    this.sampleSize = 0
+    this.bucket = 0
+  }
+
+  // ── noise ──
+
+  noiseSample(fbm2, ns) {
+    const { x: cx, y: cy } = this.center()
+    const rootCell = this.parent ?? this
+    const delta = rootCell.index * ns.offset
+    // align strip-phase offset with top-level split axis (rows → Y, cols → X)
+    const offsetX = ns.portrait ? 0 : delta
+    const offsetY = ns.portrait ? delta : 0
+
+    this.sampleSize = this.width * ns.sampleMultiplier
+
+    // snap to coarser sample grid
+    const sx = this.sampleSize > 0 ? Math.floor((cx + offsetX) / this.sampleSize) * this.sampleSize : cx + offsetX
+    const sy = this.sampleSize > 0 ? Math.floor((cy + offsetY) / this.sampleSize) * this.sampleSize : cy + offsetY
+
+    return fbm2(sx, sy)
+  }
+
+  normalizeNoise(min, max, contrast) {
+    const normalized = max > min ? (this.noise - min) / (max - min) : 0.5
+    this.noise = Math.pow(normalized, 1 / contrast)
+  }
+
+  /** Same role as assignColor() in patchwork: noise → index. `order` allows shuffling. */
+  assignPattern(order) {
+    const i = Math.min(Math.floor(this.noise * order.length), order.length - 1)
+    this.bucket = order[i]
+  }
+
+  // ── line patterns: each returns segments [a, b] ──
+
+  /** left edge → right edge */
+  horizontal(n) {
+    const { divLength } = shortcuts(this.grid.utils)
+    const left = divLength(this.tl(), this.bl(), n + 1)
+    const right = divLength(this.tr(), this.br(), n + 1)
+    return left.map((a, i) => [a, right[i]])
+  }
+
+  /** top edge → bottom edge */
+  vertical(n) {
+    const { divLength } = shortcuts(this.grid.utils)
+    const top = divLength(this.tl(), this.tr(), n + 1)
+    const bottom = divLength(this.bl(), this.br(), n + 1)
+    return top.map((a, i) => [a, bottom[i]])
+  }
+
+  /** "/" — both ends walk tl → br, one via tr, one via bl. Equal distance = 45°. */
+  diagonal(n) {
+    return Array.from({ length: n }, (_, i) => {
+      const t = (i + 1) / (n + 1)
+      return [
+        alongEdges(this.tl(), this.tr(), this.br(), t),
+        alongEdges(this.tl(), this.bl(), this.br(), t),
+      ]
+    })
+  }
+
+  /** "\" — mirrored: tr → bl */
+  antiDiagonal(n) {
+    return Array.from({ length: n }, (_, i) => {
+      const t = (i + 1) / (n + 1)
+      return [
+        alongEdges(this.tr(), this.tl(), this.bl(), t),
+        alongEdges(this.tr(), this.br(), this.bl(), t),
+      ]
+    })
+  }
+
+  // ── draw ──
+
+  drawLines(svg, layer, segs, style) {
+    if (style.connect) {
+      // one continuous zigzag: every other line reversed, all joined
+      const pts = segs.flatMap((seg, i) => (i % 2 ? [seg[1], seg[0]] : seg))
+      layer.append(svg.path(new Path(pts).buildPolygon(false), 'none', style.stroke, style.penW))
+    } else {
+      segs.forEach(([a, b]) => layer.append(svg.line(a, b, style.stroke, style.penW)))
     }
-    const a = (lo - p) / d
-    const b = (hi - p) / d
-    s0 = Math.max(s0, Math.min(a, b))
-    s1 = Math.min(s1, Math.max(a, b))
   }
-  if (s1 - s0 < 1e-6) return null
-  return [
-    { x: px + dx * s0, y: py + dy * s0 },
-    { x: px + dx * s1, y: py + dy * s1 },
-  ]
+
+  draw(svg, layers, style) {
+    const n = style.lines
+
+    switch (this.bucket) {
+      case 0:
+        this.drawLines(svg, layers.horizontal, this.horizontal(n), style)
+        break
+      case 1:
+        this.drawLines(svg, layers.vertical, this.vertical(n), style)
+        break
+      case 2:
+        this.drawLines(svg, layers.diagonal, this.diagonal(n), style)
+        break
+      case 3:
+        this.drawLines(svg, layers.antiDiagonal, this.antiDiagonal(n), style)
+        break
+      case 4:
+        this.drawLines(svg, layers.cross, this.horizontal(n), style)
+        this.drawLines(svg, layers.cross, this.vertical(n), style)
+        break
+      case 5:
+      default:
+        this.drawLines(svg, layers.diagonalCross, this.diagonal(n), style)
+        this.drawLines(svg, layers.diagonalCross, this.antiDiagonal(n), style)
+        break
+    }
+  }
 }
 
-/** Parallel segments at `angle` filling rect r, on a global lattice of pitch `spacing`. */
-const hatch = (r, angle, spacing) => {
-  const a = (angle * Math.PI) / 180
-  const dx = Math.cos(a), dy = Math.sin(a)
-  const nx = -dy, ny = dx
-  const ts = [[r.x0, r.y0], [r.x1, r.y0], [r.x0, r.y1], [r.x1, r.y1]].map(([x, y]) => x * nx + y * ny)
-  const kMin = Math.ceil(Math.min(...ts) / spacing - 0.5)
-  const kMax = Math.floor(Math.max(...ts) / spacing - 0.5)
-  const segs = []
-  for (let k = kMin; k <= kMax; k++) {
-    const t = (k + 0.5) * spacing // half-pitch phase keeps lines off the lattice origin
-    const seg = clipLine(nx * t, ny * t, dx, dy, r)
-    if (seg) segs.push(seg)
-  }
-  return segs
-}
 
-const f = (n) => n.toFixed(3)
-
-/** One subpath per segment. */
-const segmentsToD = (segs) =>
-  segs.map(([a, b]) => `M${f(a.x)} ${f(a.y)} L${f(b.x)} ${f(b.y)}`).join(' ')
-
-/** Boustrophedon: one continuous polyline, every other segment reversed. */
-const zigzagToD = (segs) =>
-  segs
-    .map((s, i) => (i % 2 ? [s[1], s[0]] : s))
-    .flat()
-    .map((p, i) => `${i ? 'L' : 'M'}${f(p.x)} ${f(p.y)}`)
-    .join(' ')
-
-// --- draw ------------------------------------------------------------------
 
 export function draw(context) {
-  const { svg, utils, theme, controls: c } = context
-  if (!svg?.print) return
+  const { svg, theme, utils, controls: c } = context
+  const { rndInt, shuffle, simplex2, noiseField } = shortcuts(utils)
+  if (!svg) return
 
-  const { rndInt, shuffle, simplex2 } = shortcuts(utils)
   const { mm, trimWidth, trimHeight } = svg.print
 
-  const border = { top: mm(12), right: mm(12), bottom: mm(18), left: mm(12) }
-  const w = trimWidth - border.left - border.right
-  const h = trimHeight - border.top - border.bottom
-
-  const patterns = c.shufflePatterns ? shuffle([...PATTERNS]) : PATTERNS
-
-  // --- grid: strips along the long side, square-ish cells inside ---
-  const portrait = h > w
-  const splits = rndInt(2, 4)
-  const grid = new Grid({
-    cols: portrait ? 1 : splits,
-    rows: portrait ? splits : 1,
-    x: border.left,
-    y: border.top,
-    width: w,
-    height: h,
-    utils,
-  })
-  const cells = grid.subdivide({
-    maxLevel: 1,
-    rule: (cell, level) => (level === 0 ? squareDivisions(cell.width, cell.height, c.divisions) : false),
-  })
-
-  // --- noise: snapped fbm per cell, strip-phase offset along the split axis ---
-  const sample = (cell) => {
-    const cx = cell.x + cell.width / 2
-    const cy = cell.y + cell.height / 2
-    const delta = (cell.parent ?? cell).index * c.offset
-    const ox = portrait ? 0 : delta
-    const oy = portrait ? delta : 0
-    const size = cell.width * c.sampleMultiplier
-    const snap = (val) => (size > 0 ? Math.floor(val / size) * size : val)
-    const sx = snap(cx + ox)
-    const sy = snap(cy + oy)
-
-    let total = 0, freq = c.scale, amp = 1
-    for (let i = 0; i < c.octaves; i++) {
-      total += simplex2(sx * freq * c.stretchX, sy * freq * c.stretchY) * amp
-      freq *= c.lacunarity
-      amp *= c.persistence
-    }
-    return (total * c.amplitude + 1) / 2
+  const border = {
+    top: mm(12),
+    right: mm(12),
+    bottom: mm(18),
+    left: mm(12),
   }
 
-  const raw = cells.map(sample)
-  const min = Math.min(...raw)
-  const max = Math.max(...raw)
-  const buckets = raw.map((n) => {
-    const t = max > min ? (n - min) / (max - min) : 0.5
-    const shaped = Math.pow(t, 1 / c.amplitude)
-    return Math.min(Math.floor(shaped * patterns.length), patterns.length - 1)
+  const style = {
+    stroke: theme.black,
+    penW: mm(c.penMm),
+    lines: c.lines,
+    connect: c.connectLines,
+  }
+
+  const order = Array.from({ length: PATTERN_COUNT }, (_, i) => i)
+  const patternOrder = c.shufflePatterns ? shuffle(order) : order
+
+
+  // GRID
+
+  const width = trimWidth - border.left - border.right
+  const height = trimHeight - border.top - border.bottom
+  const portrait = height > width
+  const splits = rndInt(2, 4)
+
+  const grid = new MyGrid({
+    cols: portrait ? 1 : splits,
+    rows: portrait ? splits : 1,
+    width,
+    height,
+    x: border.left,
+    y: border.top,
+    utils,
   })
 
-  // --- output ---
-  // Paper colour via CSS, not a <rect> (see grid-lattice-svg).
+  const terminals = grid.subdivide({
+    maxLevel: 1,
+    rule: (cell, level) => {
+      if (level === 0) return squareDivisions(cell.width, cell.height, c.divisions)
+      return false
+    }
+  })
+
+
+  // NOISE → PATTERN
+
+  const fbm2 = noiseField(simplex2, {
+    frequency: c.scale,
+    frequencyX: c.stretchX,
+    frequencyY: c.stretchY,
+    octaves: c.octaves,
+    lacunarity: c.lacunarity,
+    persistence: c.persistence,
+  })
+
+  const noiseSettings = {
+    sampleMultiplier: c.sampleMultiplier,
+    offset: c.offset,
+    portrait,
+  }
+
+  terminals.forEach(cell => { cell.noise = cell.noiseSample(fbm2, noiseSettings) })
+
+  const min = Math.min(...terminals.map(cell => cell.noise))
+  const max = Math.max(...terminals.map(cell => cell.noise))
+
+  terminals.forEach(cell => {
+    cell.normalizeNoise(min, max, c.contrast)
+    cell.assignPattern(patternOrder)
+  })
+
+
+  // LAYERS — one group per pen, sub-group per pattern
+
+  // Paper colour via CSS, not a <rect> (it would be plotted).
   svg.stage.style.background = theme.white
 
-  const stroke = theme.black
-  const penW = mm(c.penMm)
-  const spacing = mm(c.spacingMm)
-  const inset = mm(c.gapMm) / 2
-
-  const NS = 'http://www.w3.org/2000/svg'
-  const pen = document.createElementNS(NS, 'g')
-  pen.setAttribute('id', 'pen-1')
+  const pen = group('pen-1', svg.stage)
   pen.setAttribute('fill', 'none')
-  pen.setAttribute('stroke', stroke)
-  pen.setAttribute('stroke-width', penW)
   pen.setAttribute('stroke-linecap', 'round')
   pen.setAttribute('stroke-linejoin', 'round')
 
-  // sub-group per pattern — handy for selecting / re-penning in Inkscape
-  const groups = Object.fromEntries(
-    PATTERNS.map(({ id }) => {
-      const g = document.createElementNS(NS, 'g')
-      g.setAttribute('id', id)
-      pen.append(g)
-      return [id, g]
-    })
-  )
+  const layers = {
+    horizontal: group('horizontal', pen),
+    vertical: group('vertical', pen),
+    diagonal: group('diagonal', pen),
+    antiDiagonal: group('anti-diagonal', pen),
+    cross: group('cross', pen),
+    diagonalCross: group('diagonal-cross', pen),
+  }
 
-  const toD = c.connectLines ? zigzagToD : segmentsToD
 
-  cells.forEach((cell, i) => {
-    const r = {
-      x0: cell.x + inset,
-      y0: cell.y + inset,
-      x1: cell.x + cell.width - inset,
-      y1: cell.y + cell.height - inset,
-    }
-    if (r.x1 <= r.x0 || r.y1 <= r.y0) return
+  // DRAWING
 
-    const pattern = patterns[buckets[i]]
-    for (const angle of pattern.angles) {
-      const segs = hatch(r, angle, spacing)
-      if (!segs.length) continue
-      groups[pattern.id].append(svg.path(toD(segs), 'none', stroke, penW))
-    }
-  })
-
-  svg.stage.append(pen)
+  terminals.forEach(cell => cell.draw(svg, layers, style))
 
   if (c.showTrim) svg.drawTrimBox()
 }
