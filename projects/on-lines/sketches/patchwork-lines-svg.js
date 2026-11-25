@@ -123,13 +123,16 @@ class MyCell extends GridCell {
 
   // ── draw ──
 
-  drawLines(svg, layer, segs, style) {
+  /** Draw segments into the layer for `direction`, in that direction's colour. */
+  drawLines(svg, layers, direction, segs, style) {
+    const layer = layers[direction]
+    const stroke = style.colors[direction]
     if (style.connect) {
       // one continuous zigzag: every other line reversed, all joined
       const pts = segs.flatMap((seg, i) => (i % 2 ? [seg[1], seg[0]] : seg))
-      layer.append(svg.path(new Path(pts).buildPolygon(false), 'none', style.stroke, style.penW))
+      layer.append(svg.path(new Path(pts).buildPolygon(false), 'none', stroke, style.penW))
     } else {
-      segs.forEach(([a, b]) => layer.append(svg.line(a, b, style.stroke, style.penW)))
+      segs.forEach(([a, b]) => layer.append(svg.line(a, b, stroke, style.penW)))
     }
   }
 
@@ -138,25 +141,27 @@ class MyCell extends GridCell {
 
     switch (this.bucket) {
       case 0:
-        this.drawLines(svg, layers.horizontal, this.horizontal(n), style)
+        this.drawLines(svg, layers, 'horizontal', this.horizontal(n), style)
         break
       case 1:
-        this.drawLines(svg, layers.vertical, this.vertical(n), style)
+        this.drawLines(svg, layers, 'vertical', this.vertical(n), style)
         break
       case 2:
-        this.drawLines(svg, layers.diagonal, this.diagonal(n), style)
+        this.drawLines(svg, layers, 'diagonal', this.diagonal(n), style)
         break
       case 3:
-        this.drawLines(svg, layers.antiDiagonal, this.antiDiagonal(n), style)
+        this.drawLines(svg, layers, 'antiDiagonal', this.antiDiagonal(n), style)
         break
       case 4:
-        this.drawLines(svg, layers.cross, this.horizontal(n), style)
-        this.drawLines(svg, layers.cross, this.vertical(n), style)
+        // cross: horizontal + vertical
+        this.drawLines(svg, layers, 'horizontal', this.horizontal(n), style)
+        this.drawLines(svg, layers, 'vertical', this.vertical(n), style)
         break
       case 5:
       default:
-        this.drawLines(svg, layers.diagonalCross, this.diagonal(n), style)
-        this.drawLines(svg, layers.diagonalCross, this.antiDiagonal(n), style)
+        // diagonal cross: diagonal + anti-diagonal
+        this.drawLines(svg, layers, 'diagonal', this.diagonal(n), style)
+        this.drawLines(svg, layers, 'antiDiagonal', this.antiDiagonal(n), style)
         break
     }
   }
@@ -179,7 +184,13 @@ export function draw(context) {
   }
 
   const style = {
-    stroke: theme.black,
+    // one colour per line direction — illustration only, a plotter ignores these
+    colors: {
+      horizontal: theme.palette[0],
+      vertical: theme.palette[1],
+      diagonal: theme.palette[2],
+      antiDiagonal: theme.palette[3],
+    },
     penW: mm(c.penMm),
     connect: c.connectLines,
   }
@@ -242,7 +253,7 @@ export function draw(context) {
   })
 
 
-  // LAYERS — one group per pen, sub-group per pattern
+  // LAYERS — one group per pen, sub-group per line direction
 
   // Paper colour via CSS, not a <rect> (it would be plotted).
   svg.stage.style.background = theme.white
@@ -257,8 +268,6 @@ export function draw(context) {
     vertical: group('vertical', pen),
     diagonal: group('diagonal', pen),
     antiDiagonal: group('anti-diagonal', pen),
-    cross: group('cross', pen),
-    diagonalCross: group('diagonal-cross', pen),
   }
 
 
