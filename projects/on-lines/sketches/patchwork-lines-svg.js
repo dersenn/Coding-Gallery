@@ -134,7 +134,7 @@ class MyCell extends GridCell {
   }
 
   draw(svg, layers, style) {
-    const n = style.lines
+    const n = 1 // lines per cell — override per case as needed
 
     switch (this.bucket) {
       case 0:
@@ -181,7 +181,6 @@ export function draw(context) {
   const style = {
     stroke: theme.black,
     penW: mm(c.penMm),
-    lines: c.lines,
     connect: c.connectLines,
   }
 

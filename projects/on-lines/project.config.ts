@@ -79,7 +79,6 @@ const PATCHWORK_LINES_CONTROLS: ProjectControlDefinition[] = [
     defaultOpen: true,
     controls: [
       { key: 'divisions', label: 'Cells (short side)', type: 'slider', default: 15, min: 3, max: 40, step: 1 },
-      { key: 'lines', label: 'Lines per cell', type: 'slider', default: 8, min: 1, max: 40, step: 1 },
       { key: 'shufflePatterns', label: 'Shuffle patterns', type: 'toggle', default: false },
       { key: 'connectLines', label: 'Connect lines (zigzag)', type: 'toggle', default: false },
       { key: 'penMm', label: 'Pen width (mm)', type: 'slider', default: 0.3, min: 0.05, max: 1.5, step: 0.05 },
