@@ -268,18 +268,45 @@ class Hash {
   private rnd: () => number
 
   constructor(seedString?: string) {
-    this.hash = seedString ?? createSeed()
+    // Trim + NFC so a name pasted from an address list and the same name typed
+    // into the URL hash identically (macOS often yields decomposed umlauts).
+    const normalized = (seedString ?? '').trim().normalize('NFC')
+    this.hash = normalized || createSeed()
 
-    if (this.hash.startsWith('oo')) {
+    if (/^[0-9a-f]{1,8}$/i.test(this.hash)) {
+      // Hex path (default createSeed output): mulberry32 — unchanged from before
+      this.rnd = this.mulberry32(parseInt(this.hash, 16) >>> 0)
+    } else if (/^oo[1-9a-km-zA-HJ-NP-Z]{49}$/.test(this.hash)) {
       // Legacy path: oo + 49 base58 chars → sfc32
       const hashTrunc = this.hash.slice(2)
       const regex = new RegExp('.{' + ((hashTrunc.length / 4) | 0) + '}', 'g')
       const hashes = hashTrunc.match(regex)!.map((h) => this.b58dec(h))
       this.rnd = this.sfc32(...hashes)
     } else {
-      // New path: 8-char hex → mulberry32
-      this.rnd = this.mulberry32(parseInt(this.hash, 16) >>> 0)
+      // Any other string (names, words, any length): cyrb128 → sfc32
+      this.rnd = this.sfc32(...this.cyrb128(this.hash))
     }
+  }
+
+  // 128-bit string hash (bryc's cyrb128) — seeds sfc32 for free-form seeds
+  private cyrb128(str: string): [number, number, number, number] {
+    let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762
+    for (let i = 0; i < str.length; i++) {
+      const k = str.charCodeAt(i)
+      h1 = h2 ^ Math.imul(h1 ^ k, 597399067)
+      h2 = h3 ^ Math.imul(h2 ^ k, 2869860233)
+      h3 = h4 ^ Math.imul(h3 ^ k, 951274213)
+      h4 = h1 ^ Math.imul(h4 ^ k, 2716044179)
+    }
+    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067)
+    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233)
+    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213)
+    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179)
+    h1 ^= h2 ^ h3 ^ h4
+    h2 ^= h1
+    h3 ^= h1
+    h4 ^= h1
+    return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0]
   }
 
   // Legacy base58 decode — used only for oo... seed backwards compat
@@ -290,7 +317,7 @@ class Hash {
     )
   }
 
-  // Legacy PRNG — used only for oo... seeds
+  // sfc32 PRNG — used for legacy oo... seeds and hashed free-form seeds
   private sfc32(...args: number[]): () => number {
     let a = args[0] || 0
     let b = args[1] || 0
